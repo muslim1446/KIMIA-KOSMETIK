@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Copy,
   ExternalLink,
+  Globe,
   GripHorizontal,
   Home,
   Maximize2,
@@ -18,6 +19,7 @@ import {
   SlideTextItem,
 } from '../utils/annotationEngine';
 import {
+  buildGoogleSlideAiPrompt,
   buildPresentationDigest,
   clampFloatingFrameRect,
   FloatingFrameRect,
@@ -31,6 +33,7 @@ interface GoogleBrowserFrameProps {
   onClose: () => void;
   slideIndex: number;
   interactions: SharedSlideInteractions;
+  slideContainerRef?: React.RefObject<HTMLDivElement | null>;
   permanentStrokes?: PenStroke[];
   tempStrokes?: PenStroke[];
   textEdits?: Record<string, string>;
@@ -40,6 +43,9 @@ interface GoogleBrowserFrameProps {
 }
 
 type ResizeCorner = 'nw' | 'ne' | 'sw' | 'se';
+
+const GOOGLE_HOME_URL = 'https://www.google.com/webhp?igu=1&hl=ms&gl=my';
+const GEMINI_URL = 'https://gemini.google.com/app';
 
 /**
  * Authentic Google 4-Color 'G' Icon Component
@@ -65,23 +71,52 @@ export const GoogleLogoIcon: React.FC<{ className?: string }> = ({ className = '
   </svg>
 );
 
+async function copyPlainText(text: string): Promise<boolean> {
+  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // Fall through to the legacy copy path for restricted contexts.
+    }
+  }
+  if (typeof document === 'undefined') return false;
+  try {
+    const area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', 'true');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    area.style.pointerEvents = 'none';
+    document.body.appendChild(area);
+    area.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(area);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
 export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
   open,
   mode,
   onClose,
   slideIndex,
   interactions,
+  slideContainerRef,
   permanentStrokes = [],
   tempStrokes = [],
   textEdits = {},
   slideImages = [],
+  slideTexts = [],
   onShowToast,
 }) => {
   const [frameRect, setFrameRect] = useState<FloatingFrameRect>(() => {
     const vw = typeof window !== 'undefined' ? window.innerWidth : 1280;
     const vh = typeof window !== 'undefined' ? window.innerHeight : 720;
-    const initialWidth = Math.min(580, Math.max(340, vw - 48));
-    const initialHeight = Math.min(580, Math.max(400, vh - 96));
+    const initialWidth = Math.min(620, Math.max(340, vw - 48));
+    const initialHeight = Math.min(600, Math.max(380, vh - 96));
     return clampFloatingFrameRect(
       {
         x: Math.max(20, vw - initialWidth - 32),
@@ -97,10 +132,13 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
   const [minimized, setMinimized] = useState(false);
   const [isInteracting, setIsInteracting] = useState(false);
   const [urlInput, setUrlInput] = useState('');
-  const [currentUrl, setCurrentUrl] = useState('');
+  const [currentUrl, setCurrentUrl] = useState(GOOGLE_HOME_URL);
   const [iframeKey, setIframeKey] = useState(0);
 
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const onShowToastRef = useRef(onShowToast);
+  onShowToastRef.current = onShowToast;
+
   const actionRef = useRef<{
     type: 'drag' | 'resize';
     corner?: ResizeCorner;
@@ -118,55 +156,55 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
         tempStrokes,
         textEdits,
         slideImages,
+        slideTexts,
       }),
-    [slideIndex, interactions, permanentStrokes, tempStrokes, textEdits, slideImages],
+    [slideIndex, interactions, permanentStrokes, tempStrokes, textEdits, slideImages, slideTexts],
+  );
+  const digestRef = useRef(digest);
+  digestRef.current = digest;
+
+  const readVisibleSlideText = useCallback((): string => {
+    const el = slideContainerRef?.current;
+    if (!el) return '';
+    return (el.innerText || el.textContent || '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 2600);
+  }, [slideContainerRef]);
+
+  const runSlideAiSearch = useCallback(
+    async (options?: { silent?: boolean }) => {
+      const visibleText = readVisibleSlideText();
+      const { query, prompt } = buildGoogleSlideAiPrompt(digestRef.current, visibleText);
+      const searchUrl = `https://www.google.com/search?igu=1&hl=ms&gl=my&udm=50&q=${encodeURIComponent(query)}`;
+      setCurrentUrl(searchUrl);
+      setUrlInput(query);
+      setIframeKey((k) => k + 1);
+
+      const copied = await copyPlainText(prompt);
+      if (!options?.silent) {
+        onShowToastRef.current?.(
+          copied
+            ? '📋 Prompt slaid disalin + Google AI dibuka dengan konteks slaid semasa. Anda juga boleh tampal ke Gemini (Ctrl+V).'
+            : 'Google AI dibuka dengan konteks slaid. Papan klip tidak dibenarkan — salin manual jika perlu.',
+        );
+      }
+    },
+    [readVisibleSlideText],
   );
 
-  // Build context-aware search query and AI prompt
-  const { smartQuery, fullAiPrompt } = useMemo(() => {
-    const topic = digest.currentSlideTitle || 'Kimia Bab 5.4 Ubat dan Kosmetik';
-    const sub = digest.currentSubElementLabel || '';
-    const q = `Kimia KSSM Tingkatan 5 Bab 5.4: ${topic} ${sub}`.trim();
-
-    const prompt = [
-      `Anda ialah Pembantu Pakar Kimia KSSM Tingkatan 5 untuk Bab 5.4 (Ubat dan Kosmetik).`,
-      `Konteks Slaid Semasa: Slaid ${digest.currentSlideNumber}/${digest.totalSlides} - ${digest.currentSlideTitle}.`,
-      `Sub-Elemen: ${digest.currentSubElementLabel}.`,
-      `Kandungan Slaid:\n${digest.currentSlideDetailText}`,
-      `Sila terangkan konsep kimia di atas secara mendalam mengikut silibus SPM, nyatakan nama bahan kimia, kegunaan, kesan sampingan dan formula jika ada.`,
-    ].join('\n\n');
-
-    return { smartQuery: q, fullAiPrompt: prompt };
-  }, [digest]);
-
-  // When frame is opened, configure the appropriate Google URL
+  // Configure the real Google website whenever the frame opens or the mode/slide changes.
   useEffect(() => {
     if (!open) return;
 
     if (mode === 'google-ai') {
-      const searchUrl = `https://www.google.com/search?igu=1&q=${encodeURIComponent(smartQuery)}`;
-      setCurrentUrl(searchUrl);
-      setUrlInput(smartQuery);
-
-      // Auto-copy the slide context & prompt to clipboard
-      if (typeof navigator !== 'undefined' && navigator.clipboard) {
-        navigator.clipboard.writeText(fullAiPrompt).then(
-          () => {
-            onShowToast?.(
-              '📋 Konteks & soalan slaid telah disalin! Anda boleh menampal (Ctrl+V) ke dalam carian atau Gemini.',
-            );
-          },
-          () => {
-            // Ignore clipboard permission reject
-          },
-        );
-      }
+      void runSlideAiSearch();
     } else {
-      const defaultUrl = 'https://www.google.com/webhp?igu=1';
-      setCurrentUrl(defaultUrl);
+      setCurrentUrl(GOOGLE_HOME_URL);
       setUrlInput('');
+      setIframeKey((k) => k + 1);
     }
-  }, [open, mode, smartQuery, fullAiPrompt, onShowToast]);
+  }, [open, mode, slideIndex, runSlideAiSearch]);
 
   // Keep frame inside viewport on window resize
   useEffect(() => {
@@ -201,23 +239,26 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
           ),
         );
       } else if (act.type === 'resize' && act.corner) {
+        const minW = 340;
+        const minH = 300;
         let { x, y, width, height } = act.startRect;
+
         if (act.corner === 'se') {
-          width = act.startRect.width + dx;
-          height = act.startRect.height + dy;
+          width = Math.max(minW, act.startRect.width + dx);
+          height = Math.max(minH, act.startRect.height + dy);
         } else if (act.corner === 'sw') {
-          width = act.startRect.width - dx;
-          height = act.startRect.height + dy;
-          x = act.startRect.x + (act.startRect.width - Math.max(320, Math.min(1000, width)));
+          width = Math.max(minW, act.startRect.width - dx);
+          height = Math.max(minH, act.startRect.height + dy);
+          x = act.startRect.x + act.startRect.width - width;
         } else if (act.corner === 'ne') {
-          width = act.startRect.width + dx;
-          height = act.startRect.height - dy;
-          y = act.startRect.y + (act.startRect.height - Math.max(260, Math.min(850, height)));
+          width = Math.max(minW, act.startRect.width + dx);
+          height = Math.max(minH, act.startRect.height - dy);
+          y = act.startRect.y + act.startRect.height - height;
         } else if (act.corner === 'nw') {
-          width = act.startRect.width - dx;
-          height = act.startRect.height - dy;
-          x = act.startRect.x + (act.startRect.width - Math.max(320, Math.min(1000, width)));
-          y = act.startRect.y + (act.startRect.height - Math.max(260, Math.min(850, height)));
+          width = Math.max(minW, act.startRect.width - dx);
+          height = Math.max(minH, act.startRect.height - dy);
+          x = act.startRect.x + act.startRect.width - width;
+          y = act.startRect.y + act.startRect.height - height;
         }
         setFrameRect(clampFloatingFrameRect({ x, y, width, height }, vw, vh));
       }
@@ -237,7 +278,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
   }, []);
 
   const startDrag = (e: React.PointerEvent) => {
-    if ((e.target as HTMLElement).closest('button, input, a')) return;
+    if ((e.target as HTMLElement).closest('button, input, a, form')) return;
     e.preventDefault();
     setIsInteracting(true);
     actionRef.current = {
@@ -269,23 +310,38 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
     if (q.startsWith('http://') || q.startsWith('https://')) {
       setCurrentUrl(q);
     } else {
-      setCurrentUrl(`https://www.google.com/search?igu=1&q=${encodeURIComponent(q)}`);
+      setCurrentUrl(
+        `https://www.google.com/search?igu=1&hl=ms&gl=my&q=${encodeURIComponent(q)}`,
+      );
     }
+    setIframeKey((k) => k + 1);
   };
 
-  const copyPromptAgain = () => {
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(fullAiPrompt).then(() => {
-        onShowToast?.('📋 Konteks & soalan slaid disalin ke papan klip!');
-      });
-    }
+  const copyPromptAgain = async () => {
+    const visibleText = readVisibleSlideText();
+    const { prompt } = buildGoogleSlideAiPrompt(digestRef.current, visibleText);
+    const ok = await copyPlainText(prompt);
+    onShowToastRef.current?.(
+      ok
+        ? '📋 Konteks & prompt slaid disalin ke papan klip. Tampal ke Google AI atau Gemini.'
+        : 'Papan klip tidak dibenarkan oleh pelayar ini.',
+    );
+  };
+
+  const goHome = () => {
+    setCurrentUrl(GOOGLE_HOME_URL);
+    setUrlInput('');
+    setIframeKey((k) => k + 1);
   };
 
   if (!open) return null;
 
+  const isAiMode = mode === 'google-ai';
+
   return (
     <div
       data-testid="google-browser-frame"
+      data-google-mode={mode}
       style={{
         left: `${frameRect.x}px`,
         top: `${frameRect.y}px`,
@@ -305,11 +361,9 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
         <div className="flex items-center gap-2 min-w-0">
           <GripHorizontal className="w-4 h-4 text-stone-400 shrink-0" />
           <GoogleLogoIcon className="w-4 h-4 shrink-0" />
-          {mode === 'google-ai' && (
-            <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-          )}
+          {isAiMode && <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />}
           <span className="text-xs font-bold truncate">
-            {mode === 'google-ai' ? 'Google AI & Gemini' : 'Google'}
+            {isAiMode ? 'Google AI · Slaid Semasa' : 'Google'}
           </span>
           <span className="hidden sm:inline-block text-[10px] text-stone-500 dark:text-stone-400 truncate">
             · Slaid {digest.currentSlideNumber} ({digest.currentSlideTitle.slice(0, 24)})
@@ -317,31 +371,51 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
-          {mode === 'google-ai' && (
+          {isAiMode && (
             <button
               type="button"
-              onClick={copyPromptAgain}
-              title="Salin semula konteks & soalan slaid ke papan klip"
+              onClick={() => void runSlideAiSearch()}
+              title="Jana semula carian AI dengan konteks slaid terkini & salin prompt"
               className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 cursor-pointer"
             >
-              <Copy className="w-3 h-3" />
-              <span className="hidden sm:inline">Salin Konteks</span>
+              <Sparkles className="w-3 h-3" />
+              <span className="hidden sm:inline">Konteks Terkini</span>
+            </button>
+          )}
+
+          {isAiMode && (
+            <button
+              type="button"
+              onClick={() => void copyPromptAgain()}
+              title="Salin prompt penuh + konteks slaid ke papan klip"
+              className="p-1 rounded-lg text-stone-500 hover:bg-stone-200/70 dark:hover:bg-stone-800 cursor-pointer"
+            >
+              <Copy className="w-3.5 h-3.5" />
             </button>
           )}
 
           <a
-            href={
-              mode === 'google-ai'
-                ? `https://www.google.com/search?q=${encodeURIComponent(smartQuery)}`
-                : 'https://www.google.com'
-            }
+            href={currentUrl}
             target="_blank"
             rel="noreferrer"
-            title="Buka carian ini di tab pelayar baharu"
+            title="Buka halaman Google ini di tab pelayar baharu"
             className="p-1 rounded-lg text-stone-500 hover:bg-stone-200/70 dark:hover:bg-stone-800 cursor-pointer inline-flex items-center"
           >
             <ExternalLink className="w-3.5 h-3.5" />
           </a>
+
+          {isAiMode && (
+            <a
+              href={GEMINI_URL}
+              target="_blank"
+              rel="noreferrer"
+              title="Gemini tidak boleh dibenamkan. Prompt slaid telah disalin — buka Gemini dan tekan Ctrl+V."
+              className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-bold hover:opacity-90 cursor-pointer shrink-0"
+            >
+              <Sparkles className="w-3 h-3" />
+              <span>Gemini</span>
+            </a>
+          )}
 
           <button
             type="button"
@@ -370,10 +444,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
             <button
               type="button"
               title="Kembali ke Laman Utama Google"
-              onClick={() => {
-                setCurrentUrl('https://www.google.com/webhp?igu=1');
-                setUrlInput('');
-              }}
+              onClick={goHome}
               className="p-1 rounded-lg text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-800 cursor-pointer"
             >
               <Home className="w-3.5 h-3.5" />
@@ -381,7 +452,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
 
             <button
               type="button"
-              title="Muat semula (Refresh)"
+              title="Muat semula laman Google"
               onClick={() => setIframeKey((k) => k + 1)}
               className="p-1 rounded-lg text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-800 cursor-pointer"
             >
@@ -395,7 +466,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
                   type="text"
                   value={urlInput}
                   onChange={(e) => setUrlInput(e.target.value)}
-                  placeholder="Cari di Google atau taip kata kunci kimia..."
+                  placeholder="Cari di Google atau taip URL..."
                   className="w-full pl-7 pr-12 py-1 rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 text-xs text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-blue-500 select-text"
                 />
                 <button
@@ -407,16 +478,12 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
               </div>
             </form>
 
-            <a
-              href="https://gemini.google.com"
-              target="_blank"
-              rel="noreferrer"
-              title="Buka Gemini AI secara langsung (Konteks slaid telah disalin, hanya tekan Ctrl+V)"
-              className="hidden sm:inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-bold hover:opacity-90 cursor-pointer shrink-0"
-            >
-              <Sparkles className="w-3 h-3" />
-              <span>Gemini Web</span>
-            </a>
+            {isAiMode && (
+              <span className="hidden md:inline-flex items-center gap-1 px-1.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold shrink-0">
+                <Globe className="w-3 h-3" />
+                Google AI
+              </span>
+            )}
           </div>
 
           {/* ── Real Google Website Iframe Container ───────────────────────── */}
@@ -430,10 +497,10 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
               ref={iframeRef}
               key={iframeKey}
               src={currentUrl}
-              title="Google Search"
+              title="Google"
               className="w-full h-full border-0 bg-white"
-              allow="clipboard-read; clipboard-write; microphone; camera"
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads allow-modals"
+              allow="clipboard-read; clipboard-write; microphone; camera; geolocation; fullscreen"
+              referrerPolicy="no-referrer-when-downgrade"
             />
           </div>
 

@@ -12,6 +12,7 @@ import {
   PenMode,
   PenStroke,
   SlideImageItem,
+  SlideTextItem,
   TempDurationSeconds,
 } from '../utils/annotationEngine';
 import {
@@ -21,8 +22,9 @@ import {
 import { compressImageBlob, loadImageFromUrl } from '../utils/imageCompression';
 import { SlideStageContent } from './SlideStageContent';
 import { SlideAnnotationLayer } from './SlideAnnotationLayer';
+import { SlideTextLayer } from './SlideTextLayer';
 import { InvisibleTextEditor } from './InvisibleTextEditor';
-import { GeminiAssistantFrame } from './GeminiAssistantFrame';
+import { GoogleBrowserFrame, GoogleFrameMode } from './GoogleBrowserFrame';
 import { PresentationIsland } from './PresentationIsland';
 
 interface AudienceStageProps {
@@ -50,6 +52,7 @@ interface AudienceStageProps {
   liveStrokes: LiveStrokeMap;
   textEdits: Record<string, string>;
   slideImages: SlideImageItem[];
+  slideTexts: SlideTextItem[];
   onSignInGoogle: () => void;
   onSignOut: () => void;
   onJoinRoom: (roomId: string, joinCode: string) => void;
@@ -72,6 +75,25 @@ interface AudienceStageProps {
     commit?: boolean,
   ) => void;
   onDeleteImage: (imageId: string) => void;
+  onAddSlideText: (input: {
+    slideIndex: number;
+    scopeKey?: string;
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+    text?: string;
+    fontSize?: number;
+    color?: string;
+    isBold?: boolean;
+    bgColor?: string;
+  }) => SlideTextItem;
+  onUpdateSlideText: (
+    textId: string,
+    patch: Partial<SlideTextItem>,
+    commit?: boolean,
+  ) => void;
+  onDeleteSlideText: (textId: string) => void;
   onSaveTextEdit: (slideIndex: number, textKey: string, value: string | null) => void;
   onLaserBroadcast: (laser: LaserPoint) => void;
 }
@@ -99,6 +121,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
   liveStrokes,
   textEdits,
   slideImages,
+  slideTexts,
   onSignInGoogle,
   onSignOut,
   onJoinRoom,
@@ -109,6 +132,9 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
   onAddImage,
   onUpdateImage,
   onDeleteImage,
+  onAddSlideText,
+  onUpdateSlideText,
+  onDeleteSlideText,
   onSaveTextEdit,
   onLaserBroadcast,
 }) => {
@@ -123,7 +149,11 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
   const [penSize, setPenSize] = useState(4);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [closePopoverSignal, setClosePopoverSignal] = useState(0);
-  const [geminiOpen, setGeminiOpen] = useState(false);
+  const [googleOpen, setGoogleOpen] = useState(false);
+  const [googleMode, setGoogleMode] = useState<GoogleFrameMode>('google');
+  const [textFocusRequest, setTextFocusRequest] = useState<{ id: string; token: number } | null>(
+    null,
+  );
   const [laserKeyHeld, setLaserKeyHeld] = useState(false);
   const [stageSlideRect, setStageSlideRect] = useState<LogicalRect>({
     left: 0,
@@ -387,6 +417,40 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
     [onAddImage, showToast, slideImages.length, slideIndex],
   );
 
+  const handleToggleGoogle = useCallback(
+    (mode: GoogleFrameMode) => {
+      if (googleOpen && googleMode === mode) {
+        setGoogleOpen(false);
+        return;
+      }
+      setGoogleMode(mode);
+      setGoogleOpen(true);
+    },
+    [googleOpen, googleMode],
+  );
+
+  const handleAddTextBox = useCallback(() => {
+    if (tool !== 'pointer') {
+      setTool('pointer');
+    }
+    const offset = (slideTexts.length % 6) * 22;
+    const item = onAddSlideText({
+      slideIndex,
+      scopeKey: getRootSlideScope(slideIndex),
+      x: Math.round((LOGICAL_WIDTH - 420) / 2) + offset,
+      y: 200 + offset,
+      width: 420,
+      height: 110,
+      text: '',
+      fontSize: 24,
+      color: '#1C1917',
+      isBold: false,
+      bgColor: 'transparent',
+    });
+    setTextFocusRequest({ id: item.id, token: Date.now() });
+    showToast('Kotak teks ditambah — terus taip, kemudian seret atau tarik sudut untuk ubah saiz.');
+  }, [onAddSlideText, showToast, slideIndex, slideTexts.length, tool]);
+
   // Global Ctrl+V / Cmd+V Paste Image handler
   useEffect(() => {
     if (isRemoteProjector) return;
@@ -606,6 +670,24 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
         />
       )}
 
+      {/* Movable, resizable text boxes (add with the island "text box" button) */}
+      {!blackout && (
+        <SlideTextLayer
+          slideIndex={slideIndex}
+          slideContainerRef={slideContainerRef}
+          interactionsKey={interactionsKey}
+          tool={tool}
+          slideTexts={slideTexts}
+          onUpdateSlideText={onUpdateSlideText}
+          onDeleteSlideText={onDeleteSlideText}
+          isRemoteProjector={isRemoteProjector}
+          zoomScale={zoomScale}
+          panOffset={panOffset}
+          focusTextId={textFocusRequest?.id ?? null}
+          focusToken={textFocusRequest?.token ?? 0}
+        />
+      )}
+
       {/* Invisible Right-Click / Touch Text Editor */}
       {!blackout && (
         <InvisibleTextEditor
@@ -717,11 +799,12 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
         </div>
       )}
 
-      {/* Floating Draggable & Resizable Gemini AI Frame (Stage mode only) */}
+      {/* Floating Draggable & Resizable real Google frame (Stage mode only) */}
       {!isRemoteProjector && (
-        <GeminiAssistantFrame
-          open={geminiOpen}
-          onClose={() => setGeminiOpen(false)}
+        <GoogleBrowserFrame
+          open={googleOpen}
+          mode={googleMode}
+          onClose={() => setGoogleOpen(false)}
           slideIndex={slideIndex}
           interactions={interactions}
           slideContainerRef={slideContainerRef}
@@ -729,7 +812,8 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
           tempStrokes={tempStrokes}
           textEdits={textEdits}
           slideImages={slideImages}
-          onAddImage={onAddImage}
+          slideTexts={slideTexts}
+          onShowToast={showToast}
         />
       )}
 
@@ -763,8 +847,10 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
           onPenSizeChange={setPenSize}
           onClearSlideRootStrokes={onClearSlideRootStrokes}
           onPickImageFile={(file) => void addCompressedImageToSlide(file)}
-          geminiOpen={geminiOpen}
-          onToggleGemini={() => setGeminiOpen((o) => !o)}
+          googleOpen={googleOpen}
+          googleMode={googleMode}
+          onToggleGoogle={handleToggleGoogle}
+          onAddTextBox={handleAddTextBox}
           user={user}
           anonBlocked={anonBlocked}
           roomId={roomId}

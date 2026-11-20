@@ -16,14 +16,17 @@ import {
   Moon,
   MousePointer2,
   PenTool,
+  Plus,
   Sparkles,
   Sun,
+  TextCursorInput,
   Trash2,
   Type,
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
 import { User } from 'firebase/auth';
+import { GoogleFrameMode, GoogleLogoIcon } from './GoogleBrowserFrame';
 import {
   AnnotationTool,
   PEN_COLORS,
@@ -57,8 +60,10 @@ interface PresentationIslandProps {
   onPenSizeChange: (next: number) => void;
   onClearSlideRootStrokes: () => void;
   onPickImageFile: (file: File) => void;
-  geminiOpen: boolean;
-  onToggleGemini: () => void;
+  googleOpen: boolean;
+  googleMode: GoogleFrameMode;
+  onToggleGoogle: (mode: GoogleFrameMode) => void;
+  onAddTextBox: () => void;
   // Firebase / Live Sync props
   user: User | null;
   anonBlocked?: boolean;
@@ -97,8 +102,10 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
   onPenSizeChange,
   onClearSlideRootStrokes,
   onPickImageFile,
-  geminiOpen,
-  onToggleGemini,
+  googleOpen,
+  googleMode,
+  onToggleGoogle,
+  onAddTextBox,
   user,
   anonBlocked = false,
   roomId,
@@ -612,12 +619,30 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
             <ImagePlus className="w-4 h-4" />
           </button>
 
-          {/* Text Edit Mode */}
+          {/* Add Movable Text Box (separate from editing embedded slide text) */}
+          <button
+            type="button"
+            data-testid="island-add-text-button"
+            aria-label="Tambah Kotak Teks"
+            title="Tambah Kotak Teks (taip, seret, ubah saiz & saiz fon — berbeza daripada Sunting Teks)"
+            onClick={() => {
+              onAddTextBox();
+              setOpenPopover('none');
+            }}
+            className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
+          >
+            <span className="relative flex items-center justify-center">
+              <TextCursorInput className="w-4 h-4" />
+              <Plus className="absolute -bottom-1.5 -right-1.5 w-2.5 h-2.5 rounded-full bg-white dark:bg-stone-900 text-blue-700 dark:text-blue-400" />
+            </span>
+          </button>
+
+          {/* Text Edit Mode (embedded slide text) */}
           <button
             type="button"
             data-testid="island-text-edit-button"
             aria-label="Mod Sunting Teks"
-            title="Sunting Teks (Klik kanan mana-mana teks atau aktifkan mod ini)"
+            title="Sunting Teks Sedia Ada (Klik kanan mana-mana teks atau aktifkan mod ini)"
             onClick={() => {
               onToolChange(tool === 'text-edit' ? 'pointer' : 'text-edit');
               setOpenPopover('none');
@@ -651,24 +676,47 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
             <span className="hidden md:inline text-[11px]">L</span>
           </button>
 
-          {/* Gemini AI Assistant Toggle */}
+          {/* Google Browser Toggle — real google.com inside the draggable frame */}
           <button
             type="button"
-            data-testid="island-gemini-button"
-            aria-label="Pembantu Gemini AI"
-            title="Pembantu Gemini AI (Seret, ubah saiz, Mod Bukti & tampal gambar)"
+            data-testid="island-google-button"
+            aria-label="Buka Google"
+            title="Buka Google sebenar dalam bingkai (boleh seret, ubah saiz & klik apa sahaja)"
             onClick={() => {
-              onToggleGemini();
+              onToggleGoogle('google');
               setOpenPopover('none');
             }}
             className={`flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
-              geminiOpen
-                ? 'bg-emerald-700 text-white shadow-sm'
-                : 'hover:bg-stone-100 dark:hover:bg-stone-800 text-emerald-700 dark:text-emerald-400'
+              googleOpen && googleMode === 'google'
+                ? 'bg-stone-900 text-white shadow-sm dark:bg-stone-100 dark:text-stone-900'
+                : 'hover:bg-stone-100 dark:hover:bg-stone-800'
             }`}
           >
-            <Sparkles className="w-4 h-4" />
-            <span className="hidden sm:inline">AI</span>
+            <GoogleLogoIcon className="w-4 h-4" />
+            <span className="hidden sm:inline text-[11px]">Google</span>
+          </button>
+
+          {/* Google AI Toggle — same G logo + AI sparkle, auto-searches the current slide */}
+          <button
+            type="button"
+            data-testid="island-google-ai-button"
+            aria-label="Buka Google AI dengan konteks slaid"
+            title="Google AI (Gemini): auto-cari slaid semasa + salin prompt tersembunyi ke papan klip"
+            onClick={() => {
+              onToggleGoogle('google-ai');
+              setOpenPopover('none');
+            }}
+            className={`flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+              googleOpen && googleMode === 'google-ai'
+                ? 'bg-emerald-700 text-white shadow-sm'
+                : 'hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300'
+            }`}
+          >
+            <span className="relative flex items-center justify-center">
+              <GoogleLogoIcon className="w-4 h-4" />
+              <Sparkles className="absolute -top-1.5 -right-1.5 w-2.5 h-2.5 text-emerald-600 dark:text-emerald-300" />
+            </span>
+            <span className="hidden sm:inline text-[11px]">AI</span>
           </button>
         </div>
 

@@ -13,6 +13,7 @@ import {
   LogicalRect,
   PenStroke,
   SlideImageItem,
+  SlideTextItem,
 } from './annotationEngine';
 
 export interface FloatingFrameRect {
@@ -165,8 +166,17 @@ export function buildPresentationDigest(args: {
   tempStrokes: PenStroke[];
   textEdits: Record<string, string>;
   slideImages: SlideImageItem[];
+  slideTexts?: SlideTextItem[];
 }): SlideContextDigest {
-  const { slideIndex, interactions, permanentStrokes, tempStrokes, textEdits, slideImages } = args;
+  const {
+    slideIndex,
+    interactions,
+    permanentStrokes,
+    tempStrokes,
+    textEdits,
+    slideImages,
+    slideTexts = [],
+  } = args;
   const meta = SLIDES_META[slideIndex] ?? SLIDES_META[0];
   const sub = describeActiveSubElement(slideIndex, interactions);
 
@@ -199,6 +209,15 @@ export function buildPresentationDigest(args: {
           .join('; ')
       : 'Tiada gambar tambahan pada slaid ini.';
 
+  const visibleTexts = slideTexts.filter((t) => t.slideIndex === slideIndex && t.text.trim().length > 0);
+  const textBoxesSummary =
+    visibleTexts.length > 0
+      ? visibleTexts
+          .slice(0, 25)
+          .map((t) => `- "${t.text.trim().slice(0, 300)}" (saiz fon ${t.fontSize}px)`)
+          .join('\n')
+      : 'Tiada kotak teks tambahan pada slaid ini.';
+
   const currentSlideDetailText = [
     `SLAID SEMASA: Slaid ${slideIndex + 1}/${SLIDES_META.length} — "${meta.title}"`,
     `Subtajuk: ${meta.subtitle}`,
@@ -206,6 +225,7 @@ export function buildPresentationDigest(args: {
     `SUB-ELEMEN / TAB AKTIF: ${sub.detail}`,
     `LUKISAN PEN PENGGUNA: ${slideStrokes.length} garisan kekal, ${slideTemp.length} garisan sementara (Skop: ${strokeScopes.join(', ') || 'tiada'}; Warna: ${strokeColors.join(', ') || 'tiada'}).`,
     `SUNTINGAN TEKS PENGGUNA:\n${textEditsSummary}`,
+    `KOTAK TEKS TAMBAHAN PENGGUNA:\n${textBoxesSummary}`,
     `GAMBAR PADA SLAID:\n${imagesSummary}`,
   ].join('\n');
 
@@ -217,6 +237,61 @@ export function buildPresentationDigest(args: {
     deckOutlineText,
     currentSlideDetailText,
   };
+}
+
+function compactWhitespace(text: string): string {
+  return text.replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Builds the hidden instruction + current-slide context that is sent to Google
+ * (AI Mode) when the "Google + AI" island button is pressed. The compact query
+ * is used in the search URL, while the full prompt is copied to the clipboard so
+ * it can also be pasted into Gemini or any assistant.
+ */
+export function buildGoogleSlideAiPrompt(
+  digest: SlideContextDigest,
+  visibleSlideText = '',
+): { query: string; prompt: string } {
+  const visible = compactWhitespace(visibleSlideText).slice(0, 2600);
+  const hiddenInstruction =
+    'Anda ialah tutor Kimia KSSM Tingkatan 5 (Bab 5.4: Ubat-ubatan dan Bahan Kosmetik). ' +
+    'Jawab dalam Bahasa Melayu yang jelas. Gunakan konteks slaid pembentangan di bawah untuk menerangkan konsep, ' +
+    'nama bahan kimia, kegunaan, kesan sampingan, dan formula kimia jika relevan. ' +
+    'Jika ada lukisan atau kotak teks pengguna, anggap ia sebahagian daripada soalan.';
+
+  const compactContext = [
+    `Slaid ${digest.currentSlideNumber}/${digest.totalSlides}: ${digest.currentSlideTitle}.`,
+    `Sub-elemen aktif: ${digest.currentSubElementLabel}.`,
+    digest.currentSlideDetailText,
+    visible ? `Teks yang kelihatan pada slaid: ${visible.slice(0, 900)}` : '',
+    'Soalan: Terangkan slaid ini secara mendalam dan berikan fakta kimia yang tepat untuk pembentangan SPM.',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const query = compactWhitespace(`${hiddenInstruction} ${compactContext}`).slice(0, 1800);
+
+  const prompt = [
+    hiddenInstruction,
+    '',
+    `SLIDE ${digest.currentSlideNumber}/${digest.totalSlides} — ${digest.currentSlideTitle}`,
+    `Sub-elemen aktif: ${digest.currentSubElementLabel}`,
+    '',
+    'KONTEKS PENUH SLAID:',
+    digest.currentSlideDetailText,
+    '',
+    'TEKS YANG KELIHATAN PADA SLAID:',
+    visible || '(tiada teks tambahan yang dapat dibaca)',
+    '',
+    'OUTLINE KESELURUHAN DEK:',
+    digest.deckOutlineText,
+    '',
+    'ARAHAN: Terangkan slaid ini seperti pembentang Kimia KSSM Tingkatan 5. Senaraikan bahan kimia, ' +
+      'fungsi, kesan sampingan, dan formula yang berkaitan. Jika sesuai, cadangkan soalan kuiz ringkas.',
+  ].join('\n');
+
+  return { query, prompt };
 }
 
 export function parseGeminiStructuredMeta(rawText: string): ParsedGeminiMeta {

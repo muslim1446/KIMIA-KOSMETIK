@@ -37,7 +37,11 @@ function hasOwnDirectText(el: Element): boolean {
 function findEditableElement(start: EventTarget | null, root: HTMLElement): HTMLElement | SVGElement | null {
   let cur = start instanceof Node ? (start instanceof Element ? start : start.parentElement) : null;
   while (cur && cur !== root) {
-    if (cur.closest('[data-slide-image-root], [data-text-editor-ui], [data-presentation-island]')) {
+    if (
+      cur.closest(
+        '[data-slide-image-root], [data-slide-text-root], [data-text-editor-ui], [data-presentation-island]',
+      )
+    ) {
       return null;
     }
     const tag = cur.tagName.toUpperCase();

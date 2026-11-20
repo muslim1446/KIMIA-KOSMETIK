@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  collection,
+  deleteDoc,
   doc,
   getDoc,
   onSnapshot,
@@ -103,6 +105,38 @@ function saveLocalBoard(data: LocalBoardStorage) {
 
 function makeClientId(prefix: string): string {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function timestampToMillis(value: unknown): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (
+    value &&
+    typeof value === 'object' &&
+    'toMillis' in value &&
+    typeof (value as { toMillis?: unknown }).toMillis === 'function'
+  ) {
+    return (value as { toMillis: () => number }).toMillis();
+  }
+  return Date.now();
+}
+
+function clampSlideText(text: SlideTextItem): SlideTextItem {
+  const finite = (value: number, fallback: number) =>
+    Number.isFinite(value) ? value : fallback;
+  return {
+    ...text,
+    slideIndex: Math.max(0, Math.min(8, Math.trunc(finite(text.slideIndex, 0)))),
+    scopeKey: (text.scopeKey ?? '').slice(0, 160),
+    x: Math.round(finite(text.x, 380)),
+    y: Math.round(finite(text.y, 200)),
+    width: Math.max(120, Math.min(1280, Math.round(finite(text.width, 320)))),
+    height: Math.max(48, Math.min(720, Math.round(finite(text.height, 100)))),
+    text: (text.text ?? '').replace(/\r\n/g, '\n').slice(0, 2000),
+    fontSize: Math.max(8, Math.min(160, Math.round(finite(text.fontSize, 20)))),
+    color: (text.color ?? '#1C1917').slice(0, 32),
+    isBold: Boolean(text.isBold),
+    bgColor: (text.bgColor ?? 'transparent').slice(0, 32),
+  };
 }
 
 interface UseCollaborativeBoardArgs {
@@ -351,14 +385,15 @@ export function useCollaborativeBoard({
             });
             await createBatch.commit();
 
-            // Now that membership exists, seed any local offline strokes/edits/images
+            // Now that membership exists, seed any local offline strokes/edits/images/texts
             const localImgs = imagesRef.current.slice(-50);
+            const localTexts = textsRef.current.slice(-60);
             const hasLocalSlides = Array.from({ length: 9 }).some(
               (_, i) =>
                 (strokesRef.current[i]?.length ?? 0) > 0 ||
                 Object.keys(textEditsRef.current[i] ?? {}).length > 0,
             );
-            if (hasLocalSlides || localImgs.length > 0) {
+            if (hasLocalSlides || localImgs.length > 0 || localTexts.length > 0) {
               const seedBatch = writeBatch(db);
               for (let i = 0; i < 9; i++) {
                 const localStrokes = (strokesRef.current[i] ?? []).slice(-400);
@@ -395,6 +430,26 @@ export function useCollaborativeBoard({
                 }
                 seedBatch.update(roomRef, {
                   imageIds: localImgs.map((img) => img.id),
+                  updatedAt: serverTimestamp(),
+                });
+              }
+              for (const text of localTexts) {
+                seedBatch.set(doc(db, 'rooms', safeRoomId, 'texts', text.id), {
+                  id: text.id,
+                  roomId: safeRoomId,
+                  slideIndex: Math.max(0, Math.min(8, Math.trunc(text.slideIndex))),
+                  scopeKey: text.scopeKey.slice(0, 160),
+                  x: Math.round(text.x),
+                  y: Math.round(text.y),
+                  width: Math.max(120, Math.min(1280, Math.round(text.width))),
+                  height: Math.max(48, Math.min(720, Math.round(text.height))),
+                  text: text.text.replace(/\r\n/g, '\n').slice(0, 2000),
+                  fontSize: Math.max(8, Math.min(160, Math.round(text.fontSize))),
+                  color: text.color.slice(0, 32),
+                  isBold: Boolean(text.isBold),
+                  bgColor: (text.bgColor ?? 'transparent').slice(0, 32),
+                  authorId: user.uid,
+                  createdAt: serverTimestamp(),
                   updatedAt: serverTimestamp(),
                 });
               }
@@ -481,6 +536,86 @@ export function useCollaborativeBoard({
           },
         );
         unsubs.push(unsubRoom);
+
+        // 1b. Listen to movable text boxes (subcollection keeps the room document small)
+        const textsCollectionRef = collection(db, 'rooms', safeRoomId, 'texts');
+        let textsHydrated = false;
+        const unsubTexts = onSnapshot(
+          textsCollectionRef,
+          (snap) => {
+            const remoteTexts: SlideTextItem[] = [];
+            for (const textSnap of snap.docs) {
+              const d = textSnap.data();
+              if (!d || typeof d !== 'object') continue;
+              const slideIdx = Number(d.slideIndex);
+              if (!Number.isFinite(slideIdx)) continue;
+              remoteTexts.push({
+                id: typeof d.id === 'string' && d.id ? d.id : textSnap.id,
+                slideIndex: Math.max(0, Math.min(8, Math.trunc(slideIdx))),
+                scopeKey:
+                  typeof d.scopeKey === 'string' && d.scopeKey
+                    ? d.scopeKey
+                    : getRootSlideScope(Math.trunc(slideIdx)),
+                x: Number.isFinite(Number(d.x)) ? Number(d.x) : 120,
+                y: Number.isFinite(Number(d.y)) ? Number(d.y) : 120,
+                width: Number.isFinite(Number(d.width)) ? Number(d.width) : 320,
+                height: Number.isFinite(Number(d.height)) ? Number(d.height) : 100,
+                text: typeof d.text === 'string' ? d.text : '',
+                fontSize: Number.isFinite(Number(d.fontSize)) ? Number(d.fontSize) : 20,
+                color: typeof d.color === 'string' ? d.color : '#1C1917',
+                isBold: Boolean(d.isBold),
+                bgColor: typeof d.bgColor === 'string' ? d.bgColor : 'transparent',
+                authorId: typeof d.authorId === 'string' ? d.authorId : '',
+                createdAt: timestampToMillis(d.createdAt),
+                updatedAt: timestampToMillis(d.updatedAt),
+              });
+            }
+
+            // On the first snapshot, push any offline-local text boxes up to Firestore so
+            // work created while offline is never lost when the room connects.
+            if (!textsHydrated) {
+              textsHydrated = true;
+              const remoteIds = new Set(remoteTexts.map((t) => t.id));
+              const localOnly = textsRef.current
+                .filter((t) => !remoteIds.has(t.id))
+                .slice(-60);
+              if (localOnly.length > 0) {
+                for (const text of localOnly) {
+                  void setDoc(doc(db, 'rooms', safeRoomId, 'texts', text.id), {
+                    id: text.id,
+                    roomId: safeRoomId,
+                    slideIndex: Math.max(0, Math.min(8, Math.trunc(text.slideIndex))),
+                    scopeKey: text.scopeKey.slice(0, 160),
+                    x: Math.round(text.x),
+                    y: Math.round(text.y),
+                    width: Math.max(120, Math.min(1280, Math.round(text.width))),
+                    height: Math.max(48, Math.min(720, Math.round(text.height))),
+                    text: text.text.replace(/\r\n/g, '\n').slice(0, 2000),
+                    fontSize: Math.max(8, Math.min(160, Math.round(text.fontSize))),
+                    color: text.color.slice(0, 32),
+                    isBold: Boolean(text.isBold),
+                    bgColor: (text.bgColor ?? 'transparent').slice(0, 32),
+                    authorId: user.uid,
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp(),
+                  }).catch((err) =>
+                    handleFirestoreError(
+                      err,
+                      OperationType.WRITE,
+                      `rooms/${safeRoomId}/texts/${text.id}`,
+                    ),
+                  );
+                }
+                setTexts([...remoteTexts, ...localOnly].slice(-200));
+                return;
+              }
+            }
+
+            setTexts(remoteTexts.slice(-200));
+          },
+          (err) => handleFirestoreError(err, OperationType.GET, `rooms/${safeRoomId}/texts`),
+        );
+        unsubs.push(unsubTexts);
 
         // 2. Listen to all 9 slide boards & ephemeral boards
         for (let i = 0; i < 9; i++) {
@@ -1188,52 +1323,103 @@ export function useCollaborativeBoard({
       text?: string;
       fontSize?: number;
       color?: string;
+      isBold?: boolean;
+      bgColor?: string;
     }) => {
       const id = makeClientId('txt');
       const now = Date.now();
-      const item: SlideTextItem = {
+      const item: SlideTextItem = clampSlideText({
         id,
         slideIndex: input.slideIndex,
-        scopeKey: (input.scopeKey ?? getRootSlideScope(input.slideIndex)).slice(0, 160),
-        x: Math.round(input.x ?? 380),
-        y: Math.round(input.y ?? 200),
-        width: Math.max(120, Math.min(900, Math.round(input.width ?? 300))),
-        height: Math.max(50, Math.min(600, Math.round(input.height ?? 100))),
+        scopeKey: input.scopeKey ?? getRootSlideScope(input.slideIndex),
+        x: input.x ?? 380,
+        y: input.y ?? 200,
+        width: input.width ?? 300,
+        height: input.height ?? 100,
         text: input.text ?? 'Taip nota di sini...',
         fontSize: input.fontSize ?? 20,
         color: input.color ?? '#1C1917',
-        isBold: false,
-        bgColor: 'transparent',
+        isBold: Boolean(input.isBold),
+        bgColor: input.bgColor ?? 'transparent',
         authorId: currentAuthorId,
         createdAt: now,
         updatedAt: now,
-      };
+      });
 
       const nextTexts = [...textsRef.current, item].slice(-60);
       setTexts(nextTexts);
       postLocalBoardSync({ texts: nextTexts });
+
+      if (isFirebaseActive && user) {
+        void setDoc(doc(db, 'rooms', roomId, 'texts', id), {
+          id: item.id,
+          roomId,
+          slideIndex: item.slideIndex,
+          scopeKey: item.scopeKey,
+          x: item.x,
+          y: item.y,
+          width: item.width,
+          height: item.height,
+          text: item.text,
+          fontSize: item.fontSize,
+          color: item.color,
+          isBold: item.isBold,
+          bgColor: item.bgColor,
+          authorId: user.uid,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        }).catch((err) =>
+          handleFirestoreError(err, OperationType.WRITE, `rooms/${roomId}/texts/${id}`),
+        );
+      }
+
       return item;
     },
-    [currentAuthorId, postLocalBoardSync],
+    [currentAuthorId, isFirebaseActive, postLocalBoardSync, roomId, user],
   );
 
   // Update Movable Text Box
   const updateSlideText = useCallback(
     (textId: string, patch: Partial<SlideTextItem>, commitToRemote = true) => {
+      let updatedItem: SlideTextItem | null = null;
       const nextTexts = textsRef.current.map((t) => {
         if (t.id !== textId) return t;
-        return {
+        updatedItem = clampSlideText({
           ...t,
           ...patch,
+          id: t.id,
+          slideIndex: t.slideIndex,
+          authorId: t.authorId,
+          createdAt: t.createdAt,
           updatedAt: Date.now(),
-        };
+        });
+        return updatedItem;
       });
       setTexts(nextTexts);
       if (commitToRemote) {
         postLocalBoardSync({ texts: nextTexts });
       }
+
+      if (commitToRemote && isFirebaseActive && user && updatedItem) {
+        const finalItem = updatedItem as SlideTextItem;
+        void updateDoc(doc(db, 'rooms', roomId, 'texts', textId), {
+          scopeKey: finalItem.scopeKey,
+          x: finalItem.x,
+          y: finalItem.y,
+          width: finalItem.width,
+          height: finalItem.height,
+          text: finalItem.text,
+          fontSize: finalItem.fontSize,
+          color: finalItem.color,
+          isBold: finalItem.isBold,
+          bgColor: finalItem.bgColor,
+          updatedAt: serverTimestamp(),
+        }).catch((err) =>
+          handleFirestoreError(err, OperationType.UPDATE, `rooms/${roomId}/texts/${textId}`),
+        );
+      }
     },
-    [postLocalBoardSync],
+    [isFirebaseActive, postLocalBoardSync, roomId, user],
   );
 
   // Delete Movable Text Box
@@ -1242,8 +1428,14 @@ export function useCollaborativeBoard({
       const nextTexts = textsRef.current.filter((t) => t.id !== textId);
       setTexts(nextTexts);
       postLocalBoardSync({ texts: nextTexts });
+
+      if (isFirebaseActive && user) {
+        void deleteDoc(doc(db, 'rooms', roomId, 'texts', textId)).catch((err) =>
+          handleFirestoreError(err, OperationType.DELETE, `rooms/${roomId}/texts/${textId}`),
+        );
+      }
     },
-    [postLocalBoardSync],
+    [isFirebaseActive, postLocalBoardSync, roomId, user],
   );
 
   const activePermanentStrokes = strokesBySlide[currentSlideIndex] ?? [];

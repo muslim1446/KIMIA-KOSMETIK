@@ -233,6 +233,97 @@
         "createdAt",
         "updatedAt"
       ]
+    },
+    "SlideText": {
+      "title": "SlideText",
+      "description": "Movable resizable text box placed on a slide by a presenter.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "roomId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "slideIndex": {
+          "type": "number"
+        },
+        "scopeKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "fontSize": {
+          "type": "number"
+        },
+        "color": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "isBold": {
+          "type": "boolean"
+        },
+        "bgColor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "authorId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "roomId",
+        "slideIndex",
+        "scopeKey",
+        "x",
+        "y",
+        "width",
+        "height",
+        "text",
+        "fontSize",
+        "color",
+        "isBold",
+        "bgColor",
+        "authorId",
+        "createdAt",
+        "updatedAt"
+      ]
     }
   },
   "firestore": {
@@ -255,6 +346,10 @@
     "/rooms/{roomId}/images/{imageId}": {
       "schema": { "$ref": "#/entities/SlideImage" },
       "description": "Individual images attached to a slide or sub-element scope with position and size."
+    },
+    "/rooms/{roomId}/texts/{textId}": {
+      "schema": { "$ref": "#/entities/SlideText" },
+      "description": "Movable resizable text boxes with position, size, font styling, and content per slide."
     }
   }
 }

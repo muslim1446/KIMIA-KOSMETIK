@@ -81,6 +81,12 @@ export const PEN_COLORS = [
 export const PEN_SIZES = [2, 4, 8, 14, 20] as const;
 export const TEMP_DURATIONS: TempDurationSeconds[] = [3, 5, 6];
 
+/** Text colours available for movable text boxes added from the presentation island. */
+export const TEXT_COLORS = ['#1C1917', '#1E3A8A', '#B91C1C', '#047857', '#7C3AED', '#FFFFFF'] as const;
+
+/** Background options for movable text boxes (first value is transparent). */
+export const TEXT_BACKGROUNDS = ['transparent', '#FEF3C7', '#FFFFFF', '#1C1917'] as const;
+
 export function getRootSlideScope(slideIndex: number): string {
   return `slide:${Math.max(0, Math.trunc(slideIndex))}`;
 }

@@ -131,6 +131,34 @@ service cloud.firestore {
       && data.updatedAt is timestamp;
     }
 
+    function isValidSlideText(data, roomId, textId) {
+      return data.keys().hasAll([
+        'id', 'roomId', 'slideIndex', 'scopeKey', 'x', 'y', 'width', 'height',
+        'text', 'fontSize', 'color', 'isBold', 'bgColor', 'authorId', 'createdAt', 'updatedAt'
+      ])
+      && data.keys().hasOnly([
+        'id', 'roomId', 'slideIndex', 'scopeKey', 'x', 'y', 'width', 'height',
+        'text', 'fontSize', 'color', 'isBold', 'bgColor', 'authorId', 'createdAt', 'updatedAt'
+      ])
+      && data.id == textId
+      && isValidId(data.id)
+      && data.roomId == roomId
+      && isValidId(data.roomId)
+      && data.slideIndex is number && data.slideIndex >= 0 && data.slideIndex <= 8
+      && data.scopeKey is string && data.scopeKey.size() >= 1 && data.scopeKey.size() <= 160
+      && data.x is number && data.y is number
+      && data.width is number && data.width >= 120 && data.width <= 1280
+      && data.height is number && data.height >= 48 && data.height <= 720
+      && data.text is string && data.text.size() <= 2000
+      && data.fontSize is number && data.fontSize >= 8 && data.fontSize <= 160
+      && data.color is string && data.color.size() >= 1 && data.color.size() <= 32
+      && data.isBold is bool
+      && data.bgColor is string && data.bgColor.size() >= 1 && data.bgColor.size() <= 32
+      && isValidId(data.authorId)
+      && data.createdAt is timestamp
+      && data.updatedAt is timestamp;
+    }
+
     // --- Collection Rules ---
     match /rooms/{roomId} {
       allow list: if false;
@@ -284,6 +312,37 @@ service cloud.firestore {
           ]);
 
         allow delete: if isSignedIn() && isValidId(roomId) && isValidId(imageId) && isRoomMember(roomId);
+      }
+
+      match /texts/{textId} {
+        allow list: if isSignedIn() && isValidId(roomId) && isRoomMember(roomId);
+        allow get: if isSignedIn() && isValidId(roomId) && isValidId(textId) && isRoomMember(roomId);
+
+        allow create: if isSignedIn()
+          && isValidId(roomId)
+          && isValidId(textId)
+          && isValidSlideText(incoming(), roomId, textId)
+          && incoming().authorId == request.auth.uid
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && isRoomMember(roomId);
+
+        allow update: if isSignedIn()
+          && isValidId(roomId)
+          && isValidId(textId)
+          && isValidSlideText(incoming(), roomId, textId)
+          && incoming().id == existing().id
+          && incoming().roomId == existing().roomId
+          && incoming().slideIndex == existing().slideIndex
+          && incoming().authorId == existing().authorId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && isRoomMember(roomId)
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'scopeKey', 'x', 'y', 'width', 'height', 'text', 'fontSize', 'color', 'isBold', 'bgColor', 'updatedAt'
+          ]);
+
+        allow delete: if isSignedIn() && isValidId(roomId) && isValidId(textId) && isRoomMember(roomId);
       }
     }
   }

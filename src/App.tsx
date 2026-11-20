@@ -99,6 +99,7 @@ export default function App() {
         liveStrokes={board.activeLiveStrokes}
         textEdits={board.activeTextEdits}
         slideImages={board.activeSlideImages}
+        slideTexts={board.activeSlideTexts}
         onSignInGoogle={board.signInWithGoogle}
         onSignOut={board.signOutUser}
         onJoinRoom={board.joinRoom}
@@ -109,6 +110,9 @@ export default function App() {
         onAddImage={board.addImage}
         onUpdateImage={board.updateImage}
         onDeleteImage={board.deleteImage}
+        onAddSlideText={board.addSlideText}
+        onUpdateSlideText={board.updateSlideText}
+        onDeleteSlideText={board.deleteSlideText}
         onSaveTextEdit={board.setTextEdit}
         onLaserBroadcast={(nextLaser) => {
           setLaserPoint(nextLaser, true);

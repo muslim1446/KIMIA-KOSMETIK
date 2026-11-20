@@ -26,6 +26,7 @@ import { SlideTextLayer } from './SlideTextLayer';
 import { InvisibleTextEditor } from './InvisibleTextEditor';
 import { GoogleBrowserFrame, GoogleFrameMode } from './GoogleBrowserFrame';
 import { PresentationIsland } from './PresentationIsland';
+import { FirstVisitGuide } from './FirstVisitGuide';
 
 interface AudienceStageProps {
   /** True when opened via ?mode=audiens (dedicated projector window with zero controls) */
@@ -890,6 +891,8 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
           closePopoverSignal={closePopoverSignal}
         />
       )}
+
+      <FirstVisitGuide disabled={isRemoteProjector} />
     </main>
   );
 };

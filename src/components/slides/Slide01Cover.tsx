@@ -18,7 +18,7 @@ const COMPARE_CASES: Record<
   }
 > = {
   ubat: {
-    title: 'SUKATAN YANG TEPAT: KEBERKESANAN',
+    title: 'SUKATAN YANG TEPAT = KEBERKESANAN',
     moleculeExample: 'Contoh: Betamethasone valerate (preskripsi doktor), Parasetamol',
     mechanism:
       'Molekul (ubat) yang tulen disukat dengan tepat supaya cukup kuat merawat sel bermasalah tanpa merosakkan organ.',

@@ -121,7 +121,7 @@ export const SlideStageContent: React.FC<SlideStageContentProps> = ({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}
-              className="w-full h-full overflow-hidden"
+              className="projection-slide w-full h-full overflow-hidden"
             >
               {renderSlide()}
             </motion.div>

@@ -104,12 +104,12 @@ export const Slide05AbuseNpra: React.FC<Slide05Props> = ({ interactions, onPatch
               Kenali Nombor MAL & NOT
             </h3>
             <p className="text-base text-stone-600 dark:text-stone-400 mt-2 leading-relaxed">
-              Ubat berdaftar membawa kod <strong>MAL</strong>, manakala kosmetik bernotifikasi membawa kod <strong>NOT</strong>.
+              Kod <strong>MAL</strong> dan <strong>NOT</strong> membantu mengenal pasti kategori. Format kod sahaja tidak mengesahkan status produk.
             </p>
 
             <div className="mt-4">
               <label htmlFor="npra-code-input" className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1.5">
-                Masukkan nombor pendaftaran produk
+                Cuba semak format nombor produk
               </label>
               <input
                 id="npra-code-input"

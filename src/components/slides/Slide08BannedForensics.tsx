@@ -64,13 +64,13 @@ export const Slide08BannedForensics: React.FC<Slide08Props> = ({ interactions, o
               <div className="flex items-start gap-2.5 text-sm text-emerald-950">
                 <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
                 <span>
-                  <strong>Selamat Digunakan:</strong> Tiada bahan kimia berbahaya.
+                  <strong>Perlu Disemak:</strong> Bahan semula jadi pun boleh mencetuskan alahan atau tercemar.
                 </span>
               </div>
               <div className="flex items-start gap-2.5 text-sm text-emerald-950">
                 <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
                 <span>
-                  <strong>Kos yang Murah:</strong> Lebih menjimatkan perbelanjaan.
+                  <strong>Amalan Selamat:</strong> Jaga kebersihan, dos dan tempoh simpanan.
                 </span>
               </div>
             </div>

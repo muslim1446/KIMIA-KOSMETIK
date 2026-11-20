@@ -31,8 +31,8 @@ const COMPARE_CASES: Record<
     title: 'Bahan Kosmetik untuk Luaran',
     moleculeExample: 'Air, Lesitin (Pengemulsi), Gliserin (Pelembap)',
     mechanism:
-      'Digunakan di bahagian luar tubuh untuk membersih, melindungi atau mencantikkan penampilan.',
-    verdict: 'Selamat digunakan secara luaran jika mempunyai nombor notifikasi NOT yang sah.',
+      'Digunakan pada bahagian luar tubuh untuk membersih, melindungi atau mencantikkan penampilan.',
+    verdict: 'Semak status NOT semasa dan ramuan produk melalui NPRA. Nombor sahaja bukan jaminan keselamatan.',
     accent: '#2D6A4F',
   },
   terlarang: {
@@ -201,7 +201,7 @@ export const Slide01Cover: React.FC<Slide01Props> = ({ interactions, onPatch }) 
                 {interactions.coverCompareId === 'ubat'
                   ? 'Rawatan dalaman / luaran'
                   : interactions.coverCompareId === 'kosmetik'
-                  ? 'Permukaan kulit sahaja'
+                  ? 'Kegunaan luaran'
                   : 'Menyerap ke salur darah'}
               </div>
             </div>

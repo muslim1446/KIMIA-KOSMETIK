@@ -96,7 +96,7 @@ export const SLIDES_META: SlideMeta[] = [
   {
     index: 1,
     title: 'Ubat Tradisional',
-    subtitle: 'Diperoleh daripada tumbuh-tumbuhan herba atau haiwan dan tidak diproses secara kimia.',
+    subtitle: 'Berasal daripada sumber semula jadi. “Semula jadi” tidak bermaksud sentiasa selamat.',
     presenterLabel: 'Pembentang 1',
     presenters: [1],
     durationSeconds: 120,
@@ -108,7 +108,7 @@ export const SLIDES_META: SlideMeta[] = [
         'Buka bahagian Daun Ketum untuk berkongsi sebab ia diharamkan di Malaysia walaupun berasal daripada tumbuhan tradisional.',
       ],
       questionForClass: 'Jika halia dikeringkan dan dimasukkan ke dalam kapsul, adakah ia bertukar menjadi ubat moden atau kekal ubat tradisional?',
-      reminder: 'Tekankan kepada rakan sekelas bahawa kapsul herba tetap dikira ubat tradisional selagi tidak diproses secara kimia.',
+      reminder: 'Tekankan bahawa bentuk kapsul tidak membuktikan sesuatu produk selamat. Semak ramuan, dos dan status pendaftaran.',
     },
   },
   {
@@ -144,7 +144,7 @@ export const SLIDES_META: SlideMeta[] = [
         'Buka tab Dos Parasetamol dan Plasebo sebelum menyerahkan giliran kepada Pembentang 3.',
       ],
       questionForClass: 'Adakah badan kita yang menjadi kebal terhadap antibiotik, atau bakteria di dalam badan yang membina rintangan?',
-      reminder: 'Betulkan tanggapan biasa bahawa badan manusia yang menjadi imun — sebenarnya bakteria yang tinggal hidup membina rintangan.',
+      reminder: 'Betulkan tanggapan biasa bahawa badan manusia yang menjadi imun — bakteria yang tinggal hidup boleh menjadi rintang terhadap antibiotik.',
     },
   },
   {
@@ -353,8 +353,8 @@ export const MODERN_DRUGS: ModernDrugItem[] = [
     categoryName: 'Antimikrob',
     examples: ['Penisilin', 'Streptomisin'],
     functionDesc: 'Membunuh atau merencatkan pertumbuhan bakteria.',
-    usageRule: 'Perlu dihabiskan supaya semua bakteria dibunuh; pesakit alahan penisilin diberikan Kad Alahan Ubat.',
-    sideEffects: 'Jika tidak dihabiskan, bakteria menjadi imun kepada antibiotik dan penyakit akan berulang semula; alahan dapat membawa maut.',
+    usageRule: 'Ambil tepat seperti arahan doktor atau ahli farmasi; pesakit alahan penisilin diberikan Kad Alahan Ubat.',
+    sideEffects: 'Penggunaan yang tidak tepat boleh menyumbang kepada bakteria rintang antibiotik. Alahan serius memerlukan rawatan segera.',
   },
   {
     id: 'antiseptik',

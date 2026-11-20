@@ -36,3 +36,27 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/*
+ * Projector reading floor
+ *
+ * A 720 px logical canvas is deliberately rendered with a larger type scale.
+ * This keeps the smallest audience-facing labels legible from the back of a
+ * 5–20 ft room, instead of optimising the slide for a laptop at arm's length.
+ */
+.projection-slide .text-xs { font-size: 0.875rem; line-height: 1.25rem; }
+.projection-slide .text-sm { font-size: 1rem; line-height: 1.4rem; }
+.projection-slide .text-base { font-size: 1.125rem; line-height: 1.55rem; }
+.projection-slide .text-lg { font-size: 1.25rem; line-height: 1.65rem; }
+.projection-slide .text-xl { font-size: 1.5rem; line-height: 1.8rem; }
+.projection-slide .text-2xl { font-size: 1.875rem; line-height: 2.15rem; }
+.projection-slide .text-3xl { font-size: 2.25rem; line-height: 2.5rem; }
+.projection-slide .text-5xl { font-size: 3.25rem; line-height: 1.04; }
+
+/* The dark text/very light surface pairing is intentionally stronger than the
+ * minimum accessibility contrast threshold and survives a dim projector. */
+.projection-slide button:focus-visible,
+.projection-slide input:focus-visible {
+  outline: 4px solid #1d4ed8;
+  outline-offset: 3px;
+}

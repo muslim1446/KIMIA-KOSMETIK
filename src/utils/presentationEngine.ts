@@ -109,7 +109,7 @@ export function simulateAntibioticCourse(stopAtDay: number | null): AntibioticSi
       finalTotal,
       resistanceRatio,
       outcome: 'rintangan_berulang',
-      summary: `Berhenti pada hari ke-${stopAtDay} membiarkan bakteria menjadi imun kepada antibiotik dan penyakit akan berulang semula.`,
+      summary: `Berhenti pada hari ke-${stopAtDay} membiarkan lebih banyak bakteria yang rintang terhadap antibiotik hidup dan membiak semula.`,
     };
   }
 
@@ -386,15 +386,15 @@ export function validateNpraCode(rawCode: string): NpraCheckResult {
       validFormat: true,
       category: 'ubat_berdaftar',
       label: 'Format Nombor Pendaftaran Ubat NPRA (MAL) Sah',
-      guidance: 'Kod MAL menunjukkan produk ubat atau tradisional berdaftar telah dinilai keselamatan dan kualitinya oleh Bahagian Regulatori Farmasi Negara (NPRA).',
+      guidance: 'Ini hanya format nombor MAL yang munasabah, bukan semakan status. Semak rekod NPRA semasa, ramuan dan arahan ahli kesihatan sebelum menggunakan produk.',
     };
   }
   if (/^NOT\d{9}[A-Z]$/.test(code)) {
     return {
       validFormat: true,
       category: 'kosmetik_bernotifikasi',
-      label: 'Format Nombor Notifikasi Kosmetik NPRA (NOT) Sah',
-      guidance: 'Kod NOT menunjukkan bahan kosmetik bernotifikasi di bawah Peraturan Kawalan Dadah dan Kosmetik 1984 (untuk kegunaan luaran sahaja).',
+      label: 'Format Nombor Notifikasi Kosmetik (NOT) Dikenali',
+      guidance: 'Ini hanya format NOT yang munasabah, bukan jaminan keselamatan atau status aktif. Semak rekod NPRA semasa dan elakkan produk dengan tuntutan keterlaluan.',
     };
   }
   return {

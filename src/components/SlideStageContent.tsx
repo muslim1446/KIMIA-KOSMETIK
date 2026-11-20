@@ -120,20 +120,25 @@ export const SlideStageContent: React.FC<SlideStageContentProps> = ({
           transition: 'none',
         }}
       >
+        {/*
+          Unconstrained infinite canvas slide container:
+          Allows elements to expand, overflow, and break out of the 16:9 boundary
+          freely without clipping or truncation.
+        */}
         <div
           ref={slideContainerRef}
           data-slide-root="true"
-          className="relative z-10 shrink-0 overflow-hidden"
+          className="relative z-10 shrink-0 overflow-visible"
           style={{
             width: `${LOGICAL_SLIDE_WIDTH * effectiveScale}px`,
-            height: `${LOGICAL_SLIDE_HEIGHT * effectiveScale}px`,
+            minHeight: `${LOGICAL_SLIDE_HEIGHT * effectiveScale}px`,
           }}
         >
           <div
-            className="absolute top-0 left-0 origin-top-left overflow-hidden"
+            className="absolute top-0 left-0 origin-top-left overflow-visible"
             style={{
               width: `${LOGICAL_SLIDE_WIDTH}px`,
-              height: `${LOGICAL_SLIDE_HEIGHT}px`,
+              minHeight: `${LOGICAL_SLIDE_HEIGHT}px`,
               transform: `scale(${effectiveScale})`,
             }}
           >
@@ -144,7 +149,7 @@ export const SlideStageContent: React.FC<SlideStageContentProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.2, ease: 'easeOut' }}
-                className="projection-slide w-full h-full overflow-hidden"
+                className="projection-slide w-full min-h-[720px] h-auto overflow-visible"
               >
                 {renderSlide()}
               </motion.div>

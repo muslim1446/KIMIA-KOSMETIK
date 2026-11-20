@@ -299,30 +299,34 @@ async function generateWithQuotaSavings(args: {
 
   try {
     return await ai.models.generateContent({
-      model: 'gemini-4-hydrogen',
+      model: 'gemini-2.5-flash',
       contents,
       config: {
         systemInstruction,
         thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
-        abortSignal: AbortSignal.timeout(10000),
+        abortSignal: AbortSignal.timeout(15000),
         ...(useSearch ? { tools: [{ googleSearch: {} }] } : {}),
       },
     });
   } catch (firstErr: unknown) {
     const parsedFirst = extractGeminiError(firstErr);
     const shouldFallback =
-      parsedFirst.status === 429 || parsedFirst.status === 503 || parsedFirst.status === 504;
+      parsedFirst.status === 404 ||
+      parsedFirst.status === 400 ||
+      parsedFirst.status === 429 ||
+      parsedFirst.status === 503 ||
+      parsedFirst.status === 504;
     if (!shouldFallback) {
       throw firstErr;
     }
 
-    // If Search Grounding caused rate limit or timeout, try once without googleSearch on lite model
+    // Fallback to gemini-2.0-flash without search grounding if primary call fails
     return await ai.models.generateContent({
-      model: 'gemini-3.1-flash-lite',
+      model: 'gemini-2.0-flash',
       contents,
       config: {
         systemInstruction,
-        abortSignal: AbortSignal.timeout(10000),
+        abortSignal: AbortSignal.timeout(15000),
       },
     });
   }

@@ -80,3 +80,37 @@
   outline: 4px solid #1d4ed8;
   outline-offset: 3px;
 }
+
+/*
+ * Universal Unconstrained Infinite Slide Canvas Rules
+ * Allows all slides, flex children, and grids to expand naturally
+ * without being clipped at the 16:9 boundary.
+ */
+.projection-slide {
+  min-height: 720px !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+.projection-slide > div {
+  min-height: 720px !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+.projection-slide .h-full {
+  min-height: 100% !important;
+  height: auto !important;
+}
+
+.projection-slide .min-h-0 {
+  min-height: min-content !important;
+}
+
+.projection-slide .overflow-hidden {
+  overflow: visible !important;
+}
+
+.projection-slide [data-storage-scope] {
+  overflow: visible !important;
+}

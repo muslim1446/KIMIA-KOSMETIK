@@ -19,6 +19,7 @@ import {
 } from 'firebase/auth';
 import { auth, db, googleProvider, handleFirestoreError, OperationType } from '../firebase';
 import {
+  getRootSlideScope,
   mergeIdList,
   mergeLiveStrokeMap,
   mergeStrokeBatch,
@@ -30,6 +31,7 @@ import {
   removeStrokesFromList,
   sanitizeTextOverride,
   SlideImageItem,
+  SlideTextItem,
 } from '../utils/annotationEngine';
 import { LaserPoint, SyncedPresentationState } from './usePresentationSync';
 
@@ -43,6 +45,7 @@ interface LocalBoardStorage {
   strokesBySlide: Record<number, PenStroke[]>;
   textEditsBySlide: Record<number, Record<string, string>>;
   images: SlideImageItem[];
+  texts?: SlideTextItem[];
 }
 
 const LOCAL_BOARD_KEY = 'kimia-5-4-board-v3';
@@ -70,7 +73,7 @@ function getInitialRoomParams(): { roomId: string; joinCode: string } {
 
 function loadLocalBoard(): LocalBoardStorage {
   if (typeof window === 'undefined') {
-    return { strokesBySlide: {}, textEditsBySlide: {}, images: [] };
+    return { strokesBySlide: {}, textEditsBySlide: {}, images: [], texts: [] };
   }
   try {
     const raw = window.localStorage.getItem(LOCAL_BOARD_KEY);
@@ -80,12 +83,13 @@ function loadLocalBoard(): LocalBoardStorage {
         strokesBySlide: parsed.strokesBySlide ?? {},
         textEditsBySlide: parsed.textEditsBySlide ?? {},
         images: Array.isArray(parsed.images) ? parsed.images : [],
+        texts: Array.isArray(parsed.texts) ? parsed.texts : [],
       };
     }
   } catch {
     // Ignore corrupt localStorage
   }
-  return { strokesBySlide: {}, textEditsBySlide: {}, images: [] };
+  return { strokesBySlide: {}, textEditsBySlide: {}, images: [], texts: [] };
 }
 
 function saveLocalBoard(data: LocalBoardStorage) {
@@ -132,6 +136,7 @@ export function useCollaborativeBoard({
     initialBoard.textEditsBySlide,
   );
   const [images, setImages] = useState<SlideImageItem[]>(initialBoard.images);
+  const [texts, setTexts] = useState<SlideTextItem[]>(initialBoard.texts ?? []);
 
   const localAuthorIdRef = useRef<string>(
     `local-${Math.random().toString(36).slice(2, 8)}`,
@@ -158,6 +163,8 @@ export function useCollaborativeBoard({
   textEditsRef.current = textEditsBySlide;
   const imagesRef = useRef(images);
   imagesRef.current = images;
+  const textsRef = useRef(texts);
+  textsRef.current = texts;
 
   const isFirebaseActive = Boolean(authReady && user && syncStatus === 'synced');
   const currentAuthorId = user?.uid ?? localAuthorIdRef.current;
@@ -168,8 +175,9 @@ export function useCollaborativeBoard({
       strokesBySlide,
       textEditsBySlide,
       images,
+      texts,
     });
-  }, [strokesBySlide, textEditsBySlide, images]);
+  }, [strokesBySlide, textEditsBySlide, images, texts]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !('BroadcastChannel' in window)) return;
@@ -182,6 +190,7 @@ export function useCollaborativeBoard({
         if (msg.strokesBySlide) setStrokesBySlide(msg.strokesBySlide);
         if (msg.textEditsBySlide) setTextEditsBySlide(msg.textEditsBySlide);
         if (msg.images) setImages(msg.images);
+        if (msg.texts) setTexts(msg.texts);
       } else if (msg.type === 'EPHEMERAL_UPDATE') {
         setTempStrokesBySlide((prev) => ({
           ...prev,
@@ -208,6 +217,7 @@ export function useCollaborativeBoard({
           strokesBySlide: next.strokesBySlide ?? strokesRef.current,
           textEditsBySlide: next.textEditsBySlide ?? textEditsRef.current,
           images: next.images ?? imagesRef.current,
+          texts: next.texts ?? textsRef.current,
         });
       } catch {
         // Ignore BroadcastChannel errors
@@ -1166,11 +1176,82 @@ export function useCollaborativeBoard({
     setJoinCode(cleanCode);
   }, []);
 
+  // Add Movable Text Box
+  const addSlideText = useCallback(
+    (input: {
+      slideIndex: number;
+      scopeKey?: string;
+      x?: number;
+      y?: number;
+      width?: number;
+      height?: number;
+      text?: string;
+      fontSize?: number;
+      color?: string;
+    }) => {
+      const id = makeClientId('txt');
+      const now = Date.now();
+      const item: SlideTextItem = {
+        id,
+        slideIndex: input.slideIndex,
+        scopeKey: (input.scopeKey ?? getRootSlideScope(input.slideIndex)).slice(0, 160),
+        x: Math.round(input.x ?? 380),
+        y: Math.round(input.y ?? 200),
+        width: Math.max(120, Math.min(900, Math.round(input.width ?? 300))),
+        height: Math.max(50, Math.min(600, Math.round(input.height ?? 100))),
+        text: input.text ?? 'Taip nota di sini...',
+        fontSize: input.fontSize ?? 20,
+        color: input.color ?? '#1C1917',
+        isBold: false,
+        bgColor: 'transparent',
+        authorId: currentAuthorId,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      const nextTexts = [...textsRef.current, item].slice(-60);
+      setTexts(nextTexts);
+      postLocalBoardSync({ texts: nextTexts });
+      return item;
+    },
+    [currentAuthorId, postLocalBoardSync],
+  );
+
+  // Update Movable Text Box
+  const updateSlideText = useCallback(
+    (textId: string, patch: Partial<SlideTextItem>, commitToRemote = true) => {
+      const nextTexts = textsRef.current.map((t) => {
+        if (t.id !== textId) return t;
+        return {
+          ...t,
+          ...patch,
+          updatedAt: Date.now(),
+        };
+      });
+      setTexts(nextTexts);
+      if (commitToRemote) {
+        postLocalBoardSync({ texts: nextTexts });
+      }
+    },
+    [postLocalBoardSync],
+  );
+
+  // Delete Movable Text Box
+  const deleteSlideText = useCallback(
+    (textId: string) => {
+      const nextTexts = textsRef.current.filter((t) => t.id !== textId);
+      setTexts(nextTexts);
+      postLocalBoardSync({ texts: nextTexts });
+    },
+    [postLocalBoardSync],
+  );
+
   const activePermanentStrokes = strokesBySlide[currentSlideIndex] ?? [];
   const activeTempStrokes = tempStrokesBySlide[currentSlideIndex] ?? [];
   const activeLiveStrokes = liveStrokesBySlide[currentSlideIndex] ?? {};
   const activeTextEdits = textEditsBySlide[currentSlideIndex] ?? {};
   const activeSlideImages = images.filter((img) => img.slideIndex === currentSlideIndex);
+  const activeSlideTexts = texts.filter((t) => t.slideIndex === currentSlideIndex);
 
   return {
     user,
@@ -1187,6 +1268,7 @@ export function useCollaborativeBoard({
     activeLiveStrokes,
     activeTextEdits,
     activeSlideImages,
+    activeSlideTexts,
     signInWithGoogle,
     signOutUser,
     joinRoom,
@@ -1201,5 +1283,8 @@ export function useCollaborativeBoard({
     updateImage,
     deleteImage,
     setTextEdit,
+    addSlideText,
+    updateSlideText,
+    deleteSlideText,
   };
 }

@@ -47,6 +47,24 @@ export interface SlideImageItem {
   updatedAt: number;
 }
 
+export interface SlideTextItem {
+  id: string;
+  slideIndex: number;
+  scopeKey: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  text: string;
+  fontSize: number;
+  color: string;
+  isBold?: boolean;
+  bgColor?: string;
+  authorId: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export const LOGICAL_WIDTH = 1280;
 export const LOGICAL_HEIGHT = 720;
 

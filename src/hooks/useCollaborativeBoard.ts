@@ -26,6 +26,7 @@ import {
   mergeTextEditMap,
   PenStroke,
   pruneExpiredTempStrokes,
+  pruneStaleLiveStrokes,
   removeStrokesFromList,
   sanitizeTextOverride,
   SlideImageItem,
@@ -138,6 +139,8 @@ export function useCollaborativeBoard({
   const anonAttemptedRef = useRef(false);
   const bcRef = useRef<BroadcastChannel | null>(null);
   const roomImageIdsRef = useRef<string[]>([]);
+  const slideTxQueueRef = useRef<Record<number, Promise<void>>>({});
+  const ephemeralTxQueueRef = useRef<Record<number, Promise<void>>>({});
   const presentationStateRef = useRef(presentationState);
   presentationStateRef.current = presentationState;
 
@@ -276,11 +279,10 @@ export function useCollaborativeBoard({
         const timeoutPromise = new Promise<never>((_, reject) =>
           window.setTimeout(() => reject(new Error('FIRESTORE_TIMEOUT')), 7000),
         );
-        const roomSnap = await Promise.race([
-          getDoc(roomRef).catch(async (err) => {
-            if (err?.code === 'permission-denied') {
-              return null;
-            }
+
+        const memberSnap = await Promise.race([
+          getDoc(memberRef).catch((err) => {
+            if (err?.code === 'permission-denied') return null;
             throw err;
           }),
           timeoutPromise,
@@ -288,80 +290,10 @@ export function useCollaborativeBoard({
 
         if (cancelled) return;
 
-        if (roomSnap && !roomSnap.exists()) {
-          // Brand new room: create room + owner membership + seed any local offline strokes/edits atomically
-          const batch = writeBatch(db);
-          const ps = presentationStateRef.current;
-          const localImgs = imagesRef.current.slice(-50);
-          const seededImageIds = localImgs.map((img) => img.id);
-
-          batch.set(roomRef, {
-            ownerId: user.uid,
-            title: 'Pembentangan Kimia 5.4',
-            joinCode: safeJoinCode,
-            slideIndex: ps.slideIndex,
-            blackout: ps.blackout,
-            projectorDark: ps.projectorDark,
-            laser: ps.laser,
-            interactions: ps.interactions,
-            imageIds: seededImageIds,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-          });
-          batch.set(memberRef, {
-            uid: user.uid,
-            displayName: memberDisplayName,
-            role: 'owner',
-            joinCode: safeJoinCode,
-            joinedAt: serverTimestamp(),
-          });
-
-          for (let i = 0; i < 9; i++) {
-            const localStrokes = (strokesRef.current[i] ?? []).slice(-400);
-            const localEdits = Object.fromEntries(
-              Object.entries(textEditsRef.current[i] ?? {}).slice(-200),
-            );
-            if (localStrokes.length > 0 || Object.keys(localEdits).length > 0) {
-              batch.set(doc(db, 'rooms', safeRoomId, 'slides', `slide_${i}`), {
-                roomId: safeRoomId,
-                slideIndex: i,
-                strokes: localStrokes,
-                textEdits: localEdits,
-                updatedAt: serverTimestamp(),
-                updatedBy: user.uid,
-              });
-            }
-          }
-
-          for (const img of localImgs) {
-            batch.set(doc(db, 'rooms', safeRoomId, 'images', img.id), {
-              id: img.id,
-              roomId: safeRoomId,
-              slideIndex: img.slideIndex,
-              scopeKey: img.scopeKey.slice(0, 160),
-              x: Math.round(img.x),
-              y: Math.round(img.y),
-              width: Math.max(24, Math.min(1600, Math.round(img.width))),
-              height: Math.max(24, Math.min(1200, Math.round(img.height))),
-              dataUrl: img.dataUrl.slice(0, 360_000),
-              authorId: user.uid,
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp(),
-            });
-          }
-
-          await batch.commit();
-        } else {
-          // Existing room: ensure membership via joinCode
-          let memberExists = false;
+        if (!memberSnap || !memberSnap.exists()) {
+          // Try joining an existing room as editor first
+          let joinedExisting = false;
           try {
-            const memberSnap = await getDoc(memberRef);
-            memberExists = memberSnap.exists();
-          } catch {
-            memberExists = false;
-          }
-
-          if (!memberExists) {
             await setDoc(memberRef, {
               uid: user.uid,
               displayName: memberDisplayName,
@@ -369,6 +301,91 @@ export function useCollaborativeBoard({
               joinCode: safeJoinCode,
               joinedAt: serverTimestamp(),
             });
+            joinedExisting = true;
+          } catch (joinErr: unknown) {
+            const code = (joinErr as { code?: string })?.code ?? '';
+            if (code !== 'permission-denied') {
+              throw joinErr;
+            }
+          }
+
+          if (!joinedExisting) {
+            // Room likely doesn't exist yet (allow get on non-existent room throws permission-denied).
+            // Create room + owner membership atomically first, then seed any offline local boards/images.
+            const createBatch = writeBatch(db);
+            const ps = presentationStateRef.current;
+
+            createBatch.set(roomRef, {
+              ownerId: user.uid,
+              title: 'Pembentangan Kimia 5.4',
+              joinCode: safeJoinCode,
+              slideIndex: ps.slideIndex,
+              blackout: ps.blackout,
+              projectorDark: ps.projectorDark,
+              laser: ps.laser,
+              interactions: ps.interactions,
+              imageIds: [],
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp(),
+            });
+            createBatch.set(memberRef, {
+              uid: user.uid,
+              displayName: memberDisplayName,
+              role: 'owner',
+              joinCode: safeJoinCode,
+              joinedAt: serverTimestamp(),
+            });
+            await createBatch.commit();
+
+            // Now that membership exists, seed any local offline strokes/edits/images
+            const localImgs = imagesRef.current.slice(-50);
+            const hasLocalSlides = Array.from({ length: 9 }).some(
+              (_, i) =>
+                (strokesRef.current[i]?.length ?? 0) > 0 ||
+                Object.keys(textEditsRef.current[i] ?? {}).length > 0,
+            );
+            if (hasLocalSlides || localImgs.length > 0) {
+              const seedBatch = writeBatch(db);
+              for (let i = 0; i < 9; i++) {
+                const localStrokes = (strokesRef.current[i] ?? []).slice(-400);
+                const localEdits = Object.fromEntries(
+                  Object.entries(textEditsRef.current[i] ?? {}).slice(-200),
+                );
+                if (localStrokes.length > 0 || Object.keys(localEdits).length > 0) {
+                  seedBatch.set(doc(db, 'rooms', safeRoomId, 'slides', `slide_${i}`), {
+                    roomId: safeRoomId,
+                    slideIndex: i,
+                    strokes: localStrokes,
+                    textEdits: localEdits,
+                    updatedAt: serverTimestamp(),
+                    updatedBy: user.uid,
+                  });
+                }
+              }
+              if (localImgs.length > 0) {
+                for (const img of localImgs) {
+                  seedBatch.set(doc(db, 'rooms', safeRoomId, 'images', img.id), {
+                    id: img.id,
+                    roomId: safeRoomId,
+                    slideIndex: img.slideIndex,
+                    scopeKey: img.scopeKey.slice(0, 160),
+                    x: Math.round(img.x),
+                    y: Math.round(img.y),
+                    width: Math.max(24, Math.min(1600, Math.round(img.width))),
+                    height: Math.max(24, Math.min(1200, Math.round(img.height))),
+                    dataUrl: img.dataUrl.slice(0, 360_000),
+                    authorId: user.uid,
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp(),
+                  });
+                }
+                seedBatch.update(roomRef, {
+                  imageIds: localImgs.map((img) => img.id),
+                  updatedAt: serverTimestamp(),
+                });
+              }
+              await seedBatch.commit();
+            }
           }
         }
 
@@ -483,11 +500,12 @@ export function useCollaborativeBoard({
                   Array.isArray(d.tempStrokes) ? d.tempStrokes : [],
                   now,
                 );
+                const live = pruneStaleLiveStrokes(
+                  d.liveStrokes && typeof d.liveStrokes === 'object' ? d.liveStrokes : {},
+                  now,
+                );
                 setTempStrokesBySlide((prev) => ({ ...prev, [i]: temp }));
-                setLiveStrokesBySlide((prev) => ({
-                  ...prev,
-                  [i]: d.liveStrokes && typeof d.liveStrokes === 'object' ? d.liveStrokes : {},
-                }));
+                setLiveStrokesBySlide((prev) => ({ ...prev, [i]: live }));
               }
             },
             (err) =>
@@ -548,113 +566,129 @@ export function useCollaborativeBoard({
     [isFirebaseActive, user, roomId],
   );
 
-  // Atomic transaction helper for SlideBoard (prevents concurrent teammates from overwriting each other)
+  // Atomic transaction helper for SlideBoard (serialized per slide locally, merged via transaction remotely)
   const mutateSlideBoardTx = useCallback(
-    async (
+    (
       slideIndex: number,
       mutator: (current: {
         strokes: PenStroke[];
         textEdits: Record<string, string>;
       }) => { strokes: PenStroke[]; textEdits: Record<string, string> },
     ) => {
-      if (!isFirebaseActive || !user) return;
-      const slideDocPath = `rooms/${roomId}/slides/slide_${slideIndex}`;
-      const ref = doc(db, 'rooms', roomId, 'slides', `slide_${slideIndex}`);
-      try {
-        await runTransaction(db, async (tx) => {
-          const snap = await tx.get(ref);
-          const curData = snap.exists() ? snap.data() : null;
-          const curStrokes: PenStroke[] =
-            curData && Array.isArray(curData.strokes) ? curData.strokes : [];
-          const curTextEdits: Record<string, string> =
-            curData && curData.textEdits && typeof curData.textEdits === 'object'
-              ? curData.textEdits
-              : {};
+      if (!isFirebaseActive || !user) return Promise.resolve();
+      const prev = slideTxQueueRef.current[slideIndex] ?? Promise.resolve();
+      const nextTask = prev
+        .catch(() => {})
+        .then(async () => {
+          const slideDocPath = `rooms/${roomId}/slides/slide_${slideIndex}`;
+          const ref = doc(db, 'rooms', roomId, 'slides', `slide_${slideIndex}`);
+          try {
+            await runTransaction(db, async (tx) => {
+              const snap = await tx.get(ref);
+              const curData = snap.exists() ? snap.data() : null;
+              const curStrokes: PenStroke[] =
+                curData && Array.isArray(curData.strokes) ? curData.strokes : [];
+              const curTextEdits: Record<string, string> =
+                curData && curData.textEdits && typeof curData.textEdits === 'object'
+                  ? curData.textEdits
+                  : {};
 
-          const next = mutator({ strokes: curStrokes, textEdits: curTextEdits });
-          const boundedStrokes = next.strokes.slice(-400);
-          const boundedTextEdits = Object.fromEntries(
-            Object.entries(next.textEdits).slice(-200),
-          );
+              const next = mutator({ strokes: curStrokes, textEdits: curTextEdits });
+              const boundedStrokes = next.strokes.slice(-400);
+              const boundedTextEdits = Object.fromEntries(
+                Object.entries(next.textEdits).slice(-200),
+              );
 
-          if (snap.exists()) {
-            tx.update(ref, {
-              strokes: boundedStrokes,
-              textEdits: boundedTextEdits,
-              updatedAt: serverTimestamp(),
-              updatedBy: user.uid,
+              if (snap.exists()) {
+                tx.update(ref, {
+                  strokes: boundedStrokes,
+                  textEdits: boundedTextEdits,
+                  updatedAt: serverTimestamp(),
+                  updatedBy: user.uid,
+                });
+              } else {
+                tx.set(ref, {
+                  roomId,
+                  slideIndex,
+                  strokes: boundedStrokes,
+                  textEdits: boundedTextEdits,
+                  updatedAt: serverTimestamp(),
+                  updatedBy: user.uid,
+                });
+              }
             });
-          } else {
-            tx.set(ref, {
-              roomId,
-              slideIndex,
-              strokes: boundedStrokes,
-              textEdits: boundedTextEdits,
-              updatedAt: serverTimestamp(),
-              updatedBy: user.uid,
-            });
+          } catch (err) {
+            handleFirestoreError(err, OperationType.WRITE, slideDocPath);
           }
         });
-      } catch (err) {
-        handleFirestoreError(err, OperationType.WRITE, slideDocPath);
-      }
+      slideTxQueueRef.current[slideIndex] = nextTask;
+      return nextTask;
     },
     [isFirebaseActive, user, roomId],
   );
 
-  // Atomic transaction helper for EphemeralBoard (live in-progress & fading temp strokes)
+  // Atomic transaction helper for EphemeralBoard (serialized per slide locally)
   const mutateEphemeralBoardTx = useCallback(
-    async (
+    (
       slideIndex: number,
       mutator: (current: {
         tempStrokes: PenStroke[];
         liveStrokes: LiveStrokeMap;
       }) => { tempStrokes: PenStroke[]; liveStrokes: LiveStrokeMap },
     ) => {
-      if (!isFirebaseActive || !user) return;
-      const path = `rooms/${roomId}/ephemeral/slide_${slideIndex}`;
-      const ref = doc(db, 'rooms', roomId, 'ephemeral', `slide_${slideIndex}`);
-      try {
-        await runTransaction(db, async (tx) => {
-          const snap = await tx.get(ref);
-          const curData = snap.exists() ? snap.data() : null;
-          const now = Date.now();
-          const curTemp = pruneExpiredTempStrokes(
-            curData && Array.isArray(curData.tempStrokes) ? curData.tempStrokes : [],
-            now,
-          );
-          const curLive: LiveStrokeMap =
-            curData && curData.liveStrokes && typeof curData.liveStrokes === 'object'
-              ? curData.liveStrokes
-              : {};
+      if (!isFirebaseActive || !user) return Promise.resolve();
+      const prev = ephemeralTxQueueRef.current[slideIndex] ?? Promise.resolve();
+      const nextTask = prev
+        .catch(() => {})
+        .then(async () => {
+          const path = `rooms/${roomId}/ephemeral/slide_${slideIndex}`;
+          const ref = doc(db, 'rooms', roomId, 'ephemeral', `slide_${slideIndex}`);
+          try {
+            await runTransaction(db, async (tx) => {
+              const snap = await tx.get(ref);
+              const curData = snap.exists() ? snap.data() : null;
+              const now = Date.now();
+              const curTemp = pruneExpiredTempStrokes(
+                curData && Array.isArray(curData.tempStrokes) ? curData.tempStrokes : [],
+                now,
+              );
+              const curLive: LiveStrokeMap = pruneStaleLiveStrokes(
+                curData && curData.liveStrokes && typeof curData.liveStrokes === 'object'
+                  ? curData.liveStrokes
+                  : {},
+                now,
+              );
 
-          const next = mutator({ tempStrokes: curTemp, liveStrokes: curLive });
-          const boundedTemp = pruneExpiredTempStrokes(next.tempStrokes, now).slice(-120);
-          const boundedLive = Object.fromEntries(
-            Object.entries(next.liveStrokes).slice(-20),
-          );
+              const next = mutator({ tempStrokes: curTemp, liveStrokes: curLive });
+              const boundedTemp = pruneExpiredTempStrokes(next.tempStrokes, now).slice(-120);
+              const boundedLive = Object.fromEntries(
+                Object.entries(pruneStaleLiveStrokes(next.liveStrokes, now)).slice(-20),
+              );
 
-          if (snap.exists()) {
-            tx.update(ref, {
-              tempStrokes: boundedTemp,
-              liveStrokes: boundedLive,
-              updatedAt: serverTimestamp(),
-              updatedBy: user.uid,
+              if (snap.exists()) {
+                tx.update(ref, {
+                  tempStrokes: boundedTemp,
+                  liveStrokes: boundedLive,
+                  updatedAt: serverTimestamp(),
+                  updatedBy: user.uid,
+                });
+              } else {
+                tx.set(ref, {
+                  roomId,
+                  slideIndex,
+                  tempStrokes: boundedTemp,
+                  liveStrokes: boundedLive,
+                  updatedAt: serverTimestamp(),
+                  updatedBy: user.uid,
+                });
+              }
             });
-          } else {
-            tx.set(ref, {
-              roomId,
-              slideIndex,
-              tempStrokes: boundedTemp,
-              liveStrokes: boundedLive,
-              updatedAt: serverTimestamp(),
-              updatedBy: user.uid,
-            });
+          } catch (err) {
+            handleFirestoreError(err, OperationType.WRITE, path);
           }
         });
-      } catch (err) {
-        handleFirestoreError(err, OperationType.WRITE, path);
-      }
+      ephemeralTxQueueRef.current[slideIndex] = nextTask;
+      return nextTask;
     },
     [isFirebaseActive, user, roomId],
   );
@@ -794,16 +828,18 @@ export function useCollaborativeBoard({
       const nextPerm = curPerm.filter((s) => s.scopeKey !== scopeKey);
       const curTemp = tempStrokesRef.current[slideIndex] ?? [];
       const nextTemp = curTemp.filter((s) => s.scopeKey !== scopeKey);
+      const nextLive = Object.fromEntries(
+        Object.entries(liveStrokesRef.current[slideIndex] ?? {}).filter(
+          ([, s]) => s.scopeKey !== scopeKey,
+        ),
+      );
 
       const nextMap = { ...strokesRef.current, [slideIndex]: nextPerm };
       setStrokesBySlide(nextMap);
       setTempStrokesBySlide((prev) => ({ ...prev, [slideIndex]: nextTemp }));
+      setLiveStrokesBySlide((prev) => ({ ...prev, [slideIndex]: nextLive }));
       postLocalBoardSync({ strokesBySlide: nextMap });
-      broadcastEphemeralLocal(
-        slideIndex,
-        nextTemp,
-        liveStrokesRef.current[slideIndex] ?? {},
-      );
+      broadcastEphemeralLocal(slideIndex, nextTemp, nextLive);
 
       void mutateSlideBoardTx(slideIndex, (cur) => ({
         strokes: cur.strokes.filter((s) => s.scopeKey !== scopeKey),
@@ -811,7 +847,9 @@ export function useCollaborativeBoard({
       }));
       void mutateEphemeralBoardTx(slideIndex, (cur) => ({
         tempStrokes: cur.tempStrokes.filter((s) => s.scopeKey !== scopeKey),
-        liveStrokes: cur.liveStrokes,
+        liveStrokes: Object.fromEntries(
+          Object.entries(cur.liveStrokes).filter(([, s]) => s.scopeKey !== scopeKey),
+        ),
       }));
     },
     [broadcastEphemeralLocal, mutateEphemeralBoardTx, mutateSlideBoardTx, postLocalBoardSync],
@@ -822,20 +860,17 @@ export function useCollaborativeBoard({
       const nextMap = { ...strokesRef.current, [slideIndex]: [] };
       setStrokesBySlide(nextMap);
       setTempStrokesBySlide((prev) => ({ ...prev, [slideIndex]: [] }));
+      setLiveStrokesBySlide((prev) => ({ ...prev, [slideIndex]: {} }));
       postLocalBoardSync({ strokesBySlide: nextMap });
-      broadcastEphemeralLocal(
-        slideIndex,
-        [],
-        liveStrokesRef.current[slideIndex] ?? {},
-      );
+      broadcastEphemeralLocal(slideIndex, [], {});
 
       void mutateSlideBoardTx(slideIndex, (cur) => ({
         strokes: [],
         textEdits: cur.textEdits,
       }));
-      void mutateEphemeralBoardTx(slideIndex, (cur) => ({
+      void mutateEphemeralBoardTx(slideIndex, () => ({
         tempStrokes: [],
-        liveStrokes: cur.liveStrokes,
+        liveStrokes: {},
       }));
     },
     [broadcastEphemeralLocal, mutateEphemeralBoardTx, mutateSlideBoardTx, postLocalBoardSync],

@@ -8,6 +8,7 @@ import {
   getRootSlideScope,
   getScopeDepth,
   isScopeVisible,
+  LIVE_STROKE_MAX_AGE_MS,
   LOGICAL_HEIGHT,
   LOGICAL_WIDTH,
   LogicalRect,
@@ -250,16 +251,29 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
 
   // Convert visible strokes (permanent + non-expired temp + live remote strokes) to viewport SVG paths
   const renderableStrokes = useMemo(() => {
-    const all: PenStroke[] = [
-      ...permanentStrokes,
-      ...tempStrokes.filter((s) => !s.expiresAt || s.expiresAt > nowMs),
-      ...Object.values(liveStrokes).filter((s) => s.authorId !== currentAuthorId),
-    ];
+    const visibleTempStrokes = tempStrokes.filter((s) => !s.expiresAt || s.expiresAt > nowMs);
+    const committedIds = new Set<string>();
+    for (const s of permanentStrokes) committedIds.add(s.id);
+    for (const s of visibleTempStrokes) committedIds.add(s.id);
+
+    const byId = new Map<string, PenStroke>();
+    for (const s of permanentStrokes) byId.set(s.id, s);
+    for (const s of visibleTempStrokes) byId.set(s.id, s);
+    for (const s of Object.values(liveStrokes)) {
+      if (
+        s &&
+        s.authorId !== currentAuthorId &&
+        !committedIds.has(s.id) &&
+        nowMs - s.createdAt <= LIVE_STROKE_MAX_AGE_MS
+      ) {
+        byId.set(s.id, s);
+      }
+    }
     if (draftStroke) {
-      all.push(draftStroke);
+      byId.set(draftStroke.id, draftStroke);
     }
 
-    return all
+    return Array.from(byId.values())
       .filter((s) => s.slideIndex === slideIndex && isScopeVisible(s.scopeKey, slideIndex, visibleScopeSet))
       .map((stroke) => {
         const origin = getScopeOrigin(stroke.scopeKey);

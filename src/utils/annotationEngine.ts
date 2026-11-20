@@ -299,8 +299,24 @@ export function computeTempStrokeOpacity(
   return linear * linear * (3 - 2 * linear);
 }
 
+export const LIVE_STROKE_MAX_AGE_MS = 45_000;
+
 export function pruneExpiredTempStrokes(strokes: PenStroke[], nowMs: number): PenStroke[] {
   return strokes.filter((s) => s.mode !== 'temporary' || !s.expiresAt || s.expiresAt > nowMs);
+}
+
+export function pruneStaleLiveStrokes(
+  liveMap: Record<string, PenStroke>,
+  nowMs: number,
+  maxAgeMs = LIVE_STROKE_MAX_AGE_MS,
+): Record<string, PenStroke> {
+  const next: Record<string, PenStroke> = {};
+  for (const [authorId, stroke] of Object.entries(liveMap)) {
+    if (!stroke || typeof stroke !== 'object') continue;
+    if (typeof stroke.createdAt !== 'number' || nowMs - stroke.createdAt > maxAgeMs) continue;
+    next[authorId] = stroke;
+  }
+  return next;
 }
 
 export function isScopeVisible(

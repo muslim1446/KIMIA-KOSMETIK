@@ -13,6 +13,7 @@ import {
   mergeTextEditMap,
   PenStroke,
   pruneExpiredTempStrokes,
+  pruneStaleLiveStrokes,
   removeStrokesFromList,
   resolveScopeForImageBox,
   resolveScopeForPoint,
@@ -215,4 +216,27 @@ test('conflict-free merge helpers preserve concurrent teammates strokes, text ed
   assert.deepEqual(mergeIdList(['img-1'], 'img-2'), ['img-1', 'img-2']);
   assert.deepEqual(mergeIdList(['img-1', 'img-2'], undefined, 'img-1'), ['img-2']);
 });
+
+test('pruneStaleLiveStrokes removes orphaned live strokes older than maxAgeMs', () => {
+  const fresh: PenStroke = {
+    id: 'stk-fresh',
+    slideIndex: 0,
+    scopeKey: 'slide:0',
+    points: [{ x: 10, y: 10 }],
+    color: '#1E3A8A',
+    size: 4,
+    mode: 'permanent',
+    createdAt: 100_000,
+    authorId: 'u1',
+  };
+  const stale: PenStroke = {
+    ...fresh,
+    id: 'stk-stale',
+    createdAt: 40_000,
+    authorId: 'u2',
+  };
+  const pruned = pruneStaleLiveStrokes({ u1: fresh, u2: stale }, 105_000, 45_000);
+  assert.deepEqual(Object.keys(pruned), ['u1']);
+});
+
 

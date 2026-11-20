@@ -53,6 +53,23 @@
 .projection-slide .text-3xl { font-size: 2.25rem; line-height: 2.5rem; }
 .projection-slide .text-5xl { font-size: 3.25rem; line-height: 1.04; }
 
+/*
+ * Hall-reading pass (5–20 ft)
+ *
+ * Most of the interaction labels began life as 13–15 px UI copy. On a
+ * projected 720 px canvas that made the class read controls instead of seeing
+ * the science. Keep the interface usable, but give every audience-facing
+ * label a practical lower floor.
+ */
+.projection-slide [class~="text-[13px]"] { font-size: 0.9375rem; line-height: 1.25rem; }
+.projection-slide [class~="text-[14px]"] { font-size: 1rem; line-height: 1.32rem; }
+.projection-slide [class~="text-[15px]"] { font-size: 1.0625rem; line-height: 1.38rem; }
+
+/* High-contrast focus reduces search time when a presenter reveals one state. */
+.projection-slide button[aria-selected="true"] {
+  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.22);
+}
+
 /* The dark text/very light surface pairing is intentionally stronger than the
  * minimum accessibility contrast threshold and survives a dim projector. */
 .projection-slide button:focus-visible,

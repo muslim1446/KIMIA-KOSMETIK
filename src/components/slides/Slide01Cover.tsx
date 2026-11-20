@@ -1,7 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { ShieldAlert, Sparkles, Stethoscope } from 'lucide-react';
-import { TEAM_PRESENTERS } from '../../data/slidesData';
 import { SharedSlideInteractions } from '../../hooks/usePresentationSync';
 
 interface Slide01Props {
@@ -54,61 +53,38 @@ export const Slide01Cover: React.FC<Slide01Props> = ({ interactions, onPatch }) 
           <h1 className="font-display text-[44px] font-extrabold tracking-tight text-stone-900 dark:text-stone-50 leading-[1.08]">
             Ubat-ubatan &amp; Bahan Kosmetik
           </h1>
-          <p className="text-[19px] font-medium text-stone-700 dark:text-stone-300 leading-relaxed">
-            Bahan yang hampir serupa boleh menjadi{' '}
-            <span className="font-bold text-blue-900 dark:text-blue-400">ubat penyembuh</span>,{' '}
-            <span className="font-bold text-emerald-800 dark:text-emerald-400">kosmetik luaran</span>, atau{' '}
-            <span className="font-bold text-red-700 dark:text-red-400">racun berbahaya</span> — bergantung pada 3 faktor penentu:
+          <p className="text-[22px] font-medium text-stone-700 dark:text-stone-300 leading-relaxed">
+            Satu bahan kimia boleh membantu, menghias atau membahayakan. Jawapannya bergantung pada tiga perkara.
           </p>
 
           <div className="grid grid-cols-3 gap-3 pt-1">
             <div className="rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-3.5">
-              <div className="text-sm font-bold text-blue-900 dark:text-blue-400">Faktor 1</div>
-              <div className="text-[17px] font-bold text-stone-900 dark:text-stone-100 mt-0.5">Struktur</div>
-              <p className="text-[15px] text-stone-600 dark:text-stone-400 mt-1 leading-snug">
-                Bentuk serta sifat asid atau kutub molekul
-              </p>
+              <div className="text-[18px] font-bold text-blue-900 dark:text-blue-400">1. Struktur</div>
+              <p className="text-[16px] text-stone-600 dark:text-stone-400 mt-1 leading-snug">Molekul apa?</p>
             </div>
             <div className="rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-3.5">
-              <div className="text-sm font-bold text-amber-800 dark:text-amber-400">Faktor 2</div>
-              <div className="text-[17px] font-bold text-stone-900 dark:text-stone-100 mt-0.5">Dos &amp; Tempoh</div>
-              <p className="text-[15px] text-stone-600 dark:text-stone-400 mt-1 leading-snug">
-                Sukatan menentukan selamat atau toksik
-              </p>
+              <div className="text-[18px] font-bold text-amber-800 dark:text-amber-400">2. Dos</div>
+              <p className="text-[16px] text-stone-600 dark:text-stone-400 mt-1 leading-snug">Berapa banyak?</p>
             </div>
             <div className="rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-3.5">
-              <div className="text-sm font-bold text-emerald-800 dark:text-emerald-400">Faktor 3</div>
-              <div className="text-[17px] font-bold text-stone-900 dark:text-stone-100 mt-0.5">Lapisan Sasaran</div>
-              <p className="text-[15px] text-stone-600 dark:text-stone-400 mt-1 leading-snug">
-                Kekal di luar kulit atau masuk salur darah
-              </p>
+              <div className="text-[18px] font-bold text-emerald-800 dark:text-emerald-400">3. Sasaran</div>
+              <p className="text-[16px] text-stone-600 dark:text-stone-400 mt-1 leading-snug">Bertindak di mana?</p>
             </div>
           </div>
         </div>
 
-        <div className="pt-4 border-t border-stone-200 dark:border-stone-800">
-          <div className="grid grid-cols-2 gap-x-5 gap-y-2.5">
-            {([1, 2, 3, 4] as const).map((id) => (
-              <div key={id} className="flex flex-col">
-                <span className="text-[16px] font-bold text-stone-900 dark:text-stone-100">
-                  {TEAM_PRESENTERS[id].name}
-                </span>
-                <span className="text-[15px] text-stone-600 dark:text-stone-400 leading-snug">
-                  {TEAM_PRESENTERS[id].focus}
-                </span>
-              </div>
-            ))}
-          </div>
+        <div className="pt-4 border-t border-stone-200 dark:border-stone-800 text-[19px] font-bold text-stone-900 dark:text-stone-100">
+          Soalan utama: di manakah bahan itu bertindak?
         </div>
       </div>
 
       <div className="col-span-6 flex flex-col justify-center">
         <div className="rounded-3xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-6 shadow-sm">
-          <div className="text-[15px] font-semibold text-stone-500 dark:text-stone-400">
-            Perbandingan Lapisan Tindakan
+          <div className="text-[17px] font-semibold text-stone-500 dark:text-stone-400">
+            Pilih satu contoh, kemudian ikut anak panah
           </div>
-          <h2 className="font-display text-[28px] font-bold text-stone-900 dark:text-stone-100 mt-0.5 leading-tight">
-            Di Manakah Molekul Ini Bertindak?
+          <h2 className="font-display text-[32px] font-bold text-stone-900 dark:text-stone-100 mt-0.5 leading-tight">
+            Laluan Molekul Dalam Badan
           </h2>
 
           <div className="grid grid-cols-3 gap-2.5 mt-4" role="tablist" aria-label="Perbandingan Tujuan Bahan">
@@ -221,7 +197,7 @@ export const Slide01Cover: React.FC<Slide01Props> = ({ interactions, onPatch }) 
                   </g>
                 )}
               </svg>
-              <div className="text-[15px] font-bold text-stone-700 dark:text-stone-300 text-center mt-1">
+              <div className="text-[17px] font-bold text-stone-700 dark:text-stone-300 text-center mt-1">
                 {interactions.coverCompareId === 'ubat'
                   ? 'Sukatan tepat ke sasaran rawatan'
                   : interactions.coverCompareId === 'kosmetik'
@@ -235,12 +211,12 @@ export const Slide01Cover: React.FC<Slide01Props> = ({ interactions, onPatch }) 
                 <div className="text-[20px] font-bold text-stone-900 dark:text-stone-100 leading-snug">
                   {active.title}
                 </div>
-                <div className="text-[15px] font-semibold text-stone-500 dark:text-stone-400 mt-1">
+                <div className="text-[16px] font-semibold text-stone-500 dark:text-stone-400 mt-1">
                   {active.moleculeExample}
                 </div>
               </div>
-              <p className="text-[17px] leading-relaxed text-stone-800 dark:text-stone-200">{active.mechanism}</p>
-              <div className="pt-3 border-t border-stone-200 dark:border-stone-800 text-[16px] font-bold text-stone-900 dark:text-stone-100 leading-snug">
+              <p className="text-[19px] leading-relaxed text-stone-800 dark:text-stone-200">{active.mechanism}</p>
+              <div className="pt-3 border-t border-stone-200 dark:border-stone-800 text-[18px] font-bold text-stone-900 dark:text-stone-100 leading-snug">
                 {active.verdict}
               </div>
             </div>

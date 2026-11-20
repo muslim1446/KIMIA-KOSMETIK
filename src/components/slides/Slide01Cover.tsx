@@ -18,25 +18,25 @@ const COMPARE_CASES: Record<
   }
 > = {
   ubat: {
-    title: '1. Ubat: Sukatan Tepat Menuju Sasaran',
+    title: 'SUKATAN YANG TEPAT: KEBERKESANAN',
     moleculeExample: 'Contoh: Betamethasone valerate (preskripsi doktor), Parasetamol',
     mechanism:
-      'Molekul tulen disukat dengan tepat supaya cukup kuat merawat sel bermasalah tanpa merosakkan organ sihat.',
-    verdict: 'Selamat apabila dipantau doktor dan membawa nombor pendaftaran MAL yang sah.',
+      'Molekul (ubat) yang tulen disukat dengan tepat supaya cukup kuat merawat sel bermasalah tanpa merosakkan organ.',
+    verdict: '',
   },
   kosmetik: {
     title: '2. Kosmetik: Bertindak di Permukaan Luar Sahaja',
     moleculeExample: 'Contoh: Air, Lesitin (Pengemulsi), Gliserin (Pelembap)',
     mechanism:
       'Molekulnya kekal pada lapisan luar kulit untuk membersih, melembap atau memberi warna — tidak masuk ke salur darah.',
-    verdict: 'Selamat digunakan secara luaran jika mempunyai nombor notifikasi NOT yang sah.',
+    verdict: '',
   },
   terlarang: {
-    title: '3. Produk Haram: Bahan Terlarang Tembus ke Darah',
+    title: 'Bahan Terlarang',
     moleculeExample: 'Contoh: Merkuri, Hidrokuinon, Steroid dalam krim putih segera',
     mechanism:
-      'Bahan kimia aktif atau logam berat dimasukkan secara haram, lalu menyerap menembusi kulit terus ke salur darah dan organ.',
-    verdict: 'Dilarang sama sekali — merosakkan buah pinggang, sistem saraf dan perisai kulit.',
+      'Bahan kimia aktif/logam berat yang dikawal dimasukkan ke dalam badan, lalu menyerap menembusi kulit terus ke salur darah dan organ.',
+    verdict: 'Merosakkan buah pinggang, sistem saraf dan kulit.',
   },
 };
 
@@ -54,7 +54,7 @@ export const Slide01Cover: React.FC<Slide01Props> = ({ interactions, onPatch }) 
             Ubat-ubatan &amp; Bahan Kosmetik
           </h1>
           <p className="text-[22px] font-medium text-stone-700 dark:text-stone-300 leading-relaxed">
-            Satu bahan kimia boleh membantu, menghias atau membahayakan. Jawapannya bergantung pada tiga perkara.
+            
           </p>
 
           <div className="grid grid-cols-3 gap-3 pt-1">
@@ -81,7 +81,6 @@ export const Slide01Cover: React.FC<Slide01Props> = ({ interactions, onPatch }) 
       <div className="col-span-6 flex flex-col justify-center">
         <div className="rounded-3xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-6 shadow-sm">
           <div className="text-[17px] font-semibold text-stone-500 dark:text-stone-400">
-            Pilih satu contoh, kemudian ikut anak panah
           </div>
           <h2 className="font-display text-[32px] font-bold text-stone-900 dark:text-stone-100 mt-0.5 leading-tight">
             Laluan Molekul Dalam Badan
@@ -176,16 +175,12 @@ export const Slide01Cover: React.FC<Slide01Props> = ({ interactions, onPatch }) 
 
                 {interactions.coverCompareId === 'ubat' && (
                   <g>
-                    <circle cx="34" cy="90" r="8" fill="#1E3A8A" />
-                    <path d="M34,20 L34,78" stroke="#1E3A8A" strokeWidth="4" strokeLinecap="round" />
-                    <polygon points="27,74 41,74 34,85" fill="#1E3A8A" />
                   </g>
                 )}
 
                 {interactions.coverCompareId === 'kosmetik' && (
                   <g>
-                    <circle cx="34" cy="34" r="8" fill="#15803D" />
-                    <line x1="20" y1="62" x2="180" y2="62" stroke="#15803D" strokeWidth="3" strokeDasharray="5 4" />
+
                   </g>
                 )}
 
@@ -199,7 +194,7 @@ export const Slide01Cover: React.FC<Slide01Props> = ({ interactions, onPatch }) 
               </svg>
               <div className="text-[17px] font-bold text-stone-700 dark:text-stone-300 text-center mt-1">
                 {interactions.coverCompareId === 'ubat'
-                  ? 'Sukatan tepat ke sasaran rawatan'
+                  ? ''
                   : interactions.coverCompareId === 'kosmetik'
                   ? 'Berhenti di permukaan luar kulit'
                   : 'Menembusi kulit masuk ke darah'}

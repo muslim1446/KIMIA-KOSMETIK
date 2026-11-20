@@ -16,6 +16,9 @@
     color: #1c1917;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Prevent iOS Safari elastic bounce & native pinch interference */
+    overscroll-behavior: none;
+    touch-action: pan-x pan-y;
   }
 }
 

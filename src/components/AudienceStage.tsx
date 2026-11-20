@@ -114,6 +114,8 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [zoomScale, setZoomScale] = useState(1);
+  // Free-pan offset (in CSS pixels) so users can scroll the zoomed canvas freely
+  const [panOffset, setPanOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [tool, setTool] = useState<AnnotationTool>('pointer');
   const [penMode, setPenMode] = useState<PenMode>('permanent');
   const [tempDuration, setTempDuration] = useState<TempDurationSeconds>(3);
@@ -139,6 +141,11 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
   const laserTouchDraggingRef = useRef(false);
   const onLaserBroadcastRef = useRef(onLaserBroadcast);
   onLaserBroadcastRef.current = onLaserBroadcast;
+
+  // Reset pan when zoom goes back to 1× (no need to stay offset)
+  useEffect(() => {
+    if (zoomScale <= 1) setPanOffset({ x: 0, y: 0 });
+  }, [zoomScale]);
 
   const showToast = useCallback((msg: string) => {
     setToastMsg(msg);
@@ -248,7 +255,97 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
     return () => window.removeEventListener('paste', onPaste);
   }, [addCompressedImageToSlide, isRemoteProjector, onAddImage, showToast, slideImages.length, slideIndex]);
 
-  // Ctrl + Scroll wheel zoom support
+  // ── Universal two-finger pinch-zoom + free pan (works in ALL tool modes) ──
+  // Runs at the document level so it fires even when pen/eraser/image tools
+  // are active.  Only intercepts genuine two-finger gestures so single-finger
+  // drawing is never disrupted.
+  useEffect(() => {
+    if (isRemoteProjector) return;
+
+    const activeTouches = new Map<number, { x: number; y: number }>();
+    let lastPinchDist = 0;
+    let lastPinchMidX = 0;
+    let lastPinchMidY = 0;
+
+    const getDistance = (a: { x: number; y: number }, b: { x: number; y: number }) =>
+      Math.hypot(b.x - a.x, b.y - a.y);
+
+    const onTouchStart = (e: TouchEvent) => {
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const t = e.changedTouches[i];
+        activeTouches.set(t.identifier, { x: t.clientX, y: t.clientY });
+      }
+      if (activeTouches.size === 2) {
+        const [a, b] = Array.from(activeTouches.values());
+        lastPinchDist = getDistance(a, b);
+        lastPinchMidX = (a.x + b.x) / 2;
+        lastPinchMidY = (a.y + b.y) / 2;
+        // Suppress native browser zoom on iOS Safari while we handle it
+        e.preventDefault();
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const t = e.changedTouches[i];
+        if (activeTouches.has(t.identifier)) {
+          activeTouches.set(t.identifier, { x: t.clientX, y: t.clientY });
+        }
+      }
+
+      if (activeTouches.size === 2) {
+        e.preventDefault(); // block native pinch-zoom so we control it
+        const [a, b] = Array.from(activeTouches.values());
+        const dist = getDistance(a, b);
+        const midX = (a.x + b.x) / 2;
+        const midY = (a.y + b.y) / 2;
+
+        if (lastPinchDist > 0) {
+          // Zoom around the pinch midpoint
+          const scaleDelta = dist / lastPinchDist;
+          setZoomScale((prev) => {
+            const next = Math.max(0.6, Math.min(2.4, prev * scaleDelta));
+            return Math.round(next * 100) / 100;
+          });
+
+          // Pan: follow the midpoint drift so the pinch centre stays put
+          const dx = midX - lastPinchMidX;
+          const dy = midY - lastPinchMidY;
+          if (Math.abs(dx) > 0.3 || Math.abs(dy) > 0.3) {
+            setPanOffset((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+          }
+        }
+
+        lastPinchDist = dist;
+        lastPinchMidX = midX;
+        lastPinchMidY = midY;
+      }
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        activeTouches.delete(e.changedTouches[i].identifier);
+      }
+      if (activeTouches.size < 2) {
+        lastPinchDist = 0;
+      }
+    };
+
+    // passive: false so we can call preventDefault()
+    document.addEventListener('touchstart', onTouchStart, { passive: false });
+    document.addEventListener('touchmove', onTouchMove, { passive: false });
+    document.addEventListener('touchend', onTouchEnd, { passive: true });
+    document.addEventListener('touchcancel', onTouchEnd, { passive: true });
+
+    return () => {
+      document.removeEventListener('touchstart', onTouchStart);
+      document.removeEventListener('touchmove', onTouchMove);
+      document.removeEventListener('touchend', onTouchEnd);
+      document.removeEventListener('touchcancel', onTouchEnd);
+    };
+  }, [isRemoteProjector]);
+
+  // Ctrl + Scroll wheel zoom support (desktop)
   useEffect(() => {
     if (isRemoteProjector) return;
     const onWheel = (e: WheelEvent) => {
@@ -415,6 +512,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
         onPatch={onPatch}
         projectorDark={projectorDark}
         zoomScale={zoomScale}
+        panOffset={panOffset}
         slideContainerRef={slideContainerRef}
       />
 

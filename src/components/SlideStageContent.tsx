@@ -17,6 +17,8 @@ interface SlideStageContentProps {
   onPatch: (partial: Partial<SharedSlideInteractions>) => void;
   projectorDark?: boolean;
   zoomScale?: number;
+  /** Free-pan offset in CSS pixels applied on top of the centred layout */
+  panOffset?: { x: number; y: number };
   slideContainerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
@@ -29,6 +31,7 @@ export const SlideStageContent: React.FC<SlideStageContentProps> = ({
   onPatch,
   projectorDark = false,
   zoomScale = 1,
+  panOffset = { x: 0, y: 0 },
   slideContainerRef,
 }) => {
   const hostRef = useRef<HTMLDivElement | null>(null);
@@ -89,7 +92,7 @@ export const SlideStageContent: React.FC<SlideStageContentProps> = ({
   return (
     <div
       ref={hostRef}
-      className={`relative w-full h-full overflow-auto no-scrollbar flex items-center justify-center ${
+      className={`relative w-full h-full overflow-hidden no-scrollbar flex items-center justify-center ${
         projectorDark ? 'dark bg-[#181715] text-stone-100' : 'bg-[#FBF9F5] text-stone-900'
       }`}
     >
@@ -104,36 +107,50 @@ export const SlideStageContent: React.FC<SlideStageContentProps> = ({
         }}
       />
 
-      {/* Scaled 1280x720 Slide Canvas with Safe Overscan Margin + Zoom */}
+      {/*
+        Scaled 1280×720 Slide Canvas.
+        panOffset shifts the canvas so users can freely move around after
+        zooming in — works in all directions, not locked to screen centre.
+        We use a wrapper div that is itself freely positioned inside the flex
+        host so the ambient backdrop is never clipped.
+      */}
       <div
-        ref={slideContainerRef}
-        data-slide-root="true"
-        className="relative z-10 shrink-0 overflow-hidden"
         style={{
-          width: `${LOGICAL_SLIDE_WIDTH * effectiveScale}px`,
-          height: `${LOGICAL_SLIDE_HEIGHT * effectiveScale}px`,
+          transform: `translate(${panOffset.x}px, ${panOffset.y}px)`,
+          willChange: 'transform',
+          transition: 'transform 0.05s linear',
         }}
       >
         <div
-          className="absolute top-0 left-0 origin-top-left overflow-hidden"
+          ref={slideContainerRef}
+          data-slide-root="true"
+          className="relative z-10 shrink-0 overflow-hidden"
           style={{
-            width: `${LOGICAL_SLIDE_WIDTH}px`,
-            height: `${LOGICAL_SLIDE_HEIGHT}px`,
-            transform: `scale(${effectiveScale})`,
+            width: `${LOGICAL_SLIDE_WIDTH * effectiveScale}px`,
+            height: `${LOGICAL_SLIDE_HEIGHT * effectiveScale}px`,
           }}
         >
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={slideIndex}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
-              className="projection-slide w-full h-full overflow-hidden"
-            >
-              {renderSlide()}
-            </motion.div>
-          </AnimatePresence>
+          <div
+            className="absolute top-0 left-0 origin-top-left overflow-hidden"
+            style={{
+              width: `${LOGICAL_SLIDE_WIDTH}px`,
+              height: `${LOGICAL_SLIDE_HEIGHT}px`,
+              transform: `scale(${effectiveScale})`,
+            }}
+          >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={slideIndex}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+                className="projection-slide w-full h-full overflow-hidden"
+              >
+                {renderSlide()}
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </div>
       </div>
     </div>

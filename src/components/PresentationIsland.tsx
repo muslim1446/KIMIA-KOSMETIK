@@ -114,6 +114,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
   const [roomInput, setRoomInput] = useState(roomId);
   const [codeInput, setCodeInput] = useState(joinCode);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [islandHidden, setIslandHidden] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   React.useEffect(() => {
@@ -155,6 +156,20 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
     }
   };
 
+  // ── Collapsed dot ──────────────────────────────────────────────────────────
+  if (islandHidden) {
+    return (
+      <button
+        type="button"
+        data-presentation-island="true"
+        aria-label="Tunjuk bar kawalan pembentangan"
+        title="Klik untuk papar semula bar kawalan"
+        onClick={() => setIslandHidden(false)}
+        className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-5 h-5 rounded-full bg-white/90 border border-stone-400/70 shadow-md hover:scale-125 transition-transform pointer-events-auto"
+      />
+    );
+  }
+
   return (
     <div
       data-presentation-island="true"
@@ -164,7 +179,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
       {openPopover === 'pen' && (
         <div
           data-testid="pen-settings-popover"
-          className="w-[340px] rounded-2xl border border-stone-200 dark:border-stone-700 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md p-3.5 shadow-xl space-y-3 text-stone-900 dark:text-stone-100"
+          className="w-[min(340px,96vw)] rounded-2xl border border-stone-200 dark:border-stone-700 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md p-3.5 shadow-xl space-y-3 text-stone-900 dark:text-stone-100"
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">
@@ -309,7 +324,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
       {openPopover === 'sync' && (
         <div
           data-testid="sync-settings-popover"
-          className="w-[360px] rounded-2xl border border-stone-200 dark:border-stone-700 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md p-4 shadow-xl space-y-3 text-stone-900 dark:text-stone-100"
+          className="w-[min(360px,96vw)] rounded-2xl border border-stone-200 dark:border-stone-700 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md p-4 shadow-xl space-y-3 text-stone-900 dark:text-stone-100"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -476,255 +491,287 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
         </div>
       )}
 
-      {/* Main Floating Presentation Island */}
-      <div className="flex items-center gap-1 rounded-2xl border border-stone-200/90 dark:border-stone-700/90 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md px-2 py-1.5 shadow-lg text-stone-800 dark:text-stone-100">
-        {/* Slide Navigation */}
-        <button
-          type="button"
-          onClick={onPrev}
-          disabled={slideIndex === 0}
-          aria-label="Slaid sebelumnya"
-          className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-30 cursor-pointer"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-        <span className="tabular-nums-clean text-xs font-bold px-1.5 min-w-[40px] text-center">
-          {slideIndex + 1}/{totalSlides}
-        </span>
-        <button
-          type="button"
-          onClick={onNext}
-          disabled={slideIndex === totalSlides - 1}
-          aria-label="Slaid seterusnya"
-          className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-30 cursor-pointer"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
+      {/* ── Main Floating Presentation Island ─────────────────────────────── */}
+      {/*
+        On wide screens (≥ sm / ≥ 640 px) everything fits in a single row.
+        On narrow portrait phones we wrap into two rows automatically:
+          Row 1 → Nav + core tools (pointer, pen, eraser, image, text, laser, AI)
+          Row 2 → Zoom + sync + dark + fullscreen + hide-dot
+        The outer div is flex-col so rows stack; each inner row is flex-row.
+      */}
+      <div className="flex flex-col items-center gap-1 rounded-2xl border border-stone-200/90 dark:border-stone-700/90 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md px-2 py-1.5 shadow-lg text-stone-800 dark:text-stone-100 max-w-[96vw]">
 
-        <div className="w-px h-5 bg-stone-200 dark:bg-stone-700 mx-1" />
+        {/* ── Row 1: always visible core controls ── */}
+        <div className="flex items-center gap-1 flex-wrap justify-center">
 
-        {/* Pointer Tool */}
-        <button
-          type="button"
-          aria-label="Mod kursor biasa"
-          title="Kursor Biasa"
-          onClick={() => {
-            onToolChange('pointer');
-            setOpenPopover('none');
-          }}
-          className={`p-1.5 rounded-xl transition-colors cursor-pointer ${
-            tool === 'pointer'
-              ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900'
-              : 'hover:bg-stone-100 dark:hover:bg-stone-800'
-          }`}
-        >
-          <MousePointer2 className="w-4 h-4" />
-        </button>
-
-        {/* Pen Tool */}
-        <button
-          type="button"
-          data-testid="island-pen-button"
-          aria-label="Alat Pen"
-          title="Pen Lukisan (Kekal / Sementara)"
-          onClick={handlePenClick}
-          className={`relative flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
-            tool === 'pen'
-              ? 'bg-blue-800 text-white'
-              : 'hover:bg-stone-100 dark:hover:bg-stone-800'
-          }`}
-        >
-          <PenTool className="w-4 h-4" />
-          <span
-            className="w-2.5 h-2.5 rounded-full border border-white/60"
-            style={{ backgroundColor: penColor }}
-          />
-          {penMode === 'temporary' && (
-            <span className="text-[10px] tabular-nums-clean opacity-90">{tempDuration}s</span>
-          )}
-        </button>
-
-        {/* Eraser Tool */}
-        <button
-          type="button"
-          data-testid="island-eraser-button"
-          aria-label="Pemadam Pen"
-          title="Pemadam Pen"
-          onClick={() => {
-            onToolChange(tool === 'eraser' ? 'pointer' : 'eraser');
-            setOpenPopover('none');
-          }}
-          className={`p-1.5 rounded-xl transition-colors cursor-pointer ${
-            tool === 'eraser'
-              ? 'bg-red-700 text-white'
-              : 'hover:bg-stone-100 dark:hover:bg-stone-800'
-          }`}
-        >
-          <Eraser className="w-4 h-4" />
-        </button>
-
-        {/* Add Image (file picker + Ctrl+V support) */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) onPickImageFile(file);
-            e.target.value = '';
-          }}
-        />
-        <button
-          type="button"
-          data-testid="island-image-button"
-          aria-label="Tambah Gambar"
-          title="Tambah Gambar (atau tekan Ctrl+V di mana-mana)"
-          onClick={() => fileInputRef.current?.click()}
-          className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
-        >
-          <ImagePlus className="w-4 h-4" />
-        </button>
-
-        {/* Text Edit Mode toggle (optional for touchscreens; right-click also works invisibly anytime) */}
-        <button
-          type="button"
-          data-testid="island-text-edit-button"
-          aria-label="Mod Sunting Teks"
-          title="Sunting Teks (Klik kanan mana-mana teks atau aktifkan mod ini)"
-          onClick={() => {
-            onToolChange(tool === 'text-edit' ? 'pointer' : 'text-edit');
-            setOpenPopover('none');
-          }}
-          className={`p-1.5 rounded-xl transition-colors cursor-pointer ${
-            tool === 'text-edit'
-              ? 'bg-emerald-700 text-white'
-              : 'hover:bg-stone-100 dark:hover:bg-stone-800'
-          }`}
-        >
-          <Type className="w-4 h-4" />
-        </button>
-
-        {/* Collaborative Laser Pointer Tool (also holds key 'L') */}
-        <button
-          type="button"
-          data-testid="island-laser-button"
-          aria-label="Penunjuk Laser Kolaboratif"
-          title="Penunjuk Laser (Klik di sini atau tahan kekunci L sambil gerakkan tetikus)"
-          onClick={() => {
-            onToolChange(tool === 'laser' ? 'pointer' : 'laser');
-            setOpenPopover('none');
-          }}
-          className={`flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
-            tool === 'laser'
-              ? 'bg-red-600 text-white shadow-sm'
-              : 'hover:bg-stone-100 dark:hover:bg-stone-800'
-          }`}
-        >
-          <LocateFixed className="w-4 h-4" />
-          <span className="hidden md:inline text-[11px]">L</span>
-        </button>
-
-        {/* Gemini AI Assistant Toggle */}
-        <button
-          type="button"
-          data-testid="island-gemini-button"
-          aria-label="Pembantu Gemini AI"
-          title="Pembantu Gemini AI (Seret, ubah saiz, Mod Bukti & tampal gambar)"
-          onClick={() => {
-            onToggleGemini();
-            setOpenPopover('none');
-          }}
-          className={`flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
-            geminiOpen
-              ? 'bg-emerald-700 text-white shadow-sm'
-              : 'hover:bg-stone-100 dark:hover:bg-stone-800 text-emerald-700 dark:text-emerald-400'
-          }`}
-        >
-          <Sparkles className="w-4 h-4" />
-          <span className="hidden sm:inline">AI</span>
-        </button>
-
-        <div className="w-px h-5 bg-stone-200 dark:bg-stone-700 mx-1" />
-
-        {/* Zoom Controls */}
-        <button
-          type="button"
-          data-testid="island-zoom-out"
-          aria-label="Zum keluar"
-          title="Zum Keluar"
-          onClick={() => onZoomChange(Math.max(0.6, Math.round((zoomScale - 0.15) * 100) / 100))}
-          className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
-        >
-          <ZoomOut className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
-          data-testid="island-zoom-reset"
-          aria-label="Set semula zum"
-          title="Klik untuk set semula zum 100%"
-          onClick={() => onZoomChange(1)}
-          className="tabular-nums-clean text-[11px] font-bold px-1.5 py-1 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
-        >
-          {Math.round(zoomScale * 100)}%
-        </button>
-        <button
-          type="button"
-          data-testid="island-zoom-in"
-          aria-label="Zum masuk"
-          title="Zum Masuk"
-          onClick={() => onZoomChange(Math.min(2.4, Math.round((zoomScale + 0.15) * 100) / 100))}
-          className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
-        >
-          <ZoomIn className="w-4 h-4" />
-        </button>
-
-        <div className="w-px h-5 bg-stone-200 dark:bg-stone-700 mx-1" />
-
-        {/* Firebase Cloud Live Sync Button */}
-        <button
-          type="button"
-          data-testid="island-sync-button"
-          aria-label="Status Firebase Live Sync"
-          title="Firebase Live Sync & Bilik Pasukan"
-          onClick={() => setOpenPopover((p) => (p === 'sync' ? 'none' : 'sync'))}
-          className={`flex items-center gap-1.5 px-2 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
-            syncStatus === 'synced'
-              ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300'
-              : syncStatus === 'error'
-              ? 'bg-red-50 text-red-700'
-              : 'hover:bg-stone-100 dark:hover:bg-stone-800'
-          }`}
-        >
-          {syncStatus === 'synced' ? (
-            <Cloud className="w-4 h-4 text-emerald-600" />
-          ) : (
-            <CloudOff className="w-4 h-4 text-stone-500" />
-          )}
-          <span className="hidden sm:inline">
-            {syncStatus === 'synced' ? 'Live' : syncStatus === 'connecting' ? '...' : 'Sync'}
+          {/* Slide Navigation */}
+          <button
+            type="button"
+            onClick={onPrev}
+            disabled={slideIndex === 0}
+            aria-label="Slaid sebelumnya"
+            className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-30 cursor-pointer"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <span className="tabular-nums-clean text-xs font-bold px-1.5 min-w-[40px] text-center">
+            {slideIndex + 1}/{totalSlides}
           </span>
-        </button>
+          <button
+            type="button"
+            onClick={onNext}
+            disabled={slideIndex === totalSlides - 1}
+            aria-label="Slaid seterusnya"
+            className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-30 cursor-pointer"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
 
-        {/* Dark Mode & Fullscreen */}
-        <button
-          type="button"
-          onClick={onToggleDark}
-          aria-label="Tukar tema gelap"
-          title="Tema Gelap / Cerah"
-          className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
-        >
-          {projectorDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-        </button>
-        <button
-          type="button"
-          onClick={onToggleFullscreen}
-          aria-label="Skrin penuh"
-          title="Skrin Penuh (F)"
-          className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
-        >
-          {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-        </button>
+          <div className="w-px h-5 bg-stone-200 dark:bg-stone-700 mx-0.5" />
+
+          {/* Pointer Tool */}
+          <button
+            type="button"
+            aria-label="Mod kursor biasa"
+            title="Kursor Biasa"
+            onClick={() => {
+              onToolChange('pointer');
+              setOpenPopover('none');
+            }}
+            className={`p-1.5 rounded-xl transition-colors cursor-pointer ${
+              tool === 'pointer'
+                ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900'
+                : 'hover:bg-stone-100 dark:hover:bg-stone-800'
+            }`}
+          >
+            <MousePointer2 className="w-4 h-4" />
+          </button>
+
+          {/* Pen Tool */}
+          <button
+            type="button"
+            data-testid="island-pen-button"
+            aria-label="Alat Pen"
+            title="Pen Lukisan (Kekal / Sementara)"
+            onClick={handlePenClick}
+            className={`relative flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+              tool === 'pen'
+                ? 'bg-blue-800 text-white'
+                : 'hover:bg-stone-100 dark:hover:bg-stone-800'
+            }`}
+          >
+            <PenTool className="w-4 h-4" />
+            <span
+              className="w-2.5 h-2.5 rounded-full border border-white/60"
+              style={{ backgroundColor: penColor }}
+            />
+            {penMode === 'temporary' && (
+              <span className="text-[10px] tabular-nums-clean opacity-90">{tempDuration}s</span>
+            )}
+          </button>
+
+          {/* Eraser Tool */}
+          <button
+            type="button"
+            data-testid="island-eraser-button"
+            aria-label="Pemadam Pen"
+            title="Pemadam Pen"
+            onClick={() => {
+              onToolChange(tool === 'eraser' ? 'pointer' : 'eraser');
+              setOpenPopover('none');
+            }}
+            className={`p-1.5 rounded-xl transition-colors cursor-pointer ${
+              tool === 'eraser'
+                ? 'bg-red-700 text-white'
+                : 'hover:bg-stone-100 dark:hover:bg-stone-800'
+            }`}
+          >
+            <Eraser className="w-4 h-4" />
+          </button>
+
+          {/* Add Image (file picker + Ctrl+V support) */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) onPickImageFile(file);
+              e.target.value = '';
+            }}
+          />
+          <button
+            type="button"
+            data-testid="island-image-button"
+            aria-label="Tambah Gambar"
+            title="Tambah Gambar (atau tekan Ctrl+V di mana-mana)"
+            onClick={() => fileInputRef.current?.click()}
+            className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
+          >
+            <ImagePlus className="w-4 h-4" />
+          </button>
+
+          {/* Text Edit Mode */}
+          <button
+            type="button"
+            data-testid="island-text-edit-button"
+            aria-label="Mod Sunting Teks"
+            title="Sunting Teks (Klik kanan mana-mana teks atau aktifkan mod ini)"
+            onClick={() => {
+              onToolChange(tool === 'text-edit' ? 'pointer' : 'text-edit');
+              setOpenPopover('none');
+            }}
+            className={`p-1.5 rounded-xl transition-colors cursor-pointer ${
+              tool === 'text-edit'
+                ? 'bg-emerald-700 text-white'
+                : 'hover:bg-stone-100 dark:hover:bg-stone-800'
+            }`}
+          >
+            <Type className="w-4 h-4" />
+          </button>
+
+          {/* Collaborative Laser Pointer */}
+          <button
+            type="button"
+            data-testid="island-laser-button"
+            aria-label="Penunjuk Laser Kolaboratif"
+            title="Penunjuk Laser (Klik di sini atau tahan kekunci L sambil gerakkan tetikus)"
+            onClick={() => {
+              onToolChange(tool === 'laser' ? 'pointer' : 'laser');
+              setOpenPopover('none');
+            }}
+            className={`flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+              tool === 'laser'
+                ? 'bg-red-600 text-white shadow-sm'
+                : 'hover:bg-stone-100 dark:hover:bg-stone-800'
+            }`}
+          >
+            <LocateFixed className="w-4 h-4" />
+            <span className="hidden md:inline text-[11px]">L</span>
+          </button>
+
+          {/* Gemini AI Assistant Toggle */}
+          <button
+            type="button"
+            data-testid="island-gemini-button"
+            aria-label="Pembantu Gemini AI"
+            title="Pembantu Gemini AI (Seret, ubah saiz, Mod Bukti & tampal gambar)"
+            onClick={() => {
+              onToggleGemini();
+              setOpenPopover('none');
+            }}
+            className={`flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+              geminiOpen
+                ? 'bg-emerald-700 text-white shadow-sm'
+                : 'hover:bg-stone-100 dark:hover:bg-stone-800 text-emerald-700 dark:text-emerald-400'
+            }`}
+          >
+            <Sparkles className="w-4 h-4" />
+            <span className="hidden sm:inline">AI</span>
+          </button>
+        </div>
+
+        {/* ── Thin divider between rows on mobile ── */}
+        <div className="sm:hidden w-full h-px bg-stone-200 dark:bg-stone-700" />
+
+        {/* ── Row 2: zoom + sync + settings + hide ── */}
+        <div className="flex items-center gap-1 flex-wrap justify-center">
+
+          {/* Zoom Controls */}
+          <button
+            type="button"
+            data-testid="island-zoom-out"
+            aria-label="Zum keluar"
+            title="Zum Keluar"
+            onClick={() => onZoomChange(Math.max(0.6, Math.round((zoomScale - 0.15) * 100) / 100))}
+            className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
+          >
+            <ZoomOut className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            data-testid="island-zoom-reset"
+            aria-label="Set semula zum"
+            title="Klik untuk set semula zum 100%"
+            onClick={() => onZoomChange(1)}
+            className="tabular-nums-clean text-[11px] font-bold px-1.5 py-1 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
+          >
+            {Math.round(zoomScale * 100)}%
+          </button>
+          <button
+            type="button"
+            data-testid="island-zoom-in"
+            aria-label="Zum masuk"
+            title="Zum Masuk"
+            onClick={() => onZoomChange(Math.min(2.4, Math.round((zoomScale + 0.15) * 100) / 100))}
+            className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
+          >
+            <ZoomIn className="w-4 h-4" />
+          </button>
+
+          <div className="w-px h-5 bg-stone-200 dark:bg-stone-700 mx-0.5" />
+
+          {/* Firebase Cloud Live Sync Button */}
+          <button
+            type="button"
+            data-testid="island-sync-button"
+            aria-label="Status Firebase Live Sync"
+            title="Firebase Live Sync & Bilik Pasukan"
+            onClick={() => setOpenPopover((p) => (p === 'sync' ? 'none' : 'sync'))}
+            className={`flex items-center gap-1.5 px-2 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+              syncStatus === 'synced'
+                ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300'
+                : syncStatus === 'error'
+                ? 'bg-red-50 text-red-700'
+                : 'hover:bg-stone-100 dark:hover:bg-stone-800'
+            }`}
+          >
+            {syncStatus === 'synced' ? (
+              <Cloud className="w-4 h-4 text-emerald-600" />
+            ) : (
+              <CloudOff className="w-4 h-4 text-stone-500" />
+            )}
+            <span className="hidden sm:inline">
+              {syncStatus === 'synced' ? 'Live' : syncStatus === 'connecting' ? '...' : 'Sync'}
+            </span>
+          </button>
+
+          {/* Dark Mode & Fullscreen */}
+          <button
+            type="button"
+            onClick={onToggleDark}
+            aria-label="Tukar tema gelap"
+            title="Tema Gelap / Cerah"
+            className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
+          >
+            {projectorDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
+          <button
+            type="button"
+            onClick={onToggleFullscreen}
+            aria-label="Skrin penuh"
+            title="Skrin Penuh (F)"
+            className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
+          >
+            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+          </button>
+
+          {/* Hide island → dot */}
+          <button
+            type="button"
+            onClick={() => setIslandHidden(true)}
+            aria-label="Sembunyikan bar kawalan"
+            title="Sembunyikan bar kawalan (akan tinggal titik kecil)"
+            className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer text-stone-400 hover:text-stone-700 dark:hover:text-stone-200"
+          >
+            {/* Simple ⊙ hide icon */}
+            <svg viewBox="0 0 16 16" className="w-4 h-4" fill="currentColor">
+              <circle cx="8" cy="8" r="6" fillOpacity={0.15} stroke="currentColor" strokeWidth="1.5" fill="none" />
+              <circle cx="8" cy="8" r="2" />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   );

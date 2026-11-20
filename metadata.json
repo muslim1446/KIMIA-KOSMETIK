@@ -1,0 +1,6 @@
+{
+  "name": "5.4 Ubat-ubatan dan Bahan Kosmetik — Pembentangan Kimia KSSM",
+  "description": "Pembentangan interaktif Kimia Tingkatan 5 Bab 5.4: Ubat-ubatan dan Bahan Kosmetik dengan sokongan Mod Pembentang dwi-skrin dan simulasi makmal.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

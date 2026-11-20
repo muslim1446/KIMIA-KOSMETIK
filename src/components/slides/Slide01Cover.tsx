@@ -186,9 +186,7 @@ export const Slide01Cover: React.FC<Slide01Props> = ({ interactions, onPatch }) 
 
                 {interactions.coverCompareId === 'terlarang' && (
                   <g>
-                    <path d="M34,20 L34,136" stroke="#B91C1C" strokeWidth="4" strokeLinecap="round" />
-                    <polygon points="27,132 41,132 34,144" fill="#B91C1C" />
-                    <circle cx="34" cy="148" r="7" fill="#B91C1C" />
+
                   </g>
                 )}
               </svg>

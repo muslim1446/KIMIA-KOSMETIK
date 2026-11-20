@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, Maximize2, Minimize2, MonitorPlay } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Maximize2, Minimize2 } from 'lucide-react';
 import { SLIDES_META } from '../data/slidesData';
 import { LaserPoint, SharedSlideInteractions } from '../hooks/usePresentationSync';
 import { SlideStageContent } from './SlideStageContent';
@@ -15,7 +15,6 @@ interface AudienceStageProps {
   onPatch: (partial: Partial<SharedSlideInteractions>) => void;
   onNext: () => void;
   onPrev: () => void;
-  onOpenPresenterMode: () => void;
 }
 
 export const AudienceStage: React.FC<AudienceStageProps> = ({
@@ -28,7 +27,6 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
   onPatch,
   onNext,
   onPrev,
-  onOpenPresenterMode,
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -52,7 +50,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
     }
   };
 
-  // In ?mode=audiens or fullscreen, hide all presenter UI completely so audience sees only the clean slide
+  // In ?mode=audiens or fullscreen, hide the navigation island so the audience sees only the clean slide.
   const showEdgeDrawer = !isRemoteProjector && !isFullscreen;
   const progressPct = ((slideIndex + 1) / SLIDES_META.length) * 100;
 
@@ -65,7 +63,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
         projectorDark={projectorDark}
       />
 
-      {/* Synchronized Virtual Laser Pointer from Mod Pembentang */}
+      {/* Synchronized virtual laser pointer, if a connected controller supplies one. */}
       {laser.active && !blackout && (
         <div
           aria-hidden="true"
@@ -116,17 +114,6 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
               className="p-1 text-stone-700 dark:text-stone-200 disabled:opacity-30 hover:text-stone-950 cursor-pointer"
             >
               <ChevronRight className="w-4 h-4" />
-            </button>
-
-            <span className="w-px h-4 bg-stone-200 dark:bg-stone-700 mx-0.5" />
-
-            <button
-              type="button"
-              onClick={onOpenPresenterMode}
-              className="flex items-center gap-1.5 text-xs font-semibold text-stone-800 dark:text-stone-100 hover:text-stone-950 px-1.5 py-0.5 cursor-pointer"
-            >
-              <MonitorPlay className="w-3.5 h-3.5" />
-              <span>Mod Pembentang (P)</span>
             </button>
 
             <button

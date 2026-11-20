@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { SLIDES_META } from '../data/slidesData';
 import { clampSlideIndex, EmulsionState, PatientProfileId } from '../utils/presentationEngine';
 
-export type AppViewMode = 'stage' | 'pembentang' | 'audiens';
+export type AppViewMode = 'stage' | 'audiens';
 
 export interface LaserPoint {
   active: boolean;
@@ -43,13 +43,6 @@ export interface SyncedPresentationState {
   interactions: SharedSlideInteractions;
   updatedAt: number;
   senderId: string;
-}
-
-export interface DisplayEnvironmentInfo {
-  isExtended: boolean;
-  screenCount: number | null;
-  screenLabel: string;
-  permissionState: 'idle' | 'granted' | 'unsupported';
 }
 
 const CHANNEL_NAME = 'kimia-5-4-sync-v2';
@@ -126,7 +119,6 @@ export function getInitialModeFromUrl(): AppViewMode {
   const params = new URLSearchParams(window.location.search);
   const modeParam = params.get('mode');
   if (modeParam === 'audiens') return 'audiens';
-  if (modeParam === 'pembentang') return 'pembentang';
   return 'stage';
 }
 
@@ -134,21 +126,8 @@ export function usePresentationSync() {
   const senderIdRef = useRef<string>(`tab-${Math.random().toString(36).slice(2, 9)}`);
   const channelRef = useRef<BroadcastChannel | null>(null);
 
-  const [mode, setMode] = useState<AppViewMode>(() => getInitialModeFromUrl());
+  const [mode] = useState<AppViewMode>(() => getInitialModeFromUrl());
   const [state, setState] = useState<SyncedPresentationState>(() => createInitialState(senderIdRef.current));
-  const [connectedPeers, setConnectedPeers] = useState<number>(0);
-
-  const [displayInfo, setDisplayInfo] = useState<DisplayEnvironmentInfo>(() => {
-    const ext =
-      typeof window !== 'undefined' &&
-      Boolean((window.screen as Screen & { isExtended?: boolean }).isExtended);
-    return {
-      isExtended: ext,
-      screenCount: ext ? 2 : 1,
-      screenLabel: ext ? 'Paparan Luaran / HDMI Dikesan' : 'Paparan Tunggal',
-      permissionState: 'idle',
-    };
-  });
 
   const broadcastState = useCallback((next: SyncedPresentationState) => {
     try {
@@ -253,7 +232,6 @@ export function usePresentationSync() {
       });
     };
 
-    const peers = new Set<string>();
     let bc: BroadcastChannel | null = null;
     if ('BroadcastChannel' in window) {
       bc = new BroadcastChannel(CHANNEL_NAME);
@@ -264,15 +242,7 @@ export function usePresentationSync() {
         if (msg.type === 'SYNC_STATE') {
           handleIncoming(msg.payload);
         } else if (msg.type === 'PING' && msg.senderId !== senderIdRef.current) {
-          peers.add(msg.senderId);
-          setConnectedPeers(peers.size);
           bc?.postMessage({ type: 'PONG', senderId: senderIdRef.current });
-        } else if (msg.type === 'PONG' && msg.senderId !== senderIdRef.current) {
-          peers.add(msg.senderId);
-          setConnectedPeers(peers.size);
-        } else if (msg.type === 'BYE' && msg.senderId) {
-          peers.delete(msg.senderId);
-          setConnectedPeers(peers.size);
         }
       };
       bc.postMessage({ type: 'PING', senderId: senderIdRef.current });
@@ -305,74 +275,9 @@ export function usePresentationSync() {
     };
   }, []);
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const checkExtended = () => {
-      const ext = Boolean((window.screen as Screen & { isExtended?: boolean }).isExtended);
-      setDisplayInfo((prev) => {
-        if (prev.permissionState === 'granted') return prev;
-        return {
-          ...prev,
-          isExtended: ext,
-          screenCount: ext ? 2 : 1,
-          screenLabel: ext ? 'Paparan Luaran / HDMI Dikesan' : 'Paparan Tunggal',
-        };
-      });
-    };
-    checkExtended();
-    const interval = window.setInterval(checkExtended, 2500);
-    window.addEventListener('resize', checkExtended);
-    return () => {
-      window.clearInterval(interval);
-      window.removeEventListener('resize', checkExtended);
-    };
-  }, []);
-
-  const probeExternalDisplays = useCallback(async () => {
-    const win = window as Window & {
-      getScreenDetails?: () => Promise<{ screens: Array<{ label?: string; isPrimary?: boolean }> }>;
-    };
-    if (typeof win.getScreenDetails !== 'function') {
-      const ext = Boolean((window.screen as Screen & { isExtended?: boolean }).isExtended);
-      setDisplayInfo({
-        isExtended: ext,
-        screenCount: ext ? 2 : 1,
-        screenLabel: ext ? 'Paparan Luaran / HDMI Dikesan' : 'Mod Sambungan HDMI Manual Sedia',
-        permissionState: 'unsupported',
-      });
-      return;
-    }
-    try {
-      const details = await win.getScreenDetails();
-      const count = details.screens.length;
-      const ext = count > 1;
-      const secondary = details.screens.find((s) => !s.isPrimary);
-      setDisplayInfo({
-        isExtended: ext,
-        screenCount: count,
-        screenLabel: ext
-          ? `HDMI Aktif: ${secondary?.label || 'Projektor / TV'} (${count} skrin)`
-          : '1 Skrin Dikesan — Sambung kabel HDMI & pilih Extend Display',
-        permissionState: 'granted',
-      });
-    } catch {
-      const ext = Boolean((window.screen as Screen & { isExtended?: boolean }).isExtended);
-      setDisplayInfo({
-        isExtended: ext,
-        screenCount: ext ? 2 : 1,
-        screenLabel: ext ? 'Paparan Luaran / HDMI Dikesan' : 'Paparan Tunggal',
-        permissionState: 'idle',
-      });
-    }
-  }, []);
-
   return {
     mode,
-    setMode,
     state,
-    connectedPeers,
-    displayInfo,
-    probeExternalDisplays,
     goToSlide,
     nextSlide,
     prevSlide,

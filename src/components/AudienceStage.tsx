@@ -182,8 +182,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
   panOffsetRef.current = panOffset;
 
   // ── Universal Pinch-to-Zoom & 360° Pan for Touchscreens ────────────────────
-  // Active in ALL tool modes (pen, eraser, image, etc.). When 2+ fingers are
-  // detected, drawing is safely suppressed to prevent accidental strokes.
+  // One finger pans outside drawing tools; two fingers pan and pinch in any mode.
   useEffect(() => {
     if (isRemoteProjector) return;
 
@@ -191,6 +190,9 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
     let prevDist = 0;
     let prevMidX = 0;
     let prevMidY = 0;
+    let prevSingleX = 0;
+    let prevSingleY = 0;
+    let singlePanEnabled = false;
 
     const dist2 = (a: { x: number; y: number }, b: { x: number; y: number }) =>
       Math.hypot(b.x - a.x, b.y - a.y);
@@ -199,6 +201,20 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
       for (let i = 0; i < e.changedTouches.length; i++) {
         const t = e.changedTouches[i];
         pts.set(t.identifier, { x: t.clientX, y: t.clientY });
+      }
+      if (pts.size === 1) {
+        const target = e.target as HTMLElement | null;
+        const stage = slideContainerRef.current?.closest('main');
+        singlePanEnabled =
+          tool !== 'pen' &&
+          tool !== 'eraser' &&
+          Boolean(stage?.contains(target)) &&
+          !target?.closest('button, input, textarea, select, [role="button"], [data-testid*="popover"]');
+        const [point] = pts.values();
+        prevSingleX = point.x;
+        prevSingleY = point.y;
+      } else {
+        singlePanEnabled = false;
       }
       if (pts.size >= 2) {
         setIsPinchingOrPanning(true);
@@ -215,6 +231,17 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
       for (let i = 0; i < e.changedTouches.length; i++) {
         const t = e.changedTouches[i];
         if (pts.has(t.identifier)) pts.set(t.identifier, { x: t.clientX, y: t.clientY });
+      }
+      if (pts.size === 1 && singlePanEnabled) {
+        const [point] = pts.values();
+        e.preventDefault();
+        setIsPinchingOrPanning(true);
+        const dx = point.x - prevSingleX;
+        const dy = point.y - prevSingleY;
+        prevSingleX = point.x;
+        prevSingleY = point.y;
+        setPanOffset((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+        return;
       }
       if (pts.size < 2) return;
       e.preventDefault();
@@ -275,7 +302,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
       document.removeEventListener('touchcancel', onEnd);
       if (gestureTimerRef.current) window.clearTimeout(gestureTimerRef.current);
     };
-  }, [isRemoteProjector]);
+  }, [isRemoteProjector, tool]);
 
   // ── Touchpad & Mouse Wheel: Pinch-to-Zoom (Ctrl/Meta) & Free 360° Pan ──────
   // Works on ALL laptop touchpads (Windows Precision, MacBook trackpad, Chromebook):

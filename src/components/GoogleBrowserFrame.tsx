@@ -138,6 +138,8 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const onShowToastRef = useRef(onShowToast);
   onShowToastRef.current = onShowToast;
+  const wasOpenRef = useRef(false);
+  const lastModeRef = useRef<GoogleFrameMode | null>(null);
 
   const actionRef = useRef<{
     type: 'drag' | 'resize';
@@ -178,7 +180,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
       const { query, prompt } = buildGoogleSlideAiPrompt(digestRef.current, visibleText);
       const searchUrl = `https://www.google.com/search?igu=1&hl=ms&gl=my&udm=50&q=${encodeURIComponent(query)}`;
       setCurrentUrl(searchUrl);
-      setUrlInput(query);
+      setUrlInput('');
       setIframeKey((k) => k + 1);
 
       const copied = await copyPlainText(prompt);
@@ -193,13 +195,23 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
     [readVisibleSlideText],
   );
 
-  // Configure the real Google website whenever the frame opens or the mode/slide changes.
+  // Configure the real Google website whenever the frame opens, switches mode, or
+  // (in AI mode) the presenter moves to another slide.
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      wasOpenRef.current = false;
+      lastModeRef.current = null;
+      return;
+    }
+
+    const justOpened = !wasOpenRef.current;
+    const modeChanged = lastModeRef.current !== mode;
+    wasOpenRef.current = true;
+    lastModeRef.current = mode;
 
     if (mode === 'google-ai') {
       void runSlideAiSearch();
-    } else {
+    } else if (justOpened || modeChanged) {
       setCurrentUrl(GOOGLE_HOME_URL);
       setUrlInput('');
       setIframeKey((k) => k + 1);

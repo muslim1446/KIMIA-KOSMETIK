@@ -3,6 +3,7 @@ import test from 'node:test';
 import { DEFAULT_INTERACTIONS } from '../hooks/usePresentationSync.ts';
 import {
   buildGeminiCacheKey,
+  buildGoogleSlideAiPrompt,
   buildPresentationDigest,
   clampFloatingFrameRect,
   laserClientToSlidePercent,
@@ -54,6 +55,40 @@ test('buildPresentationDigest includes entire deck outline, active sub-element, 
     tempStrokes: [],
     textEdits: { 'slide:1|h1': 'Tajuk Diubah' },
     slideImages: [],
+    slideTexts: [
+      {
+        id: 'txt-1',
+        slideIndex: 1,
+        scopeKey: 'slide:1',
+        x: 100,
+        y: 120,
+        width: 320,
+        height: 100,
+        text: 'Gingerol larut dalam alkohol',
+        fontSize: 24,
+        color: '#1C1917',
+        isBold: true,
+        bgColor: 'transparent',
+        authorId: 'u1',
+        createdAt: 1000,
+        updatedAt: 1000,
+      },
+      {
+        id: 'txt-2',
+        slideIndex: 0,
+        scopeKey: 'slide:0',
+        x: 100,
+        y: 120,
+        width: 320,
+        height: 100,
+        text: 'Teks slaid lain tidak patut disertakan',
+        fontSize: 20,
+        color: '#1C1917',
+        authorId: 'u1',
+        createdAt: 1000,
+        updatedAt: 1000,
+      },
+    ],
   });
 
   assert.equal(digest.currentSlideNumber, 2);
@@ -63,6 +98,30 @@ test('buildPresentationDigest includes entire deck outline, active sub-element, 
   assert.match(digest.currentSlideDetailText, /rebusan/);
   assert.match(digest.currentSlideDetailText, /Tajuk Diubah/);
   assert.match(digest.currentSlideDetailText, /1 garisan kekal/);
+  assert.match(digest.currentSlideDetailText, /KOTAK TEKS TAMBAHAN/);
+  assert.match(digest.currentSlideDetailText, /Gingerol larut dalam alkohol/);
+  assert.doesNotMatch(digest.currentSlideDetailText, /Teks slaid lain tidak patut disertakan/);
+});
+
+test('buildGoogleSlideAiPrompt builds a compact hidden query and a full clipboard prompt', () => {
+  const digest = buildPresentationDigest({
+    slideIndex: 0,
+    interactions: DEFAULT_INTERACTIONS,
+    permanentStrokes: [],
+    tempStrokes: [],
+    textEdits: {},
+    slideImages: [],
+    slideTexts: [],
+  });
+
+  const { query, prompt } = buildGoogleSlideAiPrompt(digest, 'Ubat dan kosmetik KSSM');
+  assert.ok(query.length > 0 && query.length <= 1800);
+  assert.match(query, /tutor Kimia KSSM Tingkatan 5/);
+  assert.match(query, /Slaid 1\/9/);
+  assert.match(prompt, /KONTEKS PENUH SLAID:/);
+  assert.match(prompt, /OUTLINE KESELURUHAN DEK:/);
+  assert.match(prompt, /Ubat dan kosmetik KSSM/);
+  assert.match(prompt, /Slaid 1\/9/);
 });
 
 test('parseGeminiStructuredMeta strips json-meta fence cleanly and extracts queries', () => {

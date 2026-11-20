@@ -684,7 +684,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
             data-testid="island-zoom-out"
             aria-label="Zum keluar"
             title="Zum Keluar"
-            onClick={() => onZoomChange(Math.max(0.6, Math.round((zoomScale - 0.15) * 100) / 100))}
+            onClick={() => onZoomChange(Math.max(0.3, Math.round((zoomScale - 0.15) * 100) / 100))}
             className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
           >
             <ZoomOut className="w-4 h-4" />
@@ -693,7 +693,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
             type="button"
             data-testid="island-zoom-reset"
             aria-label="Set semula zum"
-            title="Klik untuk set semula zum 100%"
+            title="Klik untuk set semula zum 100% dan kedudukan asal tengah"
             onClick={() => onZoomChange(1)}
             className="tabular-nums-clean text-[11px] font-bold px-1.5 py-1 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
           >
@@ -704,7 +704,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
             data-testid="island-zoom-in"
             aria-label="Zum masuk"
             title="Zum Masuk"
-            onClick={() => onZoomChange(Math.min(2.4, Math.round((zoomScale + 0.15) * 100) / 100))}
+            onClick={() => onZoomChange(Math.min(4.0, Math.round((zoomScale + 0.15) * 100) / 100))}
             className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
           >
             <ZoomIn className="w-4 h-4" />

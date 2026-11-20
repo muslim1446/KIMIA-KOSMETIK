@@ -745,7 +745,12 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
           projectorDark={projectorDark}
           onToggleDark={onToggleDark}
           zoomScale={zoomScale}
-          onZoomChange={setZoomScale}
+          onZoomChange={(next) => {
+            setZoomScale(next);
+            if (next === 1) {
+              setPanOffset({ x: 0, y: 0 });
+            }
+          }}
           tool={tool}
           onToolChange={setTool}
           penMode={penMode}

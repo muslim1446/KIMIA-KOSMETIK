@@ -142,10 +142,199 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
   const onLaserBroadcastRef = useRef(onLaserBroadcast);
   onLaserBroadcastRef.current = onLaserBroadcast;
 
-  // Reset pan when zoom goes back to 1× (no need to stay offset)
+  const [isPinchingOrPanning, setIsPinchingOrPanning] = useState(false);
+  const gestureTimerRef = useRef<number | null>(null);
+
+  // ── Stable refs so event-handler closures always read fresh values ─────────
+  const zoomScaleRef = useRef(zoomScale);
+  const panOffsetRef = useRef(panOffset);
+  zoomScaleRef.current = zoomScale;
+  panOffsetRef.current = panOffset;
+
+  // ── Universal Pinch-to-Zoom & 360° Pan for Touchscreens ────────────────────
+  // Active in ALL tool modes (pen, eraser, image, etc.). When 2+ fingers are
+  // detected, drawing is safely suppressed to prevent accidental strokes.
   useEffect(() => {
-    if (zoomScale <= 1) setPanOffset({ x: 0, y: 0 });
-  }, [zoomScale]);
+    if (isRemoteProjector) return;
+
+    const pts = new Map<number, { x: number; y: number }>();
+    let prevDist = 0;
+    let prevMidX = 0;
+    let prevMidY = 0;
+
+    const dist2 = (a: { x: number; y: number }, b: { x: number; y: number }) =>
+      Math.hypot(b.x - a.x, b.y - a.y);
+
+    const onStart = (e: TouchEvent) => {
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const t = e.changedTouches[i];
+        pts.set(t.identifier, { x: t.clientX, y: t.clientY });
+      }
+      if (pts.size >= 2) {
+        setIsPinchingOrPanning(true);
+        if (gestureTimerRef.current) window.clearTimeout(gestureTimerRef.current);
+        const [a, b] = Array.from(pts.values());
+        prevDist = dist2(a, b);
+        prevMidX = (a.x + b.x) / 2;
+        prevMidY = (a.y + b.y) / 2;
+        e.preventDefault(); // stop browser native elastic pinch
+      }
+    };
+
+    const onMove = (e: TouchEvent) => {
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const t = e.changedTouches[i];
+        if (pts.has(t.identifier)) pts.set(t.identifier, { x: t.clientX, y: t.clientY });
+      }
+      if (pts.size < 2) return;
+      e.preventDefault();
+      setIsPinchingOrPanning(true);
+
+      const [a, b] = Array.from(pts.values());
+      const curDist = dist2(a, b);
+      const curMidX = (a.x + b.x) / 2;
+      const curMidY = (a.y + b.y) / 2;
+
+      if (prevDist > 0) {
+        const pinchRatio = curDist / prevDist;
+        const prevZ = zoomScaleRef.current;
+        // Infinite canvas zoom range: 0.3x to 4.0x
+        const nextZ = Math.max(0.3, Math.min(4.0, Math.round(prevZ * pinchRatio * 1000) / 1000));
+        const zRatio = nextZ / prevZ;
+
+        // Anchor zoom at the touch midpoint; pan freely 360° with midpoint movement
+        const vx = curMidX - window.innerWidth / 2;
+        const vy = curMidY - window.innerHeight / 2;
+        const panX = panOffsetRef.current.x;
+        const panY = panOffsetRef.current.y;
+        const dx = curMidX - prevMidX;
+        const dy = curMidY - prevMidY;
+
+        setZoomScale(nextZ);
+        setPanOffset({
+          x: vx * (1 - zRatio) + panX * zRatio + dx,
+          y: vy * (1 - zRatio) + panY * zRatio + dy,
+        });
+      }
+
+      prevDist = curDist;
+      prevMidX = curMidX;
+      prevMidY = curMidY;
+    };
+
+    const onEnd = (e: TouchEvent) => {
+      for (let i = 0; i < e.changedTouches.length; i++) pts.delete(e.changedTouches[i].identifier);
+      if (pts.size < 2) {
+        prevDist = 0;
+        // Safety cooldown (120ms): prevents stray drawing stroke if one finger lifts slightly before the other
+        if (gestureTimerRef.current) window.clearTimeout(gestureTimerRef.current);
+        gestureTimerRef.current = window.setTimeout(() => {
+          setIsPinchingOrPanning(false);
+        }, 120);
+      }
+    };
+
+    document.addEventListener('touchstart', onStart, { passive: false });
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onEnd, { passive: true });
+    document.addEventListener('touchcancel', onEnd, { passive: true });
+    return () => {
+      document.removeEventListener('touchstart', onStart);
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onEnd);
+      document.removeEventListener('touchcancel', onEnd);
+      if (gestureTimerRef.current) window.clearTimeout(gestureTimerRef.current);
+    };
+  }, [isRemoteProjector]);
+
+  // ── Touchpad & Mouse Wheel: Pinch-to-Zoom (Ctrl/Meta) & Free 360° Pan ──────
+  // Works on ALL laptop touchpads (Windows Precision, MacBook trackpad, Chromebook):
+  // - Two-finger swipe -> 360° infinite pan (X and Y)
+  // - Two-finger pinch -> smooth cursor-anchored zoom in/out
+  useEffect(() => {
+    if (isRemoteProjector) return;
+
+    const onWheel = (e: WheelEvent) => {
+      // Allow scrolling inside popovers or inputs without panning canvas
+      const target = e.target as HTMLElement | null;
+      if (
+        target?.closest(
+          'input, textarea, select, [data-testid="pen-settings-popover"], [data-testid="sync-settings-popover"]',
+        )
+      ) {
+        return;
+      }
+      e.preventDefault();
+
+      // Temporarily mark gesture active so drawing isn't triggered
+      setIsPinchingOrPanning(true);
+      if (gestureTimerRef.current) window.clearTimeout(gestureTimerRef.current);
+      gestureTimerRef.current = window.setTimeout(() => {
+        setIsPinchingOrPanning(false);
+      }, 100);
+
+      if (e.ctrlKey || e.metaKey) {
+        // ── Touchpad Pinch-to-Zoom or Ctrl + Wheel (anchored at cursor) ───────
+        // Continuous exponential scale factor for butter-smooth touchpad zoom
+        const factor = Math.min(1.25, Math.max(0.8, Math.exp(-e.deltaY * 0.0035)));
+        const prevZ = zoomScaleRef.current;
+        const nextZ = Math.max(0.3, Math.min(4.0, Math.round(prevZ * factor * 1000) / 1000));
+        if (nextZ === prevZ) return;
+        const zRatio = nextZ / prevZ;
+
+        // Keep point under cursor stationary in viewport
+        const vx = e.clientX - window.innerWidth / 2;
+        const vy = e.clientY - window.innerHeight / 2;
+        const panX = panOffsetRef.current.x;
+        const panY = panOffsetRef.current.y;
+
+        setZoomScale(nextZ);
+        setPanOffset({
+          x: vx * (1 - zRatio) + panX * zRatio,
+          y: vy * (1 - zRatio) + panY * zRatio,
+        });
+      } else {
+        // ── Touchpad Two-Finger Free 360° Pan ────────────────────────────────
+        // deltaMode normalisation: 0 = pixels, 1 = lines, 2 = pages
+        const mult = e.deltaMode === 1 ? 24 : e.deltaMode === 2 ? 400 : 1;
+        setPanOffset((prev) => ({
+          x: prev.x - e.deltaX * mult,
+          y: prev.y - e.deltaY * mult,
+        }));
+      }
+    };
+
+    window.addEventListener('wheel', onWheel, { passive: false });
+    return () => window.removeEventListener('wheel', onWheel);
+  }, [isRemoteProjector]);
+
+  // Synchronize stageSlideRect for cross-screen laser coordinates
+  useEffect(() => {
+    const updateRect = () => {
+      const el = slideContainerRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      if (r.width > 0 && r.height > 0) {
+        setStageSlideRect({ left: r.left, top: r.top, width: r.width, height: r.height });
+      }
+    };
+    updateRect();
+    const el = slideContainerRef.current;
+    let ro: ResizeObserver | null = null;
+    if (el && typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(updateRect);
+      ro.observe(el);
+    }
+    window.addEventListener('resize', updateRect);
+    window.addEventListener('scroll', updateRect, true);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener('resize', updateRect);
+      window.removeEventListener('scroll', updateRect, true);
+    };
+  }, [slideIndex, zoomScale, panOffset.x, panOffset.y]);
+
+
 
   const showToast = useCallback((msg: string) => {
     setToastMsg(msg);
@@ -255,134 +444,6 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
     return () => window.removeEventListener('paste', onPaste);
   }, [addCompressedImageToSlide, isRemoteProjector, onAddImage, showToast, slideImages.length, slideIndex]);
 
-  // ── Universal two-finger pinch-zoom + free pan (works in ALL tool modes) ──
-  // Runs at the document level so it fires even when pen/eraser/image tools
-  // are active.  Only intercepts genuine two-finger gestures so single-finger
-  // drawing is never disrupted.
-  useEffect(() => {
-    if (isRemoteProjector) return;
-
-    const activeTouches = new Map<number, { x: number; y: number }>();
-    let lastPinchDist = 0;
-    let lastPinchMidX = 0;
-    let lastPinchMidY = 0;
-
-    const getDistance = (a: { x: number; y: number }, b: { x: number; y: number }) =>
-      Math.hypot(b.x - a.x, b.y - a.y);
-
-    const onTouchStart = (e: TouchEvent) => {
-      for (let i = 0; i < e.changedTouches.length; i++) {
-        const t = e.changedTouches[i];
-        activeTouches.set(t.identifier, { x: t.clientX, y: t.clientY });
-      }
-      if (activeTouches.size === 2) {
-        const [a, b] = Array.from(activeTouches.values());
-        lastPinchDist = getDistance(a, b);
-        lastPinchMidX = (a.x + b.x) / 2;
-        lastPinchMidY = (a.y + b.y) / 2;
-        // Suppress native browser zoom on iOS Safari while we handle it
-        e.preventDefault();
-      }
-    };
-
-    const onTouchMove = (e: TouchEvent) => {
-      for (let i = 0; i < e.changedTouches.length; i++) {
-        const t = e.changedTouches[i];
-        if (activeTouches.has(t.identifier)) {
-          activeTouches.set(t.identifier, { x: t.clientX, y: t.clientY });
-        }
-      }
-
-      if (activeTouches.size === 2) {
-        e.preventDefault(); // block native pinch-zoom so we control it
-        const [a, b] = Array.from(activeTouches.values());
-        const dist = getDistance(a, b);
-        const midX = (a.x + b.x) / 2;
-        const midY = (a.y + b.y) / 2;
-
-        if (lastPinchDist > 0) {
-          // Zoom around the pinch midpoint
-          const scaleDelta = dist / lastPinchDist;
-          setZoomScale((prev) => {
-            const next = Math.max(0.6, Math.min(2.4, prev * scaleDelta));
-            return Math.round(next * 100) / 100;
-          });
-
-          // Pan: follow the midpoint drift so the pinch centre stays put
-          const dx = midX - lastPinchMidX;
-          const dy = midY - lastPinchMidY;
-          if (Math.abs(dx) > 0.3 || Math.abs(dy) > 0.3) {
-            setPanOffset((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
-          }
-        }
-
-        lastPinchDist = dist;
-        lastPinchMidX = midX;
-        lastPinchMidY = midY;
-      }
-    };
-
-    const onTouchEnd = (e: TouchEvent) => {
-      for (let i = 0; i < e.changedTouches.length; i++) {
-        activeTouches.delete(e.changedTouches[i].identifier);
-      }
-      if (activeTouches.size < 2) {
-        lastPinchDist = 0;
-      }
-    };
-
-    // passive: false so we can call preventDefault()
-    document.addEventListener('touchstart', onTouchStart, { passive: false });
-    document.addEventListener('touchmove', onTouchMove, { passive: false });
-    document.addEventListener('touchend', onTouchEnd, { passive: true });
-    document.addEventListener('touchcancel', onTouchEnd, { passive: true });
-
-    return () => {
-      document.removeEventListener('touchstart', onTouchStart);
-      document.removeEventListener('touchmove', onTouchMove);
-      document.removeEventListener('touchend', onTouchEnd);
-      document.removeEventListener('touchcancel', onTouchEnd);
-    };
-  }, [isRemoteProjector]);
-
-  // Ctrl + Scroll wheel zoom support (desktop)
-  useEffect(() => {
-    if (isRemoteProjector) return;
-    const onWheel = (e: WheelEvent) => {
-      if (!e.ctrlKey && !e.metaKey) return;
-      e.preventDefault();
-      const delta = e.deltaY < 0 ? 0.1 : -0.1;
-      setZoomScale((prev) => Math.max(0.6, Math.min(2.4, Math.round((prev + delta) * 100) / 100)));
-    };
-    window.addEventListener('wheel', onWheel, { passive: false });
-    return () => window.removeEventListener('wheel', onWheel);
-  }, [isRemoteProjector]);
-
-  // Measure slide bounding rect for accurate cross-screen laser coordinates
-  useEffect(() => {
-    const updateRect = () => {
-      const el = slideContainerRef.current;
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      if (r.width > 0 && r.height > 0) {
-        setStageSlideRect({ left: r.left, top: r.top, width: r.width, height: r.height });
-      }
-    };
-    updateRect();
-    const el = slideContainerRef.current;
-    let ro: ResizeObserver | null = null;
-    if (el && typeof ResizeObserver !== 'undefined') {
-      ro = new ResizeObserver(updateRect);
-      ro.observe(el);
-    }
-    window.addEventListener('resize', updateRect);
-    window.addEventListener('scroll', updateRect, true);
-    return () => {
-      ro?.disconnect();
-      window.removeEventListener('resize', updateRect);
-      window.removeEventListener('scroll', updateRect, true);
-    };
-  }, [slideIndex, zoomScale]);
 
   // Real-time Collaborative Laser Pointer: hold 'L' key + move mouse/touch OR use Laser tool
   const emitLaserAtClientPos = useCallback(
@@ -539,6 +600,9 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
           onDeleteImage={onDeleteImage}
           onDrawingStart={() => setClosePopoverSignal((n) => n + 1)}
           isRemoteProjector={isRemoteProjector}
+          zoomScale={zoomScale}
+          panOffset={panOffset}
+          isPinchingOrPanning={isPinchingOrPanning}
         />
       )}
 

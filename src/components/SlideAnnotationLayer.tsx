@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Lock, Move, Pin, Trash2, Unlock } from 'lucide-react';
 import {
   AnnotationTool,
@@ -53,6 +53,9 @@ interface SlideAnnotationLayerProps {
   onDeleteImage: (imageId: string) => void;
   onDrawingStart?: () => void;
   isRemoteProjector?: boolean;
+  zoomScale?: number;
+  panOffset?: { x: number; y: number };
+  isPinchingOrPanning?: boolean;
 }
 
 type ResizeCorner = 'nw' | 'ne' | 'sw' | 'se';
@@ -78,6 +81,9 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
   onDeleteImage,
   onDrawingStart,
   isRemoteProjector = false,
+  zoomScale = 1,
+  panOffset = { x: 0, y: 0 },
+  isPinchingOrPanning = false,
 }) => {
   const [slideRect, setSlideRect] = useState<LogicalRect>({
     left: 0,
@@ -158,6 +164,11 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
     setScopeRects(nextScopes);
   }, [slideContainerRef]);
 
+  // Synchronously update slideRect before browser paint on any zoom or pan frame
+  useLayoutEffect(() => {
+    measureGeometry();
+  }, [measureGeometry, slideIndex, interactionsKey, zoomScale, panOffset.x, panOffset.y]);
+
   useEffect(() => {
     measureGeometry();
     const t1 = window.setTimeout(measureGeometry, 60);
@@ -186,6 +197,20 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
       window.removeEventListener('scroll', measureGeometry, true);
     };
   }, [measureGeometry, slideIndex, interactionsKey, slideContainerRef]);
+
+  // Enhanced safety: Immediately abort any draft drawing, eraser, or image drag when 360 gesture starts
+  useEffect(() => {
+    if (isPinchingOrPanning) {
+      if (activeDraftRef.current) {
+        activeDraftRef.current = null;
+        setDraftStroke(null);
+        onLiveStroke(null);
+      }
+      activePointerIdRef.current = null;
+      isErasingRef.current = false;
+      imageActionRef.current = null;
+    }
+  }, [isPinchingOrPanning, onLiveStroke]);
 
   // Clear image selection when switching slides
   useEffect(() => {
@@ -346,7 +371,7 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
 
   // Pen & Eraser Pointer handlers on the full-viewport SVG overlay
   const handleCanvasPointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
-    if (isRemoteProjector || (tool !== 'pen' && tool !== 'eraser')) return;
+    if (isRemoteProjector || isPinchingOrPanning || (tool !== 'pen' && tool !== 'eraser')) return;
     if (e.button !== 0 && e.pointerType === 'mouse') return;
 
     e.preventDefault();

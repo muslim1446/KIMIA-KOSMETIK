@@ -109,16 +109,15 @@ export const SlideStageContent: React.FC<SlideStageContentProps> = ({
 
       {/*
         Scaled 1280×720 Slide Canvas.
-        panOffset shifts the canvas so users can freely move around after
-        zooming in — works in all directions, not locked to screen centre.
-        We use a wrapper div that is itself freely positioned inside the flex
-        host so the ambient backdrop is never clipped.
+        panOffset shifts the canvas so users can freely move around in 360 degrees
+        at any zoom level without boundary limits.
+        transition is 'none' to guarantee zero-lag, butter-smooth real-time movement.
       */}
       <div
         style={{
-          transform: `translate(${panOffset.x}px, ${panOffset.y}px)`,
+          transform: `translate3d(${panOffset.x}px, ${panOffset.y}px, 0)`,
           willChange: 'transform',
-          transition: 'transform 0.05s linear',
+          transition: 'none',
         }}
       >
         <div

@@ -61,7 +61,7 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
             5.4.4 · Bahan-bahan Asas Kosmetik (Rajah 5.15)
           </div>
           <h2 className="font-display text-[28px] font-bold text-stone-900 dark:text-stone-50 mt-0.5 leading-tight">
-            Mengapa Minyak &amp; Air Terpisah — Dan Bagaimana Pengemulsi Mendamaikannya
+            Mengapa Minyak &amp; Air Terpisah — Dan Bagaimana Pengemulsi Menyatukannya
           </h2>
         </div>
 
@@ -92,7 +92,7 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
             }`}
           >
             <Atom className="w-4 h-4" />
-            <span>Biokimia</span>
+            <span>Perincian</span>
           </button>
         </div>
       </div>
@@ -136,16 +136,16 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
           })}
 
           <div className="rounded-2xl border border-amber-300 bg-amber-50/80 dark:bg-amber-950/30 px-3.5 py-2.5 flex flex-col justify-center">
-            <div className="text-[14px] font-bold text-amber-900 dark:text-amber-300">Kunci Rahsia Polariti</div>
+            <div className="text-[14px] font-bold text-amber-900 dark:text-amber-300">Prinsip Kekutuban</div>
             <p className="text-[14px] text-stone-800 dark:text-stone-200 mt-0.5 leading-snug">
-              <strong>Air</strong> berkutub, <strong>Minyak</strong> tak berkutub — hanya <strong>Pengemulsi</strong> boleh memegang kedua-duanya!
+              <strong>Air</strong> berkutub, <strong>Minyak</strong> tak berkutub — <strong>Pengemulsi</strong> menjadi jambatan mengikat kedua-duanya!
             </p>
           </div>
         </div>
 
         <div className="col-span-6 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-4 flex flex-col justify-between gap-2.5">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[15px] font-bold text-stone-700 dark:text-stone-300">Makroskopik (Bikar) + Molekul</span>
+            <span className="text-[15px] font-bold text-stone-700 dark:text-stone-300">Pemerhatian Bikar &amp; Molekul</span>
             <span
               className={`text-[15px] font-bold ${
                 evalResult.isHomogeneous && em.pengawet ? 'text-emerald-700' : 'text-amber-700'
@@ -251,7 +251,7 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
 
             <div className="col-span-7 bg-[#FBF9F5] dark:bg-stone-950 rounded-2xl p-3">
               <div className="text-[13px] font-bold text-indigo-900 dark:text-indigo-300 mb-1">
-                Zum Molekul: Bagaimana Pengemulsi Bekerja?
+                Susunan Molekul: Bagaimana Pengemulsi Bekerja?
               </div>
               <svg viewBox="0 0 270 132" className="w-full h-32" aria-label="Gambar rajah molekul pengemulsi menyatukan air dan minyak">
                 {!em.pengemulsi ? (

@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowRight, Atom, Eye, HelpCircle, Lightbulb } from 'lucide-react';
-import { POE_MYSTERIES } from '../../data/slidesData';
+import { DAILY_MYSTERIES } from '../../data/slidesData';
 import { SharedSlideInteractions } from '../../hooks/usePresentationSync';
 
 interface Slide09Props {
@@ -9,7 +9,7 @@ interface Slide09Props {
 }
 
 export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) => {
-  const mystery = POE_MYSTERIES[interactions.quizIndex] ?? POE_MYSTERIES[0];
+  const mystery = DAILY_MYSTERIES[interactions.quizIndex] ?? DAILY_MYSTERIES[0];
   const pickedHypothesis = mystery.hypotheses.find((h) => h.id === interactions.quizSelectedOption);
 
   return (
@@ -17,26 +17,26 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
       <div className="shrink-0 flex items-end justify-between gap-3 border-b border-stone-200 dark:border-stone-800 pb-3">
         <div>
           <div className="text-[15px] font-bold text-blue-900 dark:text-blue-400">
-            5.4.5 · Makmal Penaakulan Feynman (Ramal → Perhati → Terangkan)
+            5.4.5 · Perbincangan &amp; Aplikasi Kimia
           </div>
           <h2 className="font-display text-[28px] font-bold text-stone-900 dark:text-stone-50 mt-0.5 leading-tight">
-            Faham Kimia di Sebalik Fenomena — Bukan Menghafal Jawapan Peperiksaan
+            Mengapa Ia Berlaku? Memahami Punca Kimia di Sebalik Situasi Harian
           </h2>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          {POE_MYSTERIES.map((m, idx) => (
+          {DAILY_MYSTERIES.map((m, idx) => (
             <button
               key={m.id}
               type="button"
-              onClick={() => onPatch({ quizIndex: idx, quizSelectedOption: null, poeRevealed: false })}
+              onClick={() => onPatch({ quizIndex: idx, quizSelectedOption: null, explanationRevealed: false })}
               className={`px-3.5 py-2 rounded-xl border text-[15px] font-bold cursor-pointer ${
                 idx === interactions.quizIndex
                   ? 'border-stone-900 bg-stone-900 text-white dark:border-stone-100 dark:bg-stone-100 dark:text-stone-900'
                   : 'border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-200 hover:bg-stone-50'
               }`}
             >
-              Misteri {idx + 1}
+              Situasi {idx + 1}
             </button>
           ))}
         </div>
@@ -47,7 +47,7 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-[15px] font-bold text-blue-900 dark:text-blue-400">
               <HelpCircle className="w-5 h-5" />
-              <span>Langkah 1 · Situasi Dunia Sebenar</span>
+              <span>Situasi Sebenar</span>
             </div>
             <h3 className="font-display text-[21px] font-bold text-stone-900 dark:text-stone-100 leading-snug">
               {mystery.title}
@@ -62,7 +62,7 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
 
           <div className="pt-3 border-t border-stone-200 dark:border-stone-800 space-y-1.5">
             <div className="text-[14px] font-bold text-emerald-800 dark:text-emerald-400">
-              3 Prinsip Kimia Utama Bab 5.4:
+              Rumusan 3 Prinsip Utama Bab 5.4:
             </div>
             <div className="text-[14px] text-stone-700 dark:text-stone-300 leading-snug">
               1. <strong>Struktur &amp; Kekutuban</strong> · 2. <strong>Dos &amp; Tempoh</strong> · 3. <strong>Sasaran &amp; Pengawasan NPRA</strong>
@@ -73,7 +73,7 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
         <div className="col-span-7 flex flex-col justify-between gap-3">
           <div className="space-y-2">
             <div className="text-[15px] font-bold text-stone-700 dark:text-stone-300">
-              Langkah 2 · Ramalkan Dahulu Bersama Kelas (Klik untuk bincang idea):
+              Ramalan Bersama Kelas (Klik satu pandangan untuk dibincangkan):
             </div>
             {mystery.hypotheses.map((hyp, i) => {
               const selected = interactions.quizSelectedOption === hyp.id;
@@ -110,7 +110,7 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-[15px] font-bold text-emerald-900 dark:text-emerald-400">
                 <Lightbulb className="w-5 h-5" />
-                <span>Langkah 3 · Penjelasan Sebab-Akibat Molekul (Feynman)</span>
+                <span>Penjelasan Mekanisme Kimia</span>
               </div>
 
               <div className="flex items-center gap-2">
@@ -124,24 +124,24 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
                   }`}
                 >
                   <Atom className="w-3.5 h-3.5" />
-                  <span>Biokimia</span>
+                  <span>Perincian</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => onPatch({ poeRevealed: !interactions.poeRevealed })}
+                  onClick={() => onPatch({ explanationRevealed: !interactions.explanationRevealed })}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-[14px] font-bold cursor-pointer"
                 >
                   <Eye className="w-4 h-4" />
-                  <span>{interactions.poeRevealed ? 'Tutup Penjelasan' : 'Dedah Mekanisme Molekul'}</span>
+                  <span>{interactions.explanationRevealed ? 'Tutup Penjelasan' : 'Dedah Penjelasan'}</span>
                 </button>
               </div>
             </div>
 
-            {interactions.poeRevealed ? (
+            {interactions.explanationRevealed ? (
               <div className="grid grid-cols-3 gap-2.5">
                 <div className="bg-[#FBF9F5] dark:bg-stone-950 rounded-xl p-3">
                   <div className="text-[13px] font-bold text-blue-900 dark:text-blue-400 flex items-center gap-1">
-                    <span>1. Punca Molekul</span>
+                    <span>1. Tindak Balas Molekul</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </div>
                   <p className="text-[14px] text-stone-800 dark:text-stone-200 mt-1 leading-snug">
@@ -174,8 +174,8 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
             ) : (
               <p className="text-[15px] text-stone-600 dark:text-stone-400 leading-snug">
                 {pickedHypothesis
-                  ? 'Bagus! Selepas kelas membincangkan ramalan di atas, klik "Dedah Mekanisme Molekul" untuk menyemak bagaimana proses kimianya berlaku.'
-                  : 'Beri peluang kepada kelas membina ramalan dahulu sebelum mendedahkan mekanisme molekul sebenar.'}
+                  ? 'Bincangkan ramalan di atas bersama kelas, kemudian klik "Dedah Penjelasan" untuk melihat rantaian sebab-akibat kimianya.'
+                  : 'Minta rakan sekelas mengemukakan ramalan dahulu sebelum mendedahkan penjelasan kimia.'}
               </p>
             )}
           </div>

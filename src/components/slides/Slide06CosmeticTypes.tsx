@@ -232,7 +232,7 @@ export const Slide06CosmeticTypes: React.FC<Slide06Props> = ({ interactions, onP
             </div>
 
             <div className="bg-emerald-50/70 dark:bg-emerald-950/30 rounded-xl p-3.5">
-              <div className="text-[14px] font-bold text-emerald-900 dark:text-emerald-300">Sifat Fizikal &amp; Kimia</div>
+              <div className="text-[14px] font-bold text-emerald-900 dark:text-emerald-300">Kandungan &amp; Cara Tindakan</div>
               <p className="text-[15px] text-stone-900 dark:text-stone-100 mt-0.5 leading-snug">{selectedItem.chemicalNote}</p>
             </div>
           </div>

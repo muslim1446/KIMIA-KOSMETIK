@@ -69,7 +69,7 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
             }`}
           >
             <Atom className="w-4 h-4" />
-            <span>Biokimia</span>
+            <span>Perincian</span>
           </button>
         </div>
       </div>

@@ -57,7 +57,7 @@ export const Slide08BannedForensics: React.FC<Slide08Props> = ({ interactions, o
             }`}
           >
             <Atom className="w-4 h-4" />
-            <span>Biokimia</span>
+            <span>Perincian</span>
           </button>
         </div>
       </div>

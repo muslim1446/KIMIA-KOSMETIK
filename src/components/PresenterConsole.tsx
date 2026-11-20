@@ -168,7 +168,7 @@ export const PresenterConsole: React.FC<PresenterConsoleProps> = ({
             }`}
           >
             <Atom className="w-3.5 h-3.5" />
-            <span>Zum Biokimia</span>
+            <span>Perincian Molekul</span>
           </button>
 
           <button
@@ -354,13 +354,13 @@ export const PresenterConsole: React.FC<PresenterConsoleProps> = ({
           <div className="border border-emerald-200 bg-emerald-50/70 rounded-2xl p-4 space-y-1.5">
             <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-900">
               <Lightbulb className="w-4 h-4" />
-              <span>Analogi Feynman (Mudah Difahami Semua Pelajar)</span>
+              <span>Analogi Mudah</span>
             </div>
-            <p className="text-sm text-stone-900 leading-relaxed">{currentMeta.presenterNotes.feynmanAnalogy}</p>
+            <p className="text-sm text-stone-900 leading-relaxed">{currentMeta.presenterNotes.simpleAnalogy}</p>
           </div>
 
           <div className="border border-stone-200 bg-white rounded-2xl p-4 space-y-2.5">
-            <div className="text-xs font-bold text-stone-700">Langkah Penyampaian Pembentang</div>
+            <div className="text-xs font-bold text-stone-700">Isi Utama Pembentang</div>
             <ol className="space-y-2 text-sm text-stone-800 leading-relaxed list-decimal list-inside">
               {currentMeta.presenterNotes.talkingPoints.map((line, i) => (
                 <li key={i}>{line}</li>
@@ -370,13 +370,13 @@ export const PresenterConsole: React.FC<PresenterConsoleProps> = ({
 
           <div className="border border-amber-200 bg-amber-50/70 rounded-2xl p-4 space-y-3">
             <div>
-              <div className="text-xs font-bold text-amber-900">Soalan Mendorong Pemikiran Kelas</div>
+              <div className="text-xs font-bold text-amber-900">Soalan untuk Ditanya kepada Kelas</div>
               <p className="text-sm text-stone-800 mt-1 leading-relaxed">
                 {currentMeta.presenterNotes.questionForClass}
               </p>
             </div>
             <div className="pt-2.5 border-t border-amber-200/80">
-              <div className="text-xs font-bold text-stone-800">Nota Pedagogi</div>
+              <div className="text-xs font-bold text-stone-800">Nota Tambahan</div>
               <p className="text-xs text-stone-700 mt-1 leading-relaxed">
                 {currentMeta.presenterNotes.reminder}
               </p>

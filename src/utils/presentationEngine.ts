@@ -416,7 +416,7 @@ export function validateNpraCode(rawCode: string): NpraCheckResult {
       category: 'ubat_berdaftar',
       label: 'Format Nombor Pendaftaran Ubat NPRA (MAL) Sah',
       guidance: 'Menunjukkan produk ubat/tradisional melalui semakan ketulenan bahan aktif dan had bahan cemar oleh NPRA.',
-      chemicalCheckSummary: 'Ubat Berdaftar: sukatan dos, kestabilan dan ketiadaan logam berat/steroid tersembunyi disemak.',
+      chemicalCheckSummary: 'Ubat Berdaftar: sukatan dos, kestabilan dan ketiadaan logam berat atau steroid tersembunyi disemak.',
     };
   }
   if (/^NOT\d{9}[A-Z]$/.test(code)) {

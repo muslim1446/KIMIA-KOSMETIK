@@ -9,7 +9,7 @@ export interface SlideMeta {
   durationSeconds: number;
   textbookRef: string;
   presenterNotes: {
-    feynmanAnalogy: string;
+    simpleAnalogy: string;
     talkingPoints: string[];
     questionForClass: string;
     reminder: string;
@@ -67,7 +67,7 @@ export interface BannedChemical {
   molecularMechanism: string;
 }
 
-export interface PoeMystery {
+export interface DailyMystery {
   id: string;
   title: string;
   dailySituation: string;
@@ -92,10 +92,10 @@ export interface QuizQuestion {
 }
 
 export const TEAM_PRESENTERS: Record<PresenterId, { name: string; focus: string }> = {
-  1: { name: 'Pembentang 1', focus: '3 Rahsia Kimia & Ubat Tradisional' },
+  1: { name: 'Pembentang 1', focus: 'Prinsip Kimia & Ubat Tradisional' },
   2: { name: 'Pembentang 2', focus: 'Mekanisme Ubat Moden & Dos' },
   3: { name: 'Pembentang 3', focus: 'Rintangan Bakteria, Plasebo & NPRA' },
-  4: { name: 'Pembentang 4', focus: 'Polariti Kosmetik & Bahan Terlarang' },
+  4: { name: 'Pembentang 4', focus: 'Kekutuban Kosmetik & Bahan Terlarang' },
 };
 
 export const SLIDES_META: SlideMeta[] = [
@@ -108,15 +108,15 @@ export const SLIDES_META: SlideMeta[] = [
     durationSeconds: 70,
     textbookRef: 'Kimia Tingkatan 5 · Bab 5.4 (m.s. 181–186)',
     presenterNotes: {
-      feynmanAnalogy:
-        'Bayangkan pisau dapur dan pisau bedah: bahan logamnya sama, tetapi tangan, tempat dan sukatan menentukan sama ada ia menyembuhkan atau mencederakan.',
+      simpleAnalogy:
+        'Bayangkan pisau dapur dan pisau bedah: bahan logamnya sama, tetapi sukatan dan tempat digunakan menentukan sama ada ia menyembuhkan atau mencederakan.',
       talkingPoints: [
-        'Mulakan dengan memecahkan salah tanggapan biasa: bukan semua bahan kimia berbahaya, dan bukan semua bahan semula jadi sentiasa selamat.',
-        'Tunjukkan 3 rahsia kimia pada sebelah kiri: Struktur Molekul, Dos/Ketulenan, dan Lapisan Sasaran.',
+        'Mulakan dengan menerangkan bahawa bukan semua bahan kimia berbahaya, dan bukan semua bahan semula jadi sentiasa selamat.',
+        'Tunjukkan 3 faktor penentu pada sebelah kiri: Struktur Molekul, Dos/Tempoh, dan Lapisan Sasaran.',
         'Klik tiga tab di sebelah kanan supaya kelas melihat di lapisan mana ubat, kosmetik, dan krim haram berhenti atau menembusi salur darah.',
       ],
       questionForClass: 'Mengapa Betamethasone valerate dibenarkan oleh doktor di hospital, tetapi diharamkan dalam krim pemutih di pasaran?',
-      reminder: 'Beri tumpuan kepada pemahaman konsep sebab-akibat, bukan hafalan nama semata-mata.',
+      reminder: 'Beri tumpuan kepada pemahaman sebab-akibat kimia, bukan hafalan senarai semata-mata.',
     },
   },
   {
@@ -128,11 +128,11 @@ export const SLIDES_META: SlideMeta[] = [
     durationSeconds: 120,
     textbookRef: 'Rajah 5.13 & Gambar foto 5.9 (m.s. 181)',
     presenterNotes: {
-      feynmanAnalogy:
-        'Meminum air rebusan halia umpama membancuh teh tanpa penimbang — bahan penyembuhnya memang ada di dalam daun/akar, tetapi jumlah molekul aktifnya berbeza-beza.',
+      simpleAnalogy:
+        'Meminum air rebusan halia umpama membancuh teh tanpa penimbang — bahan penyembuhnya ada di dalam tumbuhan, tetapi kepekatannya berbeza-beza.',
       talkingPoints: [
-        'Klik setiap tumbuhan dan tunjukkan bahagian tumbuhan serta molekul aktif yang membantu tubuh.',
-        'Klik 3 cara penyediaan (Lesung Batu, Direbus, Pil/Kapsul) untuk menerangkan bagaimana menghancurkan atau memanaskan membebaskan bahan aktif.',
+        'Klik setiap tumbuhan dan terangkan bahagian tumbuhan serta bahan aktif yang bertindak dalam badan.',
+        'Klik 3 cara penyediaan (Lesung Batu, Direbus, Pil/Kapsul) untuk menerangkan bagaimana menghancurkan atau merebus membebaskan bahan aktif.',
         'Buka Cabaran Minda Daun Ketum untuk menunjukkan bahawa tumbuhan semula jadi juga boleh mengandungi molekul psikoaktif yang menyebabkan ketagihan.',
       ],
       questionForClass: 'Jika serbuk halia dimasukkan ke dalam kapsul moden, adakah ia bertukar menjadi ubat moden? Mengapa?',
@@ -148,15 +148,15 @@ export const SLIDES_META: SlideMeta[] = [
     durationSeconds: 150,
     textbookRef: 'Rajah 5.14 & Jadual 5.7 (m.s. 182–183)',
     presenterNotes: {
-      feynmanAnalogy:
-        'Fikirkan ubat seperti kunci dan tapak tindakan badan seperti mangga: jika kuncinya berasid (Aspirin), ia membuka mangga sakit tetapi turut mengikis dinding perut.',
+      simpleAnalogy:
+        'Fikirkan ubat seperti kunci dan tapak tindakan badan seperti mangga: jika kuncinya berasid (Aspirin), ia meredakan sakit tetapi turut mengikis dinding perut.',
       talkingPoints: [
         'Mulakan dengan 5 kategori utama di sebelah kiri serta sumbangan Ibnu Sina sebagai Bapa Perubatan Moden.',
         'Pilih Aspirin vs Parasetamol, dan Antiseptik vs Disinfektan untuk menerangkan sebab molekulnya bertindak berbeza.',
-        'Gunakan Padanan Pesakit di bawah (Pesakit Gastrik + Aspirin, Alahan Penisilin + Antibiotik) serta butang Zum Biokimia bagi murid yang ingin tahu mekanisme molekulnya.',
+        'Gunakan Padanan Pesakit di bawah (Pesakit Gastrik + Aspirin, Alahan Penisilin + Antibiotik) serta butang Perincian Molekul jika perlu.',
       ],
       questionForClass: 'Mengapa alkohol dan formaldehid membunuh kuman di lantai tetapi merosakkan tisu jika disapu pada luka terbuka?',
-      reminder: 'Fokuskan kepada KENAPA kesan sampingan terjadi (sifat asid, kepekatan, sasaran sel), bukan sekadar membaca senarai.',
+      reminder: 'Fokuskan kepada punca kesan sampingan (sifat asid, kepekatan, sasaran sel), bukan sekadar membaca jadual.',
     },
   },
   {
@@ -168,15 +168,15 @@ export const SLIDES_META: SlideMeta[] = [
     durationSeconds: 160,
     textbookRef: 'Penggunaan Ubat & Ujian Klinikal (m.s. 182–184)',
     presenterNotes: {
-      feynmanAnalogy:
-        'Berhenti makan antibiotik pada Hari ke-3 umpama membunuh lalang yang lemah di kebun lalu meninggalkan lalang paling liat membiak memenuhi seluruh tanah.',
+      simpleAnalogy:
+        'Berhenti makan antibiotik pada Hari ke-3 umpama mencabut rumput yang lemah di kebun lalu meninggalkan rumput paling liat membiak memenuhi seluruh tanah.',
       talkingPoints: [
         'Tunjukkan pada Hari ke-3 pesakit terasa sihat kerana bakteria biru yang lemah sudah mati — tetapi bakteria merah yang kebal sedang menunggu peluang membiak.',
-        'Pada tab Parasetamol, gerakkan gelangsar melebihi 4000 mg dan tunjukkan Perisai Hati (glutation) yang habis digunakan sehingga sel hati diserang.',
+        'Pada tab Perisai Hati, gerakkan gelangsar melebihi 4000 mg dan tunjukkan perisai hati habis digunakan sehingga sel hati diserang.',
         'Pada tab Plasebo, terangkan bagaimana saintis memisahkan kesan harapan otak daripada kesan kimia sebenar molekul ubat.',
       ],
       questionForClass: 'Jika antibiotik tidak dihabiskan, siapakah sebenarnya yang menjadi imun: badan kita atau bakteria?',
-      reminder: 'Gunakan butang Zum Biokimia jika pelajar bertanya nama perisai hati (glutation) dan dinding sel bakteria (peptidoglikan).',
+      reminder: 'Gunakan butang Perincian jika pelajar ingin mengetahui nama bahan di hati (glutation) dan dinding sel bakteria (peptidoglikan).',
     },
   },
   {
@@ -188,7 +188,7 @@ export const SLIDES_META: SlideMeta[] = [
     durationSeconds: 120,
     textbookRef: 'Gambar foto 5.10 & Dasar PT&K (m.s. 183–184)',
     presenterNotes: {
-      feynmanAnalogy:
+      simpleAnalogy:
         'Buah pinggang dan hati ialah pusat penapisan sisa kimia tubuh; produk tanpa ujian dos umpama menuang bahan kimia tidak diketahui ke dalam penapis hingga tersumbat dan rosak.',
       talkingPoints: [
         'Klik tiga kes penyalahgunaan untuk menerangkan rantaian punca, proses dalam badan, dan akibatnya.',
@@ -208,8 +208,8 @@ export const SLIDES_META: SlideMeta[] = [
     durationSeconds: 100,
     textbookRef: 'Rajah 5.16 & Peraturan 1984 (m.s. 184–185)',
     presenterNotes: {
-      feynmanAnalogy:
-        'Kosmetik rias bertindak seperti cat mineral di permukaan kulit; kosmetik perawatan seperti span mengunci air pada kulit; pewangi pula molekul kecil ringan yang terbang ke udara.',
+      simpleAnalogy:
+        'Kosmetik rias bertindak seperti lapisan warna di permukaan kulit; kosmetik perawatan seperti span mengunci air pada kulit; pewangi pula molekul kecil ringan yang terbang ke udara.',
       talkingPoints: [
         'Tekankan definisi teras: kosmetik digunakan secara LUARAN untuk membersih, melindungi atau mencantikkan.',
         'Tunjukkan mengapa Deodoran diletakkan di bawah Pewangi (molekul meruap mengawal bau) manakala Masker dan Krim di bawah Kosmetik Perawatan.',
@@ -222,21 +222,21 @@ export const SLIDES_META: SlideMeta[] = [
   {
     index: 6,
     title: 'Minyak, Air & Jambatan Pengemulsi',
-    subtitle: 'Minyak tidak larut dalam air kerana perbezaan kekutuban; pengemulsi berdwisifat menyatukan kedua-duanya menjadi krim stabil.',
+    subtitle: 'Minyak tidak larut dalam air kerana perbezaan kekutuban; pengemulsi menyatukan kedua-duanya menjadi krim stabil.',
     presenterLabel: 'Pembentang 4',
     presenters: [4],
     durationSeconds: 150,
     textbookRef: 'Rajah 5.15 Bahan Asas Kosmetik (m.s. 184)',
     presenterNotes: {
-      feynmanAnalogy:
-        'Air dan minyak umpama dua kumpulan yang enggan berpegang tangan. Pengemulsi ialah pendamai bertangan dua: tangan kepala memegang air, tangan ekor memegang minyak!',
+      simpleAnalogy:
+        'Air dan minyak umpama dua kumpulan yang enggan berpegang tangan. Pengemulsi ialah jambatan bertangan dua: kepala memegang air, ekor memegang minyak!',
       talkingPoints: [
         'Mulakan dengan klik "Fasa Terpisah" supaya kelas melihat lapisan minyak terapung di atas air.',
-        'Tunjukkan gambar rajah molekul di bahagian bawah kanan: air berkutub vs minyak tidak berkutub.',
-        'Klik "2. Pengemulsi" dan tunjukkan bagaimana kepala hidrofilik + ekor hidrofobik membalut titisan minyak membentuk campuran homogen, lalu lengkapkan bahan lain (terutama Pengawet untuk cegah kulat).',
+        'Tunjukkan gambar rajah molekul di bahagian kanan: air berkutub vs minyak tidak berkutub.',
+        'Klik "2. Pengemulsi" dan tunjukkan bagaimana kepala hidrofilik + ekor hidrofobik membalut titisan minyak membentuk campuran homogen, lalu lengkapkan bahan lain termasuk Pengawet.',
       ],
       questionForClass: 'Jika produk penjagaan kulit mengandungi air tanpa pengawet, apa yang akan tumbuh dalam beberapa hari?',
-      reminder: 'Ini antara konsep kimia tulen paling penting dalam Bab 5.4 — luangkan masa pada gambar rajah molekul jambatan.',
+      reminder: 'Luangkan masa pada gambar rajah molekul pengemulsi kerana inilah konsep kimia utama dalam penghasilan losen dan krim.',
     },
   },
   {
@@ -248,35 +248,35 @@ export const SLIDES_META: SlideMeta[] = [
     durationSeconds: 140,
     textbookRef: 'Rajah 5.17 & Jadual 5.8 (m.s. 185–186)',
     presenterNotes: {
-      feynmanAnalogy:
-        'Memakai krim hidrokuinon umpama membuang payung melanin kulit di tengah hari terik; nampak cerah sementara tetapi sinar UV menembak terus sel kulit!',
+      simpleAnalogy:
+        'Memakai krim hidrokuinon umpama membuang payung melanin kulit di tengah hari terik; kulit nampak cerah sementara tetapi sinar UV menembak terus sel kulit!',
       talkingPoints: [
         'Bandingkan kebaikan kosmetik buatan sendiri dengan risiko kosmetik komersial haram (Rajah 5.17).',
         'Klik kesemua 4 bahan terlarang (Merkuri, Hidrokuinon, Betamethasone valerate, Tretinoin) untuk menunjukkan lapisan badan yang diserang.',
-        'Terangkan mengapa Merkuri amat berbahaya: ion logam berat menembusi kulit masuk ke salur darah lalu mengikat protein buah pinggang dan saraf.',
+        'Terangkan mengapa Merkuri amat berbahaya: ion logam berat menembusi kulit masuk ke salur darah lalu merosakkan buah pinggang dan saraf.',
       ],
-      questionForClass: 'Mengapa pengguna yang memakai krim pemutih merkuri berasa kulit cerah pada minggu pertama, tetapi rosak buah pinggang bertahun kemudian?',
-      reminder: 'Gunakan Zum Biokimia untuk menerangkan peranan enzim tirosinase dan ikatan merkuri pada organ dalaman.',
+      questionForClass: 'Mengapa pengguna krim pemutih merkuri berasa kulit cerah pada minggu pertama, tetapi rosak buah pinggang bertahun kemudian?',
+      reminder: 'Gunakan butang Perincian jika ingin menerangkan kesan ke atas enzim penghasil melanin dan protein buah pinggang.',
     },
   },
   {
     index: 8,
-    title: 'Makmal Penaakulan Feynman: Ramal → Perhati → Terangkan',
-    subtitle: 'Menguji kefahaman kimia sebenar melalui penaakulan molekul terhadap empat misteri harian.',
+    title: 'Penaakulan Kimia dalam Situasi Harian',
+    subtitle: 'Memahami punca molekul di sebalik empat situasi harian berkaitan ubat dan bahan kosmetik.',
     presenterLabel: 'Semua Ahli',
     presenters: [1, 2, 3, 4],
     durationSeconds: 130,
-    textbookRef: 'Sintesis Bab 5.4 · Pedagogi Ramal-Perhati-Terangkan (m.s. 181–186)',
+    textbookRef: 'Sintesis & Aplikasi Bab 5.4 (m.s. 181–186)',
     presenterNotes: {
-      feynmanAnalogy:
-        'Matlamat belajar kimia bukan menghafal jawapan A, B, C untuk peperiksaan — tetapi boleh menjelaskan KENAPA sesuatu fenomena berlaku di tahap molekul.',
+      simpleAnalogy:
+        'Tujuan mempelajari kimia ialah supaya kita boleh menjelaskan KENAPA sesuatu fenomena berlaku pada badan dan bahan harian — bukan sekadar meneka jawapan ujian.',
       talkingPoints: [
-        'Bacakan satu misteri harian, minta 2-3 orang rakan sekelas meramalkan punca (klik hipotesis mereka untuk membincangkan logiknya).',
-        'Jangan salahkan jawapan pelajar — tekan butang "Dedah Mekanisme Molekul" untuk menunjukkan rantaian sebab-akibat kimia sebenar.',
-        'Akhiri pembentangan dengan merumuskan 3 prinsip kimia di sebelah kiri: Struktur & Kekutuban, Dos & Kepekatan, Sasaran & Pengawasan.',
+        'Bacakan satu situasi harian, minta 2–3 orang rakan sekelas mengemukakan ramalan (klik idea mereka untuk berbincang).',
+        'Kemudian tekan butang "Dedah Penjelasan" untuk meneliti rantaian tindak balas molekul dan kesannya dalam badan.',
+        'Akhiri pembentangan dengan merumuskan 3 faktor utama di sebelah kiri: Struktur & Kekutuban, Dos & Tempoh, Sasaran & Pengawasan NPRA.',
       ],
-      questionForClass: 'Jika seorang rakan ingin memulakan jenama losen herba buatan sendiri, apakah 3 prinsip kimia yang mesti dipatuhinya?',
-      reminder: 'Pastikan suasana terbuka seperti perbincangan makmal, bukan kuiz peperiksaan.',
+      questionForClass: 'Jika seorang rakan ingin membuat losen herba buatan sendiri, apakah 3 prinsip kimia yang mesti dipatuhinya?',
+      reminder: 'Kekalkan suasana perbincangan makmal yang santai dan terbuka.',
     },
   },
 ];
@@ -299,7 +299,7 @@ export const TRADITIONAL_HERBS: TraditionalHerb[] = [
     prepNotes: {
       lesung: 'Dihancurkan dengan lesung: memecahkan dinding sel tumbuhan supaya pati molekul aktif terus menyentuh bahagian badan yang sakit.',
       rebusan: 'Direbus untuk mendapatkan pati: haba dan air melarutkan molekul aktif menjadi minuman suam yang mudah diserap.',
-      kapsul: 'Dipasarkan dalam bentuk pil atau kapsul: hanya memudahkan pengambilan serbuk tumbuhan, namun kepekatan bahan aktifnya tidak setulen ubat moden.',
+      kapsul: 'Dipasarkan dalam bentuk pil atau kapsul: memudahkan pengambilan serbuk tumbuhan, namun kepekatan bahan aktifnya tidak setulen ubat moden.',
     },
     accentColor: '#B45309',
   },
@@ -567,7 +567,7 @@ export const BANNED_CHEMICALS: BannedChemical[] = [
     explanation:
       'Hidrokuinon menyebabkan kulit menjadi hipersensitif dan mengurangkan pigmentasi sehingga kulit terdedah kepada sinar UV yang berbahaya.',
     molecularMechanism:
-      'Molekul hidrokuinon merencatkan enzim tirosinase yang menghasilkan melanin. Tanpa pigmen melanin sebagai payung penyerap cahaya, sinaran UV terus mencederakan sel kulit.',
+      'Molekul hidrokuinon merencatkan enzim tirosinase yang menghasilkan melanin. Tanpa pigmen melanin sebagai pelindung cahaya, sinaran UV terus mencederakan sel kulit.',
   },
   {
     id: 'betamethasone',
@@ -595,10 +595,10 @@ export const BANNED_CHEMICALS: BannedChemical[] = [
   },
 ];
 
-export const POE_MYSTERIES: PoeMystery[] = [
+export const DAILY_MYSTERIES: DailyMystery[] = [
   {
-    id: 'poe1',
-    title: 'Misteri 1: Mengapa Perut Sakit Selepas Aspirin, Tetapi Hati Rosak Jika Terlebih Parasetamol?',
+    id: 'm1',
+    title: 'Situasi 1: Mengapa Perut Sakit Selepas Aspirin, Tetapi Hati Rosak Jika Terlebih Parasetamol?',
     dailySituation:
       'Ali demam dan mempunyai sejarah sakit gastrik. Jika dia mengambil Aspirin, perutnya berisiko luka. Jika dia menukar kepada Parasetamol secara berlebihan (15 biji sehari), hatinya pula terancam.',
     questionWhy: 'Bagaimanakah perbezaan sifat molekul kedua-dua ubat ini menerangkan kesan yang berlainan pada organ berbeza?',
@@ -606,12 +606,12 @@ export const POE_MYSTERIES: PoeMystery[] = [
       {
         id: 'h1',
         label: 'Parasetamol lebih lemah daripada Aspirin sehingga perlu dimakan banyak biji untuk berkesan.',
-        discussionNote: 'Idea biasa, tetapi tidak tepat — Parasetamol berkesan pada dos normal; bahaya berlaku apabila kapasiti penyahtoksin hati dilampaui.',
+        discussionNote: 'Anggapan biasa, tetapi tidak tepat — Parasetamol berkesan pada dos normal; bahaya berlaku apabila kapasiti penyahtoksin hati dilampaui.',
       },
       {
         id: 'h2',
         label: 'Aspirin bersifat asid dan menghakis dinding perut, manakala Parasetamol neutral tetapi membebankan hati pada dos tinggi.',
-        discussionNote: 'Ramalan tepat! Mari lihat mekanisme molekulnya pada perut berbanding hati.',
+        discussionNote: 'Tepat sekali! Mari lihat mekanisme molekulnya pada perut berbanding hati.',
       },
       {
         id: 'h3',
@@ -624,12 +624,12 @@ export const POE_MYSTERIES: PoeMystery[] = [
       step2Body: 'Pada dos selamat, hati menggunakan perisai antioksidan (glutation) untuk meneutralkan Parasetamol. Melebihi 4000 mg/hari, perisai habis dan sisa toksik menyerang sel hati.',
       step3Principle: 'Struktur kimia menentukan lokasi kesan sampingan, manakala dos menentukan had keselamatan organ.',
     },
-    deepChemNote: 'Kimia Organik & Biokimia: keasidan asid karboksilik (-COOH) berbanding had kinetik detoksifikasi glutation/NAPQI di hati.',
+    deepChemNote: 'Keasidan kumpulan karboksilik (-COOH) berbanding had kadar penyahtoksikan glutation/NAPQI di hati.',
     kssmRef: 'Jadual 5.7 Analgesik (m.s. 182)',
   },
   {
-    id: 'poe2',
-    title: 'Misteri 2: Siti Sudah Sihat Hari ke-3 — Mengapa Doktor Tetap Arah Habiskan Antibiotik?',
+    id: 'm2',
+    title: 'Situasi 2: Siti Sudah Sihat Hari ke-3 — Mengapa Doktor Tetap Arah Habiskan Antibiotik?',
     dailySituation:
       'Selepas 3 hari mengambil penisilin daripada tempoh 7 hari, demam Siti reda dan tekaknya tidak lagi sakit. Dia bercadang menyimpan baki ubat untuk kegunaan masa depan.',
     questionWhy: 'Mengapakah berhenti awal menyebabkan jangkitan berulang yang lebih sukar dirawat? Siapakah yang sebenarnya menjadi imun?',
@@ -642,7 +642,7 @@ export const POE_MYSTERIES: PoeMystery[] = [
       {
         id: 'h2',
         label: 'Baki bakteria yang lebih kebal terselamat pada Hari ke-3 lalu membiak menggantikan bakteria yang lemah.',
-        discussionNote: 'Ramalan tepat! Inilah pemilihan semula jadi akibat kepekatan antibiotik dihentikan terlalu awal.',
+        discussionNote: 'Ramalan tepat! Inilah pemilihan semula jadi apabila kepekatan antibiotik dihentikan terlalu awal.',
       },
       {
         id: 'h3',
@@ -652,15 +652,15 @@ export const POE_MYSTERIES: PoeMystery[] = [
     ],
     causalChain: {
       step1Molecule: 'Antibiotik menyerang dinding sel peptidoglikan bakteria. Pada Hari ke-3, ~80% bakteria lemah sudah mati maka simptom hilang.',
-      step2Body: 'Baki ~20% bakteria yang sedikit berbeza dan lebih tahan masih hidup. Tanpa antibiotik pada Hari 4–7, bakteria tahan ini membiak semula dan menguasai badan.',
+      step2Body: 'Baki ~20% bakteria yang lebih tahan masih hidup. Tanpa antibiotik pada Hari 4–7, bakteria tahan ini membiak semula dan menguasai badan.',
       step3Principle: 'Tempoh dos penuh mengekalkan kepekatan ubat cukup tinggi supaya tiada bakteria kebal tertinggal untuk membina rintangan.',
     },
-    deepChemNote: 'Pemilihan evolusi mikrob: pengurangan kepekatan antibiotik di bawah paras perencatan minimum memihak kepada mutan rintang.',
+    deepChemNote: 'Pemilihan evolusi mikrob: kejatuhan kepekatan antibiotik di bawah paras perencatan memihak kepada bakteria mutan rintang.',
     kssmRef: 'Jadual 5.7 Antimikrob & Gambar foto 5.10 (m.s. 182–183)',
   },
   {
-    id: 'poe3',
-    title: 'Misteri 3: Mengapa Minyak & Air dalam Losen Buatan Sendiri Terpisah Semula Selepas 5 Minit?',
+    id: 'm3',
+    title: 'Situasi 3: Mengapa Minyak & Air dalam Losen Buatan Sendiri Terpisah Semula Selepas 5 Minit?',
     dailySituation:
       'Murid mengacau minyak zaitun, air mawar dan pewarna semula jadi dengan laju untuk membuat losen kulit, tetapi campuran itu segera terpisah menjadi dua lapisan.',
     questionWhy: 'Apakah daya antara molekul yang menolak minyak keluar daripada air, dan molekul jenis apakah yang boleh mendamaikannya?',
@@ -672,8 +672,8 @@ export const POE_MYSTERIES: PoeMystery[] = [
       },
       {
         id: 'h2',
-        label: 'Air berkutub manakala minyak tak berkutub; molekul bertangan dua (Pengemulsi) diperlukan untuk menyatukannya.',
-        discussionNote: 'Tepat sekali! Mari perhatikan bagaimana molekul amfifilik membina jambatan misel.',
+        label: 'Air berkutub manakala minyak tak berkutub; molekul dwisifat (Pengemulsi) diperlukan untuk menyatukannya.',
+        discussionNote: 'Tepat sekali! Molekul pengemulsi bertindak sebagai jambatan antara air dengan minyak.',
       },
       {
         id: 'h3',
@@ -684,17 +684,17 @@ export const POE_MYSTERIES: PoeMystery[] = [
     causalChain: {
       step1Molecule: 'Molekul air bercas separa (berkutub) dan saling menarik melalui ikatan hidrogen, menolak molekul minyak yang tidak berkutub keluar.',
       step2Body: 'Pengemulsi seperti lesitin memiliki kepala suka air (hidrofilik) dan ekor suka minyak (hidrofobik) yang membalut titisan minyak membentuk campuran homogen.',
-      step3Principle: 'Prinsip "serupa melarutkan serupa" diatasi oleh molekul dwisifat (amfifilik) sebagai jambatan.',
+      step3Principle: 'Perbezaan kekutuban diatasi oleh molekul pengemulsi yang menyatukan fasa air dan fasa minyak.',
     },
     deepChemNote: 'Kepolaran ikatan kimia & pembentukan misel koloid yang menstabilkan emulsi kosmetik.',
     kssmRef: 'Rajah 5.15 Bahan-bahan Asas Kosmetik (m.s. 185)',
   },
   {
-    id: 'poe4',
-    title: 'Misteri 4: Kulit Putih dalam 3 Hari — Apa Sebenarnya yang Terjadi di Bawah Lapisan Kulit?',
+    id: 'm4',
+    title: 'Situasi 4: Kulit Putih dalam 3 Hari — Apa Sebenarnya yang Terjadi di Bawah Lapisan Kulit?',
     dailySituation:
       'Satu krim malam tanpa nombor NOT menjanjikan kulit putih seawal 3 hari. Selepas beberapa minggu, kulit menjadi pedih di bawah matahari dan ujian kesihatan mengesan gangguan buah pinggang.',
-    questionWhy: 'Bagaimana bahan terlarang dalam krim itu menipu mata pada minggu pertama sebelum merosakkan kulit dan organ dalaman?',
+    questionWhy: 'Bagaimana bahan terlarang dalam krim itu menghasilkan kesan cerah sementara sebelum merosakkan kulit dan organ dalaman?',
     hypotheses: [
       {
         id: 'h1',
@@ -704,7 +704,7 @@ export const POE_MYSTERIES: PoeMystery[] = [
       {
         id: 'h2',
         label: 'Bahan terlarang menyekat pigmen pelindung melanin (maka UV menyerang kulit) dan menyerap ke darah merosakkan ginjal.',
-        discussionNote: 'Ramalan cemerlang! Mari susun rantaian kejadian bagi Merkuri, Hidrokuinon dan Steroid.',
+        discussionNote: 'Ramalan tepat! Mari susun rantaian kejadian bagi Merkuri, Hidrokuinon dan Steroid.',
       },
       {
         id: 'h3',
@@ -725,14 +725,14 @@ export const POE_MYSTERIES: PoeMystery[] = [
 export const QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: 'q1',
-    scenario: POE_MYSTERIES[0].dailySituation,
-    question: POE_MYSTERIES[0].questionWhy,
-    options: POE_MYSTERIES[0].hypotheses.map((h) => ({
+    scenario: DAILY_MYSTERIES[0].dailySituation,
+    question: DAILY_MYSTERIES[0].questionWhy,
+    options: DAILY_MYSTERIES[0].hypotheses.map((h) => ({
       id: h.id,
       label: h.label,
       explanation: h.discussionNote,
     })),
     correctOptionId: 'h2',
-    kssmRef: POE_MYSTERIES[0].kssmRef,
+    kssmRef: DAILY_MYSTERIES[0].kssmRef,
   },
 ];

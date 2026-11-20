@@ -32,7 +32,7 @@ export interface SharedSlideInteractions {
   bannedChemicalId: 'merkuri' | 'hidrokuinon' | 'betamethasone' | 'tretinoin';
   quizIndex: number;
   quizSelectedOption: string | null;
-  poeRevealed: boolean;
+  explanationRevealed: boolean;
 }
 
 export interface SyncedPresentationState {
@@ -85,7 +85,7 @@ export const DEFAULT_INTERACTIONS: SharedSlideInteractions = {
   bannedChemicalId: 'merkuri',
   quizIndex: 0,
   quizSelectedOption: null,
-  poeRevealed: false,
+  explanationRevealed: false,
 };
 
 function createInitialState(senderId: string): SyncedPresentationState {

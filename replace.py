@@ -423,7 +423,7 @@ export function validateNpraCode(rawCode: string): NpraCheckResult {
       category: 'ubat_berdaftar',
       label: 'Format Nombor Pendaftaran Ubat NPRA (MAL) Sah',
       guidance: 'Menunjukkan produk ubat/tradisional melalui semakan ketulenan bahan aktif dan had bahan cemar oleh NPRA.',
-      chemicalCheckSummary: 'Ubat Berdaftar: sukatan dos, kestabilan dan ketiadaan logam berat/steroid tersembunyi disemak.',
+      chemicalCheckSummary: 'Ubat Berdaftar: sukatan dos, kestabilan dan ketiadaan logam berat atau steroid tersembunyi disemak.',
     };
   }
   if (/^NOT\d{9}[A-Z]$/.test(code)) {
@@ -567,7 +567,7 @@ export interface SlideMeta {
   durationSeconds: number;
   textbookRef: string;
   presenterNotes: {
-    feynmanAnalogy: string;
+    simpleAnalogy: string;
     talkingPoints: string[];
     questionForClass: string;
     reminder: string;
@@ -625,7 +625,7 @@ export interface BannedChemical {
   molecularMechanism: string;
 }
 
-export interface PoeMystery {
+export interface DailyMystery {
   id: string;
   title: string;
   dailySituation: string;
@@ -650,10 +650,10 @@ export interface QuizQuestion {
 }
 
 export const TEAM_PRESENTERS: Record<PresenterId, { name: string; focus: string }> = {
-  1: { name: 'Pembentang 1', focus: '3 Rahsia Kimia & Ubat Tradisional' },
+  1: { name: 'Pembentang 1', focus: 'Prinsip Kimia & Ubat Tradisional' },
   2: { name: 'Pembentang 2', focus: 'Mekanisme Ubat Moden & Dos' },
   3: { name: 'Pembentang 3', focus: 'Rintangan Bakteria, Plasebo & NPRA' },
-  4: { name: 'Pembentang 4', focus: 'Polariti Kosmetik & Bahan Terlarang' },
+  4: { name: 'Pembentang 4', focus: 'Kekutuban Kosmetik & Bahan Terlarang' },
 };
 
 export const SLIDES_META: SlideMeta[] = [
@@ -666,15 +666,15 @@ export const SLIDES_META: SlideMeta[] = [
     durationSeconds: 70,
     textbookRef: 'Kimia Tingkatan 5 · Bab 5.4 (m.s. 181–186)',
     presenterNotes: {
-      feynmanAnalogy:
-        'Bayangkan pisau dapur dan pisau bedah: bahan logamnya sama, tetapi tangan, tempat dan sukatan menentukan sama ada ia menyembuhkan atau mencederakan.',
+      simpleAnalogy:
+        'Bayangkan pisau dapur dan pisau bedah: bahan logamnya sama, tetapi sukatan dan tempat digunakan menentukan sama ada ia menyembuhkan atau mencederakan.',
       talkingPoints: [
-        'Mulakan dengan memecahkan salah tanggapan biasa: bukan semua bahan kimia berbahaya, dan bukan semua bahan semula jadi sentiasa selamat.',
-        'Tunjukkan 3 rahsia kimia pada sebelah kiri: Struktur Molekul, Dos/Ketulenan, dan Lapisan Sasaran.',
+        'Mulakan dengan menerangkan bahawa bukan semua bahan kimia berbahaya, dan bukan semua bahan semula jadi sentiasa selamat.',
+        'Tunjukkan 3 faktor penentu pada sebelah kiri: Struktur Molekul, Dos/Tempoh, dan Lapisan Sasaran.',
         'Klik tiga tab di sebelah kanan supaya kelas melihat di lapisan mana ubat, kosmetik, dan krim haram berhenti atau menembusi salur darah.',
       ],
       questionForClass: 'Mengapa Betamethasone valerate dibenarkan oleh doktor di hospital, tetapi diharamkan dalam krim pemutih di pasaran?',
-      reminder: 'Beri tumpuan kepada pemahaman konsep sebab-akibat, bukan hafalan nama semata-mata.',
+      reminder: 'Beri tumpuan kepada pemahaman sebab-akibat kimia, bukan hafalan senarai semata-mata.',
     },
   },
   {
@@ -686,11 +686,11 @@ export const SLIDES_META: SlideMeta[] = [
     durationSeconds: 120,
     textbookRef: 'Rajah 5.13 & Gambar foto 5.9 (m.s. 181)',
     presenterNotes: {
-      feynmanAnalogy:
-        'Meminum air rebusan halia umpama membancuh teh tanpa penimbang — bahan penyembuhnya memang ada di dalam daun/akar, tetapi jumlah molekul aktifnya berbeza-beza.',
+      simpleAnalogy:
+        'Meminum air rebusan halia umpama membancuh teh tanpa penimbang — bahan penyembuhnya ada di dalam tumbuhan, tetapi kepekatannya berbeza-beza.',
       talkingPoints: [
-        'Klik setiap tumbuhan dan tunjukkan bahagian tumbuhan serta molekul aktif yang membantu tubuh.',
-        'Klik 3 cara penyediaan (Lesung Batu, Direbus, Pil/Kapsul) untuk menerangkan bagaimana menghancurkan atau memanaskan membebaskan bahan aktif.',
+        'Klik setiap tumbuhan dan terangkan bahagian tumbuhan serta bahan aktif yang bertindak dalam badan.',
+        'Klik 3 cara penyediaan (Lesung Batu, Direbus, Pil/Kapsul) untuk menerangkan bagaimana menghancurkan atau merebus membebaskan bahan aktif.',
         'Buka Cabaran Minda Daun Ketum untuk menunjukkan bahawa tumbuhan semula jadi juga boleh mengandungi molekul psikoaktif yang menyebabkan ketagihan.',
       ],
       questionForClass: 'Jika serbuk halia dimasukkan ke dalam kapsul moden, adakah ia bertukar menjadi ubat moden? Mengapa?',
@@ -706,15 +706,15 @@ export const SLIDES_META: SlideMeta[] = [
     durationSeconds: 150,
     textbookRef: 'Rajah 5.14 & Jadual 5.7 (m.s. 182–183)',
     presenterNotes: {
-      feynmanAnalogy:
-        'Fikirkan ubat seperti kunci dan tapak tindakan badan seperti mangga: jika kuncinya berasid (Aspirin), ia membuka mangga sakit tetapi turut mengikis dinding perut.',
+      simpleAnalogy:
+        'Fikirkan ubat seperti kunci dan tapak tindakan badan seperti mangga: jika kuncinya berasid (Aspirin), ia meredakan sakit tetapi turut mengikis dinding perut.',
       talkingPoints: [
         'Mulakan dengan 5 kategori utama di sebelah kiri serta sumbangan Ibnu Sina sebagai Bapa Perubatan Moden.',
         'Pilih Aspirin vs Parasetamol, dan Antiseptik vs Disinfektan untuk menerangkan sebab molekulnya bertindak berbeza.',
-        'Gunakan Padanan Pesakit di bawah (Pesakit Gastrik + Aspirin, Alahan Penisilin + Antibiotik) serta butang Zum Biokimia bagi murid yang ingin tahu mekanisme molekulnya.',
+        'Gunakan Padanan Pesakit di bawah (Pesakit Gastrik + Aspirin, Alahan Penisilin + Antibiotik) serta butang Perincian Molekul jika perlu.',
       ],
       questionForClass: 'Mengapa alkohol dan formaldehid membunuh kuman di lantai tetapi merosakkan tisu jika disapu pada luka terbuka?',
-      reminder: 'Fokuskan kepada KENAPA kesan sampingan terjadi (sifat asid, kepekatan, sasaran sel), bukan sekadar membaca senarai.',
+      reminder: 'Fokuskan kepada punca kesan sampingan (sifat asid, kepekatan, sasaran sel), bukan sekadar membaca jadual.',
     },
   },
   {
@@ -726,15 +726,15 @@ export const SLIDES_META: SlideMeta[] = [
     durationSeconds: 160,
     textbookRef: 'Penggunaan Ubat & Ujian Klinikal (m.s. 182–184)',
     presenterNotes: {
-      feynmanAnalogy:
-        'Berhenti makan antibiotik pada Hari ke-3 umpama membunuh lalang yang lemah di kebun lalu meninggalkan lalang paling liat membiak memenuhi seluruh tanah.',
+      simpleAnalogy:
+        'Berhenti makan antibiotik pada Hari ke-3 umpama mencabut rumput yang lemah di kebun lalu meninggalkan rumput paling liat membiak memenuhi seluruh tanah.',
       talkingPoints: [
         'Tunjukkan pada Hari ke-3 pesakit terasa sihat kerana bakteria biru yang lemah sudah mati — tetapi bakteria merah yang kebal sedang menunggu peluang membiak.',
-        'Pada tab Parasetamol, gerakkan gelangsar melebihi 4000 mg dan tunjukkan Perisai Hati (glutation) yang habis digunakan sehingga sel hati diserang.',
+        'Pada tab Perisai Hati, gerakkan gelangsar melebihi 4000 mg dan tunjukkan perisai hati habis digunakan sehingga sel hati diserang.',
         'Pada tab Plasebo, terangkan bagaimana saintis memisahkan kesan harapan otak daripada kesan kimia sebenar molekul ubat.',
       ],
       questionForClass: 'Jika antibiotik tidak dihabiskan, siapakah sebenarnya yang menjadi imun: badan kita atau bakteria?',
-      reminder: 'Gunakan butang Zum Biokimia jika pelajar bertanya nama perisai hati (glutation) dan dinding sel bakteria (peptidoglikan).',
+      reminder: 'Gunakan butang Perincian jika pelajar ingin mengetahui nama bahan di hati (glutation) dan dinding sel bakteria (peptidoglikan).',
     },
   },
   {
@@ -746,7 +746,7 @@ export const SLIDES_META: SlideMeta[] = [
     durationSeconds: 120,
     textbookRef: 'Gambar foto 5.10 & Dasar PT&K (m.s. 183–184)',
     presenterNotes: {
-      feynmanAnalogy:
+      simpleAnalogy:
         'Buah pinggang dan hati ialah pusat penapisan sisa kimia tubuh; produk tanpa ujian dos umpama menuang bahan kimia tidak diketahui ke dalam penapis hingga tersumbat dan rosak.',
       talkingPoints: [
         'Klik tiga kes penyalahgunaan untuk menerangkan rantaian punca, proses dalam badan, dan akibatnya.',
@@ -766,8 +766,8 @@ export const SLIDES_META: SlideMeta[] = [
     durationSeconds: 100,
     textbookRef: 'Rajah 5.16 & Peraturan 1984 (m.s. 184–185)',
     presenterNotes: {
-      feynmanAnalogy:
-        'Kosmetik rias bertindak seperti cat mineral di permukaan kulit; kosmetik perawatan seperti span mengunci air pada kulit; pewangi pula molekul kecil ringan yang terbang ke udara.',
+      simpleAnalogy:
+        'Kosmetik rias bertindak seperti lapisan warna di permukaan kulit; kosmetik perawatan seperti span mengunci air pada kulit; pewangi pula molekul kecil ringan yang terbang ke udara.',
       talkingPoints: [
         'Tekankan definisi teras: kosmetik digunakan secara LUARAN untuk membersih, melindungi atau mencantikkan.',
         'Tunjukkan mengapa Deodoran diletakkan di bawah Pewangi (molekul meruap mengawal bau) manakala Masker dan Krim di bawah Kosmetik Perawatan.',
@@ -780,21 +780,21 @@ export const SLIDES_META: SlideMeta[] = [
   {
     index: 6,
     title: 'Minyak, Air & Jambatan Pengemulsi',
-    subtitle: 'Minyak tidak larut dalam air kerana perbezaan kekutuban; pengemulsi berdwisifat menyatukan kedua-duanya menjadi krim stabil.',
+    subtitle: 'Minyak tidak larut dalam air kerana perbezaan kekutuban; pengemulsi menyatukan kedua-duanya menjadi krim stabil.',
     presenterLabel: 'Pembentang 4',
     presenters: [4],
     durationSeconds: 150,
     textbookRef: 'Rajah 5.15 Bahan Asas Kosmetik (m.s. 184)',
     presenterNotes: {
-      feynmanAnalogy:
-        'Air dan minyak umpama dua kumpulan yang enggan berpegang tangan. Pengemulsi ialah pendamai bertangan dua: tangan kepala memegang air, tangan ekor memegang minyak!',
+      simpleAnalogy:
+        'Air dan minyak umpama dua kumpulan yang enggan berpegang tangan. Pengemulsi ialah jambatan bertangan dua: kepala memegang air, ekor memegang minyak!',
       talkingPoints: [
         'Mulakan dengan klik "Fasa Terpisah" supaya kelas melihat lapisan minyak terapung di atas air.',
-        'Tunjukkan gambar rajah molekul di bahagian bawah kanan: air berkutub vs minyak tidak berkutub.',
-        'Klik "2. Pengemulsi" dan tunjukkan bagaimana kepala hidrofilik + ekor hidrofobik membalut titisan minyak membentuk campuran homogen, lalu lengkapkan bahan lain (terutama Pengawet untuk cegah kulat).',
+        'Tunjukkan gambar rajah molekul di bahagian kanan: air berkutub vs minyak tidak berkutub.',
+        'Klik "2. Pengemulsi" dan tunjukkan bagaimana kepala hidrofilik + ekor hidrofobik membalut titisan minyak membentuk campuran homogen, lalu lengkapkan bahan lain termasuk Pengawet.',
       ],
       questionForClass: 'Jika produk penjagaan kulit mengandungi air tanpa pengawet, apa yang akan tumbuh dalam beberapa hari?',
-      reminder: 'Ini antara konsep kimia tulen paling penting dalam Bab 5.4 — luangkan masa pada gambar rajah molekul jambatan.',
+      reminder: 'Luangkan masa pada gambar rajah molekul pengemulsi kerana inilah konsep kimia utama dalam penghasilan losen dan krim.',
     },
   },
   {
@@ -806,35 +806,35 @@ export const SLIDES_META: SlideMeta[] = [
     durationSeconds: 140,
     textbookRef: 'Rajah 5.17 & Jadual 5.8 (m.s. 185–186)',
     presenterNotes: {
-      feynmanAnalogy:
-        'Memakai krim hidrokuinon umpama membuang payung melanin kulit di tengah hari terik; nampak cerah sementara tetapi sinar UV menembak terus sel kulit!',
+      simpleAnalogy:
+        'Memakai krim hidrokuinon umpama membuang payung melanin kulit di tengah hari terik; kulit nampak cerah sementara tetapi sinar UV menembak terus sel kulit!',
       talkingPoints: [
         'Bandingkan kebaikan kosmetik buatan sendiri dengan risiko kosmetik komersial haram (Rajah 5.17).',
         'Klik kesemua 4 bahan terlarang (Merkuri, Hidrokuinon, Betamethasone valerate, Tretinoin) untuk menunjukkan lapisan badan yang diserang.',
-        'Terangkan mengapa Merkuri amat berbahaya: ion logam berat menembusi kulit masuk ke salur darah lalu mengikat protein buah pinggang dan saraf.',
+        'Terangkan mengapa Merkuri amat berbahaya: ion logam berat menembusi kulit masuk ke salur darah lalu merosakkan buah pinggang dan saraf.',
       ],
-      questionForClass: 'Mengapa pengguna yang memakai krim pemutih merkuri berasa kulit cerah pada minggu pertama, tetapi rosak buah pinggang bertahun kemudian?',
-      reminder: 'Gunakan Zum Biokimia untuk menerangkan peranan enzim tirosinase dan ikatan merkuri pada organ dalaman.',
+      questionForClass: 'Mengapa pengguna krim pemutih merkuri berasa kulit cerah pada minggu pertama, tetapi rosak buah pinggang bertahun kemudian?',
+      reminder: 'Gunakan butang Perincian jika ingin menerangkan kesan ke atas enzim penghasil melanin dan protein buah pinggang.',
     },
   },
   {
     index: 8,
-    title: 'Makmal Penaakulan Feynman: Ramal → Perhati → Terangkan',
-    subtitle: 'Menguji kefahaman kimia sebenar melalui penaakulan molekul terhadap empat misteri harian.',
+    title: 'Penaakulan Kimia dalam Situasi Harian',
+    subtitle: 'Memahami punca molekul di sebalik empat situasi harian berkaitan ubat dan bahan kosmetik.',
     presenterLabel: 'Semua Ahli',
     presenters: [1, 2, 3, 4],
     durationSeconds: 130,
-    textbookRef: 'Sintesis Bab 5.4 · Pedagogi Ramal-Perhati-Terangkan (m.s. 181–186)',
+    textbookRef: 'Sintesis & Aplikasi Bab 5.4 (m.s. 181–186)',
     presenterNotes: {
-      feynmanAnalogy:
-        'Matlamat belajar kimia bukan menghafal jawapan A, B, C untuk peperiksaan — tetapi boleh menjelaskan KENAPA sesuatu fenomena berlaku di tahap molekul.',
+      simpleAnalogy:
+        'Tujuan mempelajari kimia ialah supaya kita boleh menjelaskan KENAPA sesuatu fenomena berlaku pada badan dan bahan harian — bukan sekadar meneka jawapan ujian.',
       talkingPoints: [
-        'Bacakan satu misteri harian, minta 2-3 orang rakan sekelas meramalkan punca (klik hipotesis mereka untuk membincangkan logiknya).',
-        'Jangan salahkan jawapan pelajar — tekan butang "Dedah Mekanisme Molekul" untuk menunjukkan rantaian sebab-akibat kimia sebenar.',
-        'Akhiri pembentangan dengan merumuskan 3 prinsip kimia di sebelah kiri: Struktur & Kekutuban, Dos & Kepekatan, Sasaran & Pengawasan.',
+        'Bacakan satu situasi harian, minta 2–3 orang rakan sekelas mengemukakan ramalan (klik idea mereka untuk berbincang).',
+        'Kemudian tekan butang "Dedah Penjelasan" untuk meneliti rantaian tindak balas molekul dan kesannya dalam badan.',
+        'Akhiri pembentangan dengan merumuskan 3 faktor utama di sebelah kiri: Struktur & Kekutuban, Dos & Tempoh, Sasaran & Pengawasan NPRA.',
       ],
-      questionForClass: 'Jika seorang rakan ingin memulakan jenama losen herba buatan sendiri, apakah 3 prinsip kimia yang mesti dipatuhinya?',
-      reminder: 'Pastikan suasana terbuka seperti perbincangan makmal, bukan kuiz peperiksaan.',
+      questionForClass: 'Jika seorang rakan ingin membuat losen herba buatan sendiri, apakah 3 prinsip kimia yang mesti dipatuhinya?',
+      reminder: 'Kekalkan suasana perbincangan makmal yang santai dan terbuka.',
     },
   },
 ];
@@ -857,7 +857,7 @@ export const TRADITIONAL_HERBS: TraditionalHerb[] = [
     prepNotes: {
       lesung: 'Dihancurkan dengan lesung: memecahkan dinding sel tumbuhan supaya pati molekul aktif terus menyentuh bahagian badan yang sakit.',
       rebusan: 'Direbus untuk mendapatkan pati: haba dan air melarutkan molekul aktif menjadi minuman suam yang mudah diserap.',
-      kapsul: 'Dipasarkan dalam bentuk pil atau kapsul: hanya memudahkan pengambilan serbuk tumbuhan, namun kepekatan bahan aktifnya tidak setulen ubat moden.',
+      kapsul: 'Dipasarkan dalam bentuk pil atau kapsul: memudahkan pengambilan serbuk tumbuhan, namun kepekatan bahan aktifnya tidak setulen ubat moden.',
     },
     accentColor: '#B45309',
   },
@@ -1125,7 +1125,7 @@ export const BANNED_CHEMICALS: BannedChemical[] = [
     explanation:
       'Hidrokuinon menyebabkan kulit menjadi hipersensitif dan mengurangkan pigmentasi sehingga kulit terdedah kepada sinar UV yang berbahaya.',
     molecularMechanism:
-      'Molekul hidrokuinon merencatkan enzim tirosinase yang menghasilkan melanin. Tanpa pigmen melanin sebagai payung penyerap cahaya, sinaran UV terus mencederakan sel kulit.',
+      'Molekul hidrokuinon merencatkan enzim tirosinase yang menghasilkan melanin. Tanpa pigmen melanin sebagai pelindung cahaya, sinaran UV terus mencederakan sel kulit.',
   },
   {
     id: 'betamethasone',
@@ -1153,10 +1153,10 @@ export const BANNED_CHEMICALS: BannedChemical[] = [
   },
 ];
 
-export const POE_MYSTERIES: PoeMystery[] = [
+export const DAILY_MYSTERIES: DailyMystery[] = [
   {
-    id: 'poe1',
-    title: 'Misteri 1: Mengapa Perut Sakit Selepas Aspirin, Tetapi Hati Rosak Jika Terlebih Parasetamol?',
+    id: 'm1',
+    title: 'Situasi 1: Mengapa Perut Sakit Selepas Aspirin, Tetapi Hati Rosak Jika Terlebih Parasetamol?',
     dailySituation:
       'Ali demam dan mempunyai sejarah sakit gastrik. Jika dia mengambil Aspirin, perutnya berisiko luka. Jika dia menukar kepada Parasetamol secara berlebihan (15 biji sehari), hatinya pula terancam.',
     questionWhy: 'Bagaimanakah perbezaan sifat molekul kedua-dua ubat ini menerangkan kesan yang berlainan pada organ berbeza?',
@@ -1164,12 +1164,12 @@ export const POE_MYSTERIES: PoeMystery[] = [
       {
         id: 'h1',
         label: 'Parasetamol lebih lemah daripada Aspirin sehingga perlu dimakan banyak biji untuk berkesan.',
-        discussionNote: 'Idea biasa, tetapi tidak tepat — Parasetamol berkesan pada dos normal; bahaya berlaku apabila kapasiti penyahtoksin hati dilampaui.',
+        discussionNote: 'Anggapan biasa, tetapi tidak tepat — Parasetamol berkesan pada dos normal; bahaya berlaku apabila kapasiti penyahtoksin hati dilampaui.',
       },
       {
         id: 'h2',
         label: 'Aspirin bersifat asid dan menghakis dinding perut, manakala Parasetamol neutral tetapi membebankan hati pada dos tinggi.',
-        discussionNote: 'Ramalan tepat! Mari lihat mekanisme molekulnya pada perut berbanding hati.',
+        discussionNote: 'Tepat sekali! Mari lihat mekanisme molekulnya pada perut berbanding hati.',
       },
       {
         id: 'h3',
@@ -1182,12 +1182,12 @@ export const POE_MYSTERIES: PoeMystery[] = [
       step2Body: 'Pada dos selamat, hati menggunakan perisai antioksidan (glutation) untuk meneutralkan Parasetamol. Melebihi 4000 mg/hari, perisai habis dan sisa toksik menyerang sel hati.',
       step3Principle: 'Struktur kimia menentukan lokasi kesan sampingan, manakala dos menentukan had keselamatan organ.',
     },
-    deepChemNote: 'Kimia Organik & Biokimia: keasidan asid karboksilik (-COOH) berbanding had kinetik detoksifikasi glutation/NAPQI di hati.',
+    deepChemNote: 'Keasidan kumpulan karboksilik (-COOH) berbanding had kadar penyahtoksikan glutation/NAPQI di hati.',
     kssmRef: 'Jadual 5.7 Analgesik (m.s. 182)',
   },
   {
-    id: 'poe2',
-    title: 'Misteri 2: Siti Sudah Sihat Hari ke-3 — Mengapa Doktor Tetap Arah Habiskan Antibiotik?',
+    id: 'm2',
+    title: 'Situasi 2: Siti Sudah Sihat Hari ke-3 — Mengapa Doktor Tetap Arah Habiskan Antibiotik?',
     dailySituation:
       'Selepas 3 hari mengambil penisilin daripada tempoh 7 hari, demam Siti reda dan tekaknya tidak lagi sakit. Dia bercadang menyimpan baki ubat untuk kegunaan masa depan.',
     questionWhy: 'Mengapakah berhenti awal menyebabkan jangkitan berulang yang lebih sukar dirawat? Siapakah yang sebenarnya menjadi imun?',
@@ -1200,7 +1200,7 @@ export const POE_MYSTERIES: PoeMystery[] = [
       {
         id: 'h2',
         label: 'Baki bakteria yang lebih kebal terselamat pada Hari ke-3 lalu membiak menggantikan bakteria yang lemah.',
-        discussionNote: 'Ramalan tepat! Inilah pemilihan semula jadi akibat kepekatan antibiotik dihentikan terlalu awal.',
+        discussionNote: 'Ramalan tepat! Inilah pemilihan semula jadi apabila kepekatan antibiotik dihentikan terlalu awal.',
       },
       {
         id: 'h3',
@@ -1210,15 +1210,15 @@ export const POE_MYSTERIES: PoeMystery[] = [
     ],
     causalChain: {
       step1Molecule: 'Antibiotik menyerang dinding sel peptidoglikan bakteria. Pada Hari ke-3, ~80% bakteria lemah sudah mati maka simptom hilang.',
-      step2Body: 'Baki ~20% bakteria yang sedikit berbeza dan lebih tahan masih hidup. Tanpa antibiotik pada Hari 4–7, bakteria tahan ini membiak semula dan menguasai badan.',
+      step2Body: 'Baki ~20% bakteria yang lebih tahan masih hidup. Tanpa antibiotik pada Hari 4–7, bakteria tahan ini membiak semula dan menguasai badan.',
       step3Principle: 'Tempoh dos penuh mengekalkan kepekatan ubat cukup tinggi supaya tiada bakteria kebal tertinggal untuk membina rintangan.',
     },
-    deepChemNote: 'Pemilihan evolusi mikrob: pengurangan kepekatan antibiotik di bawah paras perencatan minimum memihak kepada mutan rintang.',
+    deepChemNote: 'Pemilihan evolusi mikrob: kejatuhan kepekatan antibiotik di bawah paras perencatan memihak kepada bakteria mutan rintang.',
     kssmRef: 'Jadual 5.7 Antimikrob & Gambar foto 5.10 (m.s. 182–183)',
   },
   {
-    id: 'poe3',
-    title: 'Misteri 3: Mengapa Minyak & Air dalam Losen Buatan Sendiri Terpisah Semula Selepas 5 Minit?',
+    id: 'm3',
+    title: 'Situasi 3: Mengapa Minyak & Air dalam Losen Buatan Sendiri Terpisah Semula Selepas 5 Minit?',
     dailySituation:
       'Murid mengacau minyak zaitun, air mawar dan pewarna semula jadi dengan laju untuk membuat losen kulit, tetapi campuran itu segera terpisah menjadi dua lapisan.',
     questionWhy: 'Apakah daya antara molekul yang menolak minyak keluar daripada air, dan molekul jenis apakah yang boleh mendamaikannya?',
@@ -1230,8 +1230,8 @@ export const POE_MYSTERIES: PoeMystery[] = [
       },
       {
         id: 'h2',
-        label: 'Air berkutub manakala minyak tak berkutub; molekul bertangan dua (Pengemulsi) diperlukan untuk menyatukannya.',
-        discussionNote: 'Tepat sekali! Mari perhatikan bagaimana molekul amfifilik membina jambatan misel.',
+        label: 'Air berkutub manakala minyak tak berkutub; molekul dwisifat (Pengemulsi) diperlukan untuk menyatukannya.',
+        discussionNote: 'Tepat sekali! Molekul pengemulsi bertindak sebagai jambatan antara air dengan minyak.',
       },
       {
         id: 'h3',
@@ -1242,17 +1242,17 @@ export const POE_MYSTERIES: PoeMystery[] = [
     causalChain: {
       step1Molecule: 'Molekul air bercas separa (berkutub) dan saling menarik melalui ikatan hidrogen, menolak molekul minyak yang tidak berkutub keluar.',
       step2Body: 'Pengemulsi seperti lesitin memiliki kepala suka air (hidrofilik) dan ekor suka minyak (hidrofobik) yang membalut titisan minyak membentuk campuran homogen.',
-      step3Principle: 'Prinsip "serupa melarutkan serupa" diatasi oleh molekul dwisifat (amfifilik) sebagai jambatan.',
+      step3Principle: 'Perbezaan kekutuban diatasi oleh molekul pengemulsi yang menyatukan fasa air dan fasa minyak.',
     },
     deepChemNote: 'Kepolaran ikatan kimia & pembentukan misel koloid yang menstabilkan emulsi kosmetik.',
     kssmRef: 'Rajah 5.15 Bahan-bahan Asas Kosmetik (m.s. 185)',
   },
   {
-    id: 'poe4',
-    title: 'Misteri 4: Kulit Putih dalam 3 Hari — Apa Sebenarnya yang Terjadi di Bawah Lapisan Kulit?',
+    id: 'm4',
+    title: 'Situasi 4: Kulit Putih dalam 3 Hari — Apa Sebenarnya yang Terjadi di Bawah Lapisan Kulit?',
     dailySituation:
       'Satu krim malam tanpa nombor NOT menjanjikan kulit putih seawal 3 hari. Selepas beberapa minggu, kulit menjadi pedih di bawah matahari dan ujian kesihatan mengesan gangguan buah pinggang.',
-    questionWhy: 'Bagaimana bahan terlarang dalam krim itu menipu mata pada minggu pertama sebelum merosakkan kulit dan organ dalaman?',
+    questionWhy: 'Bagaimana bahan terlarang dalam krim itu menghasilkan kesan cerah sementara sebelum merosakkan kulit dan organ dalaman?',
     hypotheses: [
       {
         id: 'h1',
@@ -1262,7 +1262,7 @@ export const POE_MYSTERIES: PoeMystery[] = [
       {
         id: 'h2',
         label: 'Bahan terlarang menyekat pigmen pelindung melanin (maka UV menyerang kulit) dan menyerap ke darah merosakkan ginjal.',
-        discussionNote: 'Ramalan cemerlang! Mari susun rantaian kejadian bagi Merkuri, Hidrokuinon dan Steroid.',
+        discussionNote: 'Ramalan tepat! Mari susun rantaian kejadian bagi Merkuri, Hidrokuinon dan Steroid.',
       },
       {
         id: 'h3',
@@ -1283,15 +1283,15 @@ export const POE_MYSTERIES: PoeMystery[] = [
 export const QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: 'q1',
-    scenario: POE_MYSTERIES[0].dailySituation,
-    question: POE_MYSTERIES[0].questionWhy,
-    options: POE_MYSTERIES[0].hypotheses.map((h) => ({
+    scenario: DAILY_MYSTERIES[0].dailySituation,
+    question: DAILY_MYSTERIES[0].questionWhy,
+    options: DAILY_MYSTERIES[0].hypotheses.map((h) => ({
       id: h.id,
       label: h.label,
       explanation: h.discussionNote,
     })),
     correctOptionId: 'h2',
-    kssmRef: POE_MYSTERIES[0].kssmRef,
+    kssmRef: DAILY_MYSTERIES[0].kssmRef,
   },
 ];
 """,
@@ -1329,7 +1329,7 @@ export interface SharedSlideInteractions {
   bannedChemicalId: 'merkuri' | 'hidrokuinon' | 'betamethasone' | 'tretinoin';
   quizIndex: number;
   quizSelectedOption: string | null;
-  poeRevealed: boolean;
+  explanationRevealed: boolean;
 }
 
 export interface SyncedPresentationState {
@@ -1382,7 +1382,7 @@ export const DEFAULT_INTERACTIONS: SharedSlideInteractions = {
   bannedChemicalId: 'merkuri',
   quizIndex: 0,
   quizSelectedOption: null,
-  poeRevealed: false,
+  explanationRevealed: false,
 };
 
 function createInitialState(senderId: string): SyncedPresentationState {
@@ -1851,7 +1851,7 @@ export const PresenterConsole: React.FC<PresenterConsoleProps> = ({
             }`}
           >
             <Atom className="w-3.5 h-3.5" />
-            <span>Zum Biokimia</span>
+            <span>Perincian Molekul</span>
           </button>
 
           <button
@@ -2037,13 +2037,13 @@ export const PresenterConsole: React.FC<PresenterConsoleProps> = ({
           <div className="border border-emerald-200 bg-emerald-50/70 rounded-2xl p-4 space-y-1.5">
             <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-900">
               <Lightbulb className="w-4 h-4" />
-              <span>Analogi Feynman (Mudah Difahami Semua Pelajar)</span>
+              <span>Analogi Mudah</span>
             </div>
-            <p className="text-sm text-stone-900 leading-relaxed">{currentMeta.presenterNotes.feynmanAnalogy}</p>
+            <p className="text-sm text-stone-900 leading-relaxed">{currentMeta.presenterNotes.simpleAnalogy}</p>
           </div>
 
           <div className="border border-stone-200 bg-white rounded-2xl p-4 space-y-2.5">
-            <div className="text-xs font-bold text-stone-700">Langkah Penyampaian Pembentang</div>
+            <div className="text-xs font-bold text-stone-700">Isi Utama Pembentang</div>
             <ol className="space-y-2 text-sm text-stone-800 leading-relaxed list-decimal list-inside">
               {currentMeta.presenterNotes.talkingPoints.map((line, i) => (
                 <li key={i}>{line}</li>
@@ -2053,13 +2053,13 @@ export const PresenterConsole: React.FC<PresenterConsoleProps> = ({
 
           <div className="border border-amber-200 bg-amber-50/70 rounded-2xl p-4 space-y-3">
             <div>
-              <div className="text-xs font-bold text-amber-900">Soalan Mendorong Pemikiran Kelas</div>
+              <div className="text-xs font-bold text-amber-900">Soalan untuk Ditanya kepada Kelas</div>
               <p className="text-sm text-stone-800 mt-1 leading-relaxed">
                 {currentMeta.presenterNotes.questionForClass}
               </p>
             </div>
             <div className="pt-2.5 border-t border-amber-200/80">
-              <div className="text-xs font-bold text-stone-800">Nota Pedagogi</div>
+              <div className="text-xs font-bold text-stone-800">Nota Tambahan</div>
               <p className="text-xs text-stone-700 mt-1 leading-relaxed">
                 {currentMeta.presenterNotes.reminder}
               </p>
@@ -2132,32 +2132,32 @@ export const Slide01Cover: React.FC<Slide01Props> = ({ interactions, onPatch }) 
             Kimia Tingkatan 5 · Bab 5.4
           </div>
           <h1 className="font-display text-[44px] font-extrabold tracking-tight text-stone-900 dark:text-stone-50 leading-[1.08]">
-            Ubat-ubatan & Bahan Kosmetik
+            Ubat-ubatan &amp; Bahan Kosmetik
           </h1>
           <p className="text-[19px] font-medium text-stone-700 dark:text-stone-300 leading-relaxed">
             Bahan yang hampir serupa boleh menjadi{' '}
             <span className="font-bold text-blue-900 dark:text-blue-400">ubat penyembuh</span>,{' '}
             <span className="font-bold text-emerald-800 dark:text-emerald-400">kosmetik luaran</span>, atau{' '}
-            <span className="font-bold text-red-700 dark:text-red-400">racun senyap</span> — bergantung pada 3 rahsia kimia:
+            <span className="font-bold text-red-700 dark:text-red-400">racun berbahaya</span> — bergantung pada 3 faktor penentu:
           </p>
 
           <div className="grid grid-cols-3 gap-3 pt-1">
             <div className="rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-3.5">
-              <div className="text-sm font-bold text-blue-900 dark:text-blue-400">Rahsia 1</div>
+              <div className="text-sm font-bold text-blue-900 dark:text-blue-400">Faktor 1</div>
               <div className="text-[17px] font-bold text-stone-900 dark:text-stone-100 mt-0.5">Struktur</div>
               <p className="text-[15px] text-stone-600 dark:text-stone-400 mt-1 leading-snug">
-                Bentuk dan sifat asid/kutub molekul
+                Bentuk serta sifat asid atau kutub molekul
               </p>
             </div>
             <div className="rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-3.5">
-              <div className="text-sm font-bold text-amber-800 dark:text-amber-400">Rahsia 2</div>
+              <div className="text-sm font-bold text-amber-800 dark:text-amber-400">Faktor 2</div>
               <div className="text-[17px] font-bold text-stone-900 dark:text-stone-100 mt-0.5">Dos &amp; Tempoh</div>
               <p className="text-[15px] text-stone-600 dark:text-stone-400 mt-1 leading-snug">
-                Jumlah yang masuk menentu selamat atau toksik
+                Sukatan menentukan selamat atau toksik
               </p>
             </div>
             <div className="rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-3.5">
-              <div className="text-sm font-bold text-emerald-800 dark:text-emerald-400">Rahsia 3</div>
+              <div className="text-sm font-bold text-emerald-800 dark:text-emerald-400">Faktor 3</div>
               <div className="text-[17px] font-bold text-stone-900 dark:text-stone-100 mt-0.5">Lapisan Sasaran</div>
               <p className="text-[15px] text-stone-600 dark:text-stone-400 mt-1 leading-snug">
                 Kekal di luar kulit atau masuk salur darah
@@ -2472,16 +2472,16 @@ export const Slide02Traditional: React.FC<Slide02Props> = ({ interactions, onPat
                     </p>
                   </div>
                   <div className="rounded-2xl p-5 bg-red-50/70 dark:bg-red-950/40 border border-red-200 dark:border-red-900">
-                    <div className="text-[15px] font-bold text-red-800 dark:text-red-300">Punca Kimia Diharamkan</div>
+                    <div className="text-[15px] font-bold text-red-800 dark:text-red-300">Sebab Diharamkan</div>
                     <p className="text-[17px] text-stone-900 dark:text-stone-100 mt-2 leading-relaxed">
-                      Mengandungi molekul psikoaktif (mitraginina) yang melekat pada reseptor otak dan mencetuskan <strong>ketagihan</strong> — sebab itu produknya diharamkan di sisi undang-undang.
+                      Mengandungi bahan psikoaktif (mitraginina) yang melekat pada reseptor otak dan menyebabkan <strong>ketagihan</strong> — sebab itu produknya diharamkan di sisi undang-undang.
                     </p>
                   </div>
                 </div>
               </div>
               <div className="pt-4 border-t border-stone-200 dark:border-stone-800 flex items-center justify-between gap-4">
                 <span className="text-[16px] font-semibold text-stone-700 dark:text-stone-300">
-                  Prinsip Kimia: Molekul menentukan kesan — sama ada daripada pokok atau makmal.
+                  Molekul aktif menentukan kesan pada badan — sama ada daripada tumbuhan atau makmal.
                 </span>
                 <button
                   type="button"
@@ -2537,7 +2537,7 @@ export const Slide02Traditional: React.FC<Slide02Props> = ({ interactions, onPat
               <div className="mt-3 pt-3 border-t border-stone-200 dark:border-stone-800">
                 <div className="flex items-center justify-between gap-2 mb-2.5">
                   <span className="text-[16px] font-bold text-stone-700 dark:text-stone-300">
-                    Cara Membebaskan Bahan Aktif (Penyediaan):
+                    Cara Membebaskan Bahan Aktif:
                   </span>
                   <div className="flex gap-2">
                     {(
@@ -2633,7 +2633,7 @@ export const Slide03ModernDrugs: React.FC<Slide03Props> = ({ interactions, onPat
           }`}
         >
           <Atom className="w-4 h-4" />
-          <span>{interactions.molecularLens ? 'Mod Biokimia Aktif' : 'Zum Biokimia'}</span>
+          <span>{interactions.molecularLens ? 'Perincian Molekul: Hidup' : 'Perincian Molekul'}</span>
         </button>
       </div>
 
@@ -2792,7 +2792,7 @@ export const Slide03ModernDrugs: React.FC<Slide03Props> = ({ interactions, onPat
                 <p className="text-[15px] mt-0.5 leading-snug">{assessment.mechanismReason}</p>
                 {interactions.molecularLens && (
                   <p className="text-[14px] mt-1 font-semibold opacity-90">
-                    Tahap Biokimia: {assessment.molecularDeepDive}
+                    Mekanisme molekul: {assessment.molecularDeepDive}
                   </p>
                 )}
               </div>
@@ -2875,7 +2875,7 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
             }`}
           >
             <Atom className="w-4 h-4" />
-            <span>Biokimia</span>
+            <span>Perincian</span>
           </button>
         </div>
       </div>
@@ -3642,7 +3642,7 @@ export const Slide06CosmeticTypes: React.FC<Slide06Props> = ({ interactions, onP
             </div>
 
             <div className="bg-emerald-50/70 dark:bg-emerald-950/30 rounded-xl p-3.5">
-              <div className="text-[14px] font-bold text-emerald-900 dark:text-emerald-300">Sifat Fizikal &amp; Kimia</div>
+              <div className="text-[14px] font-bold text-emerald-900 dark:text-emerald-300">Kandungan &amp; Cara Tindakan</div>
               <p className="text-[15px] text-stone-900 dark:text-stone-100 mt-0.5 leading-snug">{selectedItem.chemicalNote}</p>
             </div>
           </div>
@@ -3719,7 +3719,7 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
             5.4.4 · Bahan-bahan Asas Kosmetik (Rajah 5.15)
           </div>
           <h2 className="font-display text-[28px] font-bold text-stone-900 dark:text-stone-50 mt-0.5 leading-tight">
-            Mengapa Minyak &amp; Air Terpisah — Dan Bagaimana Pengemulsi Mendamaikannya
+            Mengapa Minyak &amp; Air Terpisah — Dan Bagaimana Pengemulsi Menyatukannya
           </h2>
         </div>
 
@@ -3750,7 +3750,7 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
             }`}
           >
             <Atom className="w-4 h-4" />
-            <span>Biokimia</span>
+            <span>Perincian</span>
           </button>
         </div>
       </div>
@@ -3794,16 +3794,16 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
           })}
 
           <div className="rounded-2xl border border-amber-300 bg-amber-50/80 dark:bg-amber-950/30 px-3.5 py-2.5 flex flex-col justify-center">
-            <div className="text-[14px] font-bold text-amber-900 dark:text-amber-300">Kunci Rahsia Polariti</div>
+            <div className="text-[14px] font-bold text-amber-900 dark:text-amber-300">Prinsip Kekutuban</div>
             <p className="text-[14px] text-stone-800 dark:text-stone-200 mt-0.5 leading-snug">
-              <strong>Air</strong> berkutub, <strong>Minyak</strong> tak berkutub — hanya <strong>Pengemulsi</strong> boleh memegang kedua-duanya!
+              <strong>Air</strong> berkutub, <strong>Minyak</strong> tak berkutub — <strong>Pengemulsi</strong> menjadi jambatan mengikat kedua-duanya!
             </p>
           </div>
         </div>
 
         <div className="col-span-6 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-4 flex flex-col justify-between gap-2.5">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[15px] font-bold text-stone-700 dark:text-stone-300">Makroskopik (Bikar) + Molekul</span>
+            <span className="text-[15px] font-bold text-stone-700 dark:text-stone-300">Pemerhatian Bikar &amp; Molekul</span>
             <span
               className={`text-[15px] font-bold ${
                 evalResult.isHomogeneous && em.pengawet ? 'text-emerald-700' : 'text-amber-700'
@@ -3909,7 +3909,7 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
 
             <div className="col-span-7 bg-[#FBF9F5] dark:bg-stone-950 rounded-2xl p-3">
               <div className="text-[13px] font-bold text-indigo-900 dark:text-indigo-300 mb-1">
-                Zum Molekul: Bagaimana Pengemulsi Bekerja?
+                Susunan Molekul: Bagaimana Pengemulsi Bekerja?
               </div>
               <svg viewBox="0 0 270 132" className="w-full h-32" aria-label="Gambar rajah molekul pengemulsi menyatukan air dan minyak">
                 {!em.pengemulsi ? (
@@ -4051,7 +4051,7 @@ export const Slide08BannedForensics: React.FC<Slide08Props> = ({ interactions, o
             }`}
           >
             <Atom className="w-4 h-4" />
-            <span>Biokimia</span>
+            <span>Perincian</span>
           </button>
         </div>
       </div>
@@ -4237,7 +4237,7 @@ export const Slide08BannedForensics: React.FC<Slide08Props> = ({ interactions, o
 """,
     "src/components/slides/Slide09Quiz.tsx": r"""import React from 'react';
 import { ArrowRight, Atom, Eye, HelpCircle, Lightbulb } from 'lucide-react';
-import { POE_MYSTERIES } from '../../data/slidesData';
+import { DAILY_MYSTERIES } from '../../data/slidesData';
 import { SharedSlideInteractions } from '../../hooks/usePresentationSync';
 
 interface Slide09Props {
@@ -4246,7 +4246,7 @@ interface Slide09Props {
 }
 
 export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) => {
-  const mystery = POE_MYSTERIES[interactions.quizIndex] ?? POE_MYSTERIES[0];
+  const mystery = DAILY_MYSTERIES[interactions.quizIndex] ?? DAILY_MYSTERIES[0];
   const pickedHypothesis = mystery.hypotheses.find((h) => h.id === interactions.quizSelectedOption);
 
   return (
@@ -4254,26 +4254,26 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
       <div className="shrink-0 flex items-end justify-between gap-3 border-b border-stone-200 dark:border-stone-800 pb-3">
         <div>
           <div className="text-[15px] font-bold text-blue-900 dark:text-blue-400">
-            5.4.5 · Makmal Penaakulan Feynman (Ramal → Perhati → Terangkan)
+            5.4.5 · Perbincangan &amp; Aplikasi Kimia
           </div>
           <h2 className="font-display text-[28px] font-bold text-stone-900 dark:text-stone-50 mt-0.5 leading-tight">
-            Faham Kimia di Sebalik Fenomena — Bukan Menghafal Jawapan Peperiksaan
+            Mengapa Ia Berlaku? Memahami Punca Kimia di Sebalik Situasi Harian
           </h2>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          {POE_MYSTERIES.map((m, idx) => (
+          {DAILY_MYSTERIES.map((m, idx) => (
             <button
               key={m.id}
               type="button"
-              onClick={() => onPatch({ quizIndex: idx, quizSelectedOption: null, poeRevealed: false })}
+              onClick={() => onPatch({ quizIndex: idx, quizSelectedOption: null, explanationRevealed: false })}
               className={`px-3.5 py-2 rounded-xl border text-[15px] font-bold cursor-pointer ${
                 idx === interactions.quizIndex
                   ? 'border-stone-900 bg-stone-900 text-white dark:border-stone-100 dark:bg-stone-100 dark:text-stone-900'
                   : 'border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-200 hover:bg-stone-50'
               }`}
             >
-              Misteri {idx + 1}
+              Situasi {idx + 1}
             </button>
           ))}
         </div>
@@ -4284,7 +4284,7 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-[15px] font-bold text-blue-900 dark:text-blue-400">
               <HelpCircle className="w-5 h-5" />
-              <span>Langkah 1 · Situasi Dunia Sebenar</span>
+              <span>Situasi Sebenar</span>
             </div>
             <h3 className="font-display text-[21px] font-bold text-stone-900 dark:text-stone-100 leading-snug">
               {mystery.title}
@@ -4299,7 +4299,7 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
 
           <div className="pt-3 border-t border-stone-200 dark:border-stone-800 space-y-1.5">
             <div className="text-[14px] font-bold text-emerald-800 dark:text-emerald-400">
-              3 Prinsip Kimia Utama Bab 5.4:
+              Rumusan 3 Prinsip Utama Bab 5.4:
             </div>
             <div className="text-[14px] text-stone-700 dark:text-stone-300 leading-snug">
               1. <strong>Struktur &amp; Kekutuban</strong> · 2. <strong>Dos &amp; Tempoh</strong> · 3. <strong>Sasaran &amp; Pengawasan NPRA</strong>
@@ -4310,7 +4310,7 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
         <div className="col-span-7 flex flex-col justify-between gap-3">
           <div className="space-y-2">
             <div className="text-[15px] font-bold text-stone-700 dark:text-stone-300">
-              Langkah 2 · Ramalkan Dahulu Bersama Kelas (Klik untuk bincang idea):
+              Ramalan Bersama Kelas (Klik satu pandangan untuk dibincangkan):
             </div>
             {mystery.hypotheses.map((hyp, i) => {
               const selected = interactions.quizSelectedOption === hyp.id;
@@ -4347,7 +4347,7 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-[15px] font-bold text-emerald-900 dark:text-emerald-400">
                 <Lightbulb className="w-5 h-5" />
-                <span>Langkah 3 · Penjelasan Sebab-Akibat Molekul (Feynman)</span>
+                <span>Penjelasan Mekanisme Kimia</span>
               </div>
 
               <div className="flex items-center gap-2">
@@ -4361,24 +4361,24 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
                   }`}
                 >
                   <Atom className="w-3.5 h-3.5" />
-                  <span>Biokimia</span>
+                  <span>Perincian</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => onPatch({ poeRevealed: !interactions.poeRevealed })}
+                  onClick={() => onPatch({ explanationRevealed: !interactions.explanationRevealed })}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-[14px] font-bold cursor-pointer"
                 >
                   <Eye className="w-4 h-4" />
-                  <span>{interactions.poeRevealed ? 'Tutup Penjelasan' : 'Dedah Mekanisme Molekul'}</span>
+                  <span>{interactions.explanationRevealed ? 'Tutup Penjelasan' : 'Dedah Penjelasan'}</span>
                 </button>
               </div>
             </div>
 
-            {interactions.poeRevealed ? (
+            {interactions.explanationRevealed ? (
               <div className="grid grid-cols-3 gap-2.5">
                 <div className="bg-[#FBF9F5] dark:bg-stone-950 rounded-xl p-3">
                   <div className="text-[13px] font-bold text-blue-900 dark:text-blue-400 flex items-center gap-1">
-                    <span>1. Punca Molekul</span>
+                    <span>1. Tindak Balas Molekul</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </div>
                   <p className="text-[14px] text-stone-800 dark:text-stone-200 mt-1 leading-snug">
@@ -4411,8 +4411,8 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
             ) : (
               <p className="text-[15px] text-stone-600 dark:text-stone-400 leading-snug">
                 {pickedHypothesis
-                  ? 'Bagus! Selepas kelas membincangkan ramalan di atas, klik "Dedah Mekanisme Molekul" untuk menyemak bagaimana proses kimianya berlaku.'
-                  : 'Beri peluang kepada kelas membina ramalan dahulu sebelum mendedahkan mekanisme molekul sebenar.'}
+                  ? 'Bincangkan ramalan di atas bersama kelas, kemudian klik "Dedah Penjelasan" untuk melihat rantaian sebab-akibat kimianya.'
+                  : 'Minta rakan sekelas mengemukakan ramalan dahulu sebelum mendedahkan penjelasan kimia.'}
               </p>
             )}
           </div>

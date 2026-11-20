@@ -139,16 +139,16 @@ export const Slide02Traditional: React.FC<Slide02Props> = ({ interactions, onPat
                     </p>
                   </div>
                   <div className="rounded-2xl p-5 bg-red-50/70 dark:bg-red-950/40 border border-red-200 dark:border-red-900">
-                    <div className="text-[15px] font-bold text-red-800 dark:text-red-300">Punca Kimia Diharamkan</div>
+                    <div className="text-[15px] font-bold text-red-800 dark:text-red-300">Sebab Diharamkan</div>
                     <p className="text-[17px] text-stone-900 dark:text-stone-100 mt-2 leading-relaxed">
-                      Mengandungi molekul psikoaktif (mitraginina) yang melekat pada reseptor otak dan mencetuskan <strong>ketagihan</strong> — sebab itu produknya diharamkan di sisi undang-undang.
+                      Mengandungi bahan psikoaktif (mitraginina) yang melekat pada reseptor otak dan menyebabkan <strong>ketagihan</strong> — sebab itu produknya diharamkan di sisi undang-undang.
                     </p>
                   </div>
                 </div>
               </div>
               <div className="pt-4 border-t border-stone-200 dark:border-stone-800 flex items-center justify-between gap-4">
                 <span className="text-[16px] font-semibold text-stone-700 dark:text-stone-300">
-                  Prinsip Kimia: Molekul menentukan kesan — sama ada daripada pokok atau makmal.
+                  Molekul aktif menentukan kesan pada badan — sama ada daripada tumbuhan atau makmal.
                 </span>
                 <button
                   type="button"
@@ -204,7 +204,7 @@ export const Slide02Traditional: React.FC<Slide02Props> = ({ interactions, onPat
               <div className="mt-3 pt-3 border-t border-stone-200 dark:border-stone-800">
                 <div className="flex items-center justify-between gap-2 mb-2.5">
                   <span className="text-[16px] font-bold text-stone-700 dark:text-stone-300">
-                    Cara Membebaskan Bahan Aktif (Penyediaan):
+                    Cara Membebaskan Bahan Aktif:
                   </span>
                   <div className="flex gap-2">
                     {(

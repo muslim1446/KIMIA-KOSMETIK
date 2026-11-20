@@ -52,32 +52,32 @@ export const Slide01Cover: React.FC<Slide01Props> = ({ interactions, onPatch }) 
             Kimia Tingkatan 5 · Bab 5.4
           </div>
           <h1 className="font-display text-[44px] font-extrabold tracking-tight text-stone-900 dark:text-stone-50 leading-[1.08]">
-            Ubat-ubatan & Bahan Kosmetik
+            Ubat-ubatan &amp; Bahan Kosmetik
           </h1>
           <p className="text-[19px] font-medium text-stone-700 dark:text-stone-300 leading-relaxed">
             Bahan yang hampir serupa boleh menjadi{' '}
             <span className="font-bold text-blue-900 dark:text-blue-400">ubat penyembuh</span>,{' '}
             <span className="font-bold text-emerald-800 dark:text-emerald-400">kosmetik luaran</span>, atau{' '}
-            <span className="font-bold text-red-700 dark:text-red-400">racun senyap</span> — bergantung pada 3 rahsia kimia:
+            <span className="font-bold text-red-700 dark:text-red-400">racun berbahaya</span> — bergantung pada 3 faktor penentu:
           </p>
 
           <div className="grid grid-cols-3 gap-3 pt-1">
             <div className="rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-3.5">
-              <div className="text-sm font-bold text-blue-900 dark:text-blue-400">Rahsia 1</div>
+              <div className="text-sm font-bold text-blue-900 dark:text-blue-400">Faktor 1</div>
               <div className="text-[17px] font-bold text-stone-900 dark:text-stone-100 mt-0.5">Struktur</div>
               <p className="text-[15px] text-stone-600 dark:text-stone-400 mt-1 leading-snug">
-                Bentuk dan sifat asid/kutub molekul
+                Bentuk serta sifat asid atau kutub molekul
               </p>
             </div>
             <div className="rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-3.5">
-              <div className="text-sm font-bold text-amber-800 dark:text-amber-400">Rahsia 2</div>
+              <div className="text-sm font-bold text-amber-800 dark:text-amber-400">Faktor 2</div>
               <div className="text-[17px] font-bold text-stone-900 dark:text-stone-100 mt-0.5">Dos &amp; Tempoh</div>
               <p className="text-[15px] text-stone-600 dark:text-stone-400 mt-1 leading-snug">
-                Jumlah yang masuk menentu selamat atau toksik
+                Sukatan menentukan selamat atau toksik
               </p>
             </div>
             <div className="rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-3.5">
-              <div className="text-sm font-bold text-emerald-800 dark:text-emerald-400">Rahsia 3</div>
+              <div className="text-sm font-bold text-emerald-800 dark:text-emerald-400">Faktor 3</div>
               <div className="text-[17px] font-bold text-stone-900 dark:text-stone-100 mt-0.5">Lapisan Sasaran</div>
               <p className="text-[15px] text-stone-600 dark:text-stone-400 mt-1 leading-snug">
                 Kekal di luar kulit atau masuk salur darah

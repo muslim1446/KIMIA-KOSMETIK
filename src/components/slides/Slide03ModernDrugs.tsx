@@ -55,7 +55,7 @@ export const Slide03ModernDrugs: React.FC<Slide03Props> = ({ interactions, onPat
           }`}
         >
           <Atom className="w-4 h-4" />
-          <span>{interactions.molecularLens ? 'Mod Biokimia Aktif' : 'Zum Biokimia'}</span>
+          <span>{interactions.molecularLens ? 'Perincian Molekul: Hidup' : 'Perincian Molekul'}</span>
         </button>
       </div>
 
@@ -214,7 +214,7 @@ export const Slide03ModernDrugs: React.FC<Slide03Props> = ({ interactions, onPat
                 <p className="text-[15px] mt-0.5 leading-snug">{assessment.mechanismReason}</p>
                 {interactions.molecularLens && (
                   <p className="text-[14px] mt-1 font-semibold opacity-90">
-                    Tahap Biokimia: {assessment.molecularDeepDive}
+                    Mekanisme molekul: {assessment.molecularDeepDive}
                   </p>
                 )}
               </div>

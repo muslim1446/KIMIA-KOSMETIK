@@ -6,39 +6,33 @@ export type AppViewMode = 'stage' | 'pembentang' | 'audiens';
 
 export interface LaserPoint {
   active: boolean;
-  x: number; // percentage 0..100
-  y: number; // percentage 0..100
+  x: number;
+  y: number;
 }
 
 export interface SharedSlideInteractions {
-  // Slide 1
+  molecularLens: boolean;
   coverCompareId: 'ubat' | 'kosmetik' | 'terlarang';
-  // Slide 2
   herbId: 'halia' | 'lidah_buaya' | 'ginseng' | 'asam_jawa';
   herbPrep: 'lesung' | 'rebusan' | 'kapsul';
   ketumOpen: boolean;
-  // Slide 3
+  drugCategoryId: 'analgesik' | 'antimikrob' | 'psikotik' | 'antialergi' | 'kortikosteroid';
   selectedDrugId: string;
   selectedPatient: PatientProfileId;
-  // Slide 4
   antibioticMode: 'full' | 'stop3';
   antibioticDay: number;
   paracetamolMg: number;
   placeboTab: 'antibiotik' | 'parasetamol' | 'plasebo';
-  // Slide 5
   misuseCaseIndex: number;
   npraInput: string;
-  // Slide 6
   cosmeticSortCategory: 'all' | 'rias' | 'perawatan' | 'pewangi';
   selectedCosmeticItemId: string;
-  // Slide 7
   emulsion: EmulsionState;
-  // Slide 8
   cosmeticCompareTab: 'buatan_sendiri' | 'komersial_haram';
   bannedChemicalId: 'merkuri' | 'hidrokuinon' | 'betamethasone' | 'tretinoin';
-  // Slide 9
   quizIndex: number;
   quizSelectedOption: string | null;
+  poeRevealed: boolean;
 }
 
 export interface SyncedPresentationState {
@@ -58,14 +52,16 @@ export interface DisplayEnvironmentInfo {
   permissionState: 'idle' | 'granted' | 'unsupported';
 }
 
-const CHANNEL_NAME = 'kimia-5-4-sync-v1';
-const STORAGE_KEY = 'kimia-5-4-shared-state-v1';
+const CHANNEL_NAME = 'kimia-5-4-sync-v2';
+const STORAGE_KEY = 'kimia-5-4-shared-state-v2';
 
 export const DEFAULT_INTERACTIONS: SharedSlideInteractions = {
+  molecularLens: false,
   coverCompareId: 'ubat',
   herbId: 'halia',
   herbPrep: 'lesung',
   ketumOpen: false,
+  drugCategoryId: 'analgesik',
   selectedDrugId: 'aspirin',
   selectedPatient: 'pesakit_gastrik',
   antibioticMode: 'stop3',
@@ -89,6 +85,7 @@ export const DEFAULT_INTERACTIONS: SharedSlideInteractions = {
   bannedChemicalId: 'merkuri',
   quizIndex: 0,
   quizSelectedOption: null,
+  poeRevealed: false,
 };
 
 function createInitialState(senderId: string): SyncedPresentationState {
@@ -110,7 +107,6 @@ function createInitialState(senderId: string): SyncedPresentationState {
         }
       }
     } catch {
-      // ignore storage errors
     }
   }
 
@@ -154,17 +150,14 @@ export function usePresentationSync() {
     };
   });
 
-  // Broadcast helper
   const broadcastState = useCallback((next: SyncedPresentationState) => {
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     } catch {
-      // ignore quota errors
     }
     try {
       channelRef.current?.postMessage({ type: 'SYNC_STATE', payload: next });
     } catch {
-      // ignore channel closed
     }
   }, []);
 
@@ -249,7 +242,6 @@ export function usePresentationSync() {
     }));
   }, [updateSharedState]);
 
-  // Setup BroadcastChannel + storage fallback + peer heartbeat
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -291,7 +283,6 @@ export function usePresentationSync() {
         try {
           handleIncoming(JSON.parse(e.newValue));
         } catch {
-          // ignore
         }
       }
     };
@@ -301,7 +292,6 @@ export function usePresentationSync() {
       try {
         bc?.postMessage({ type: 'BYE', senderId: senderIdRef.current });
       } catch {
-        // ignore
       }
     };
     window.addEventListener('beforeunload', onUnload);
@@ -315,7 +305,6 @@ export function usePresentationSync() {
     };
   }, []);
 
-  // Poll window.screen.isExtended for live HDMI plug/unplug detection
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const checkExtended = () => {

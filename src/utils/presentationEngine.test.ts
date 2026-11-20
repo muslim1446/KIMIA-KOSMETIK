@@ -27,21 +27,24 @@ test('simulateAntibioticCourse differentiates full 7-day cure from stopping at d
   const fullCourse = simulateAntibioticCourse(null);
   assert.equal(fullCourse.outcome, 'sembuh_sepenuhnya');
   assert.equal(fullCourse.points.length, 8);
-  assert.ok(fullCourse.finalTotal <= 5, `Expected near-zero bacteria after 7 days, got ${fullCourse.finalTotal}`);
+  assert.ok(fullCourse.finalTotal <= 5);
+  assert.match(fullCourse.mechanismDetail, /peptidoglikan/i);
 
   const stoppedEarly = simulateAntibioticCourse(3);
   assert.equal(stoppedEarly.outcome, 'rintangan_berulang');
-  assert.ok(stoppedEarly.finalTotal > 40, `Expected rebound growth after stopping at day 3, got ${stoppedEarly.finalTotal}`);
-  assert.ok(stoppedEarly.resistanceRatio >= 70, `Expected resistant mutants to dominate, got ${stoppedEarly.resistanceRatio}%`);
+  assert.ok(stoppedEarly.finalTotal > 40);
+  assert.ok(stoppedEarly.resistanceRatio >= 70);
 });
 
-test('evaluateParacetamolDose flags hepatotoxicity risk above 4000 mg/day', () => {
+test('evaluateParacetamolDose flags hepatotoxicity risk and glutathione depletion above 4000 mg/day', () => {
   const safe = evaluateParacetamolDose(2000);
   assert.equal(safe.status, 'terapeutik');
+  assert.ok(safe.glutathioneShieldPercent > 60);
 
   const overdose = evaluateParacetamolDose(6000);
   assert.equal(overdose.status, 'amaran_hati');
   assert.ok(overdose.liverLoadPercent > 80);
+  assert.ok(overdose.glutathioneShieldPercent < 25);
 });
 
 test('evaluateCosmeticEmulsion detects phase separation without pengemulsi and mold risk without pengawet', () => {
@@ -56,6 +59,7 @@ test('evaluateCosmeticEmulsion detects phase separation without pengemulsi and m
   });
   assert.equal(separated.isHomogeneous, false);
   assert.match(separated.statusLabel, /Pemisahan Dua Fasa/);
+  assert.match(separated.molecularNote, /ikatan hidrogen/i);
 
   const fullStable = evaluateCosmeticEmulsion({
     air: true,

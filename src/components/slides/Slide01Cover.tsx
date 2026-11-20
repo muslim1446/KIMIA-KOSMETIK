@@ -16,32 +16,28 @@ const COMPARE_CASES: Record<
     moleculeExample: string;
     mechanism: string;
     verdict: string;
-    accent: string;
   }
 > = {
   ubat: {
-    title: 'Ubat untuk Merawat & Mencegah',
-    moleculeExample: 'Betamethasone valerate (preskripsi doktor), Aspirin',
+    title: '1. Ubat: Sukatan Tepat Menuju Sasaran',
+    moleculeExample: 'Contoh: Betamethasone valerate (preskripsi doktor), Parasetamol',
     mechanism:
-      'Bahan kimia dalam sukatan tepat untuk merawat atau mencegah penyakit di bawah pengawasan perubatan.',
-    verdict: 'Selamat digunakan apabila mematuhi preskripsi dan nombor pendaftaran MAL.',
-    accent: '#1E40AF',
+      'Molekul tulen disukat dengan tepat supaya cukup kuat merawat sel bermasalah tanpa merosakkan organ sihat.',
+    verdict: 'Selamat apabila dipantau doktor dan membawa nombor pendaftaran MAL yang sah.',
   },
   kosmetik: {
-    title: 'Bahan Kosmetik untuk Luaran',
-    moleculeExample: 'Air, Lesitin (Pengemulsi), Gliserin (Pelembap)',
+    title: '2. Kosmetik: Bertindak di Permukaan Luar Sahaja',
+    moleculeExample: 'Contoh: Air, Lesitin (Pengemulsi), Gliserin (Pelembap)',
     mechanism:
-      'Digunakan pada bahagian luar tubuh untuk membersih, melindungi atau mencantikkan penampilan.',
-    verdict: 'Semak status NOT semasa dan ramuan produk melalui NPRA. Nombor sahaja bukan jaminan keselamatan.',
-    accent: '#2D6A4F',
+      'Molekulnya kekal pada lapisan luar kulit untuk membersih, melembap atau memberi warna — tidak masuk ke salur darah.',
+    verdict: 'Selamat digunakan secara luaran jika mempunyai nombor notifikasi NOT yang sah.',
   },
   terlarang: {
-    title: 'Penyalahgunaan & Bahan Terlarang',
-    moleculeExample: 'Merkuri, Hidrokuinon, Betamethasone dalam krim haram',
+    title: '3. Produk Haram: Bahan Terlarang Tembus ke Darah',
+    moleculeExample: 'Contoh: Merkuri, Hidrokuinon, Steroid dalam krim putih segera',
     mechanism:
-      'Apabila ubat kawalan atau logam berat dimasukkan secara haram ke dalam produk harian, ia menyerap ke salur darah.',
-    verdict: 'Dilarang sama sekali — berisiko merosakkan buah pinggang, hati dan saraf.',
-    accent: '#B91C1C',
+      'Bahan kimia aktif atau logam berat dimasukkan secara haram, lalu menyerap menembusi kulit terus ke salur darah dan organ.',
+    verdict: 'Dilarang sama sekali — merosakkan buah pinggang, sistem saraf dan perisai kulit.',
   },
 };
 
@@ -49,35 +45,55 @@ export const Slide01Cover: React.FC<Slide01Props> = ({ interactions, onPatch }) 
   const active = COMPARE_CASES[interactions.coverCompareId];
 
   return (
-    <div className="h-full w-full grid grid-cols-12 gap-8 px-10 py-8 items-center select-none">
-      {/* Left Column */}
-      <div className="col-span-6 flex flex-col justify-center gap-7 h-full">
-        <div>
-          <div className="text-base font-semibold text-emerald-800 dark:text-emerald-400 mb-2">
+    <div className="h-full w-full grid grid-cols-12 gap-8 px-10 py-7 items-center select-none">
+      <div className="col-span-6 flex flex-col justify-between h-full py-1">
+        <div className="space-y-4">
+          <div className="text-base font-bold text-emerald-800 dark:text-emerald-400">
             Kimia Tingkatan 5 · Bab 5.4
           </div>
-          <h1 className="font-display text-5xl font-extrabold tracking-tight text-stone-900 dark:text-stone-50 leading-[1.06]">
-            Ubat-ubatan dan Bahan Kosmetik
+          <h1 className="font-display text-[44px] font-extrabold tracking-tight text-stone-900 dark:text-stone-50 leading-[1.08]">
+            Ubat-ubatan & Bahan Kosmetik
           </h1>
-          <p className="mt-4 text-xl text-stone-700 dark:text-stone-300 leading-relaxed">
-            Memahami peranan bahan kimia dalam{' '}
-            <span className="font-bold text-blue-800 dark:text-blue-400">merawat penyakit</span>,{' '}
-            <span className="font-bold text-emerald-800 dark:text-emerald-400">penjagaan luaran</span>, serta{' '}
-            <span className="font-bold text-red-700 dark:text-red-400">bahaya penyalahgunaan</span>.
+          <p className="text-[19px] font-medium text-stone-700 dark:text-stone-300 leading-relaxed">
+            Bahan yang hampir serupa boleh menjadi{' '}
+            <span className="font-bold text-blue-900 dark:text-blue-400">ubat penyembuh</span>,{' '}
+            <span className="font-bold text-emerald-800 dark:text-emerald-400">kosmetik luaran</span>, atau{' '}
+            <span className="font-bold text-red-700 dark:text-red-400">racun senyap</span> — bergantung pada 3 rahsia kimia:
           </p>
+
+          <div className="grid grid-cols-3 gap-3 pt-1">
+            <div className="rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-3.5">
+              <div className="text-sm font-bold text-blue-900 dark:text-blue-400">Rahsia 1</div>
+              <div className="text-[17px] font-bold text-stone-900 dark:text-stone-100 mt-0.5">Struktur</div>
+              <p className="text-[15px] text-stone-600 dark:text-stone-400 mt-1 leading-snug">
+                Bentuk dan sifat asid/kutub molekul
+              </p>
+            </div>
+            <div className="rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-3.5">
+              <div className="text-sm font-bold text-amber-800 dark:text-amber-400">Rahsia 2</div>
+              <div className="text-[17px] font-bold text-stone-900 dark:text-stone-100 mt-0.5">Dos &amp; Tempoh</div>
+              <p className="text-[15px] text-stone-600 dark:text-stone-400 mt-1 leading-snug">
+                Jumlah yang masuk menentu selamat atau toksik
+              </p>
+            </div>
+            <div className="rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-3.5">
+              <div className="text-sm font-bold text-emerald-800 dark:text-emerald-400">Rahsia 3</div>
+              <div className="text-[17px] font-bold text-stone-900 dark:text-stone-100 mt-0.5">Lapisan Sasaran</div>
+              <p className="text-[15px] text-stone-600 dark:text-stone-400 mt-1 leading-snug">
+                Kekal di luar kulit atau masuk salur darah
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div className="pt-5 border-t border-stone-200 dark:border-stone-800">
-          <div className="text-sm font-semibold text-stone-500 dark:text-stone-400 mb-3">
-            Pembahagian Pembentangan
-          </div>
-          <div className="grid grid-cols-2 gap-x-5 gap-y-3">
+        <div className="pt-4 border-t border-stone-200 dark:border-stone-800">
+          <div className="grid grid-cols-2 gap-x-5 gap-y-2.5">
             {([1, 2, 3, 4] as const).map((id) => (
               <div key={id} className="flex flex-col">
-                <span className="text-base font-bold text-stone-900 dark:text-stone-100">
+                <span className="text-[16px] font-bold text-stone-900 dark:text-stone-100">
                   {TEAM_PRESENTERS[id].name}
                 </span>
-                <span className="text-sm text-stone-600 dark:text-stone-400 leading-snug">
+                <span className="text-[15px] text-stone-600 dark:text-stone-400 leading-snug">
                   {TEAM_PRESENTERS[id].focus}
                 </span>
               </div>
@@ -86,23 +102,24 @@ export const Slide01Cover: React.FC<Slide01Props> = ({ interactions, onPatch }) 
         </div>
       </div>
 
-      {/* Right Column */}
       <div className="col-span-6 flex flex-col justify-center">
-        <div className="rounded-3xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-7 shadow-sm">
-          <div className="text-sm font-semibold text-stone-500 dark:text-stone-400">Perbandingan Awal</div>
-          <h2 className="font-display text-3xl font-bold text-stone-900 dark:text-stone-100 mt-1">
-            Bahan Sama, Tujuan Berbeza
+        <div className="rounded-3xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-6 shadow-sm">
+          <div className="text-[15px] font-semibold text-stone-500 dark:text-stone-400">
+            Perbandingan Lapisan Tindakan
+          </div>
+          <h2 className="font-display text-[28px] font-bold text-stone-900 dark:text-stone-100 mt-0.5 leading-tight">
+            Di Manakah Molekul Ini Bertindak?
           </h2>
 
-          <div className="grid grid-cols-3 gap-2.5 mt-5" role="tablist" aria-label="Perbandingan Tujuan Bahan">
+          <div className="grid grid-cols-3 gap-2.5 mt-4" role="tablist" aria-label="Perbandingan Tujuan Bahan">
             <button
               type="button"
               role="tab"
               aria-selected={interactions.coverCompareId === 'ubat'}
               onClick={() => onPatch({ coverCompareId: 'ubat' })}
-              className={`flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-base font-bold transition-colors cursor-pointer ${
+              className={`flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-[16px] font-bold transition-colors cursor-pointer ${
                 interactions.coverCompareId === 'ubat'
-                  ? 'bg-blue-800 text-white'
+                  ? 'bg-blue-900 text-white'
                   : 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-200'
               }`}
             >
@@ -115,7 +132,7 @@ export const Slide01Cover: React.FC<Slide01Props> = ({ interactions, onPatch }) 
               role="tab"
               aria-selected={interactions.coverCompareId === 'kosmetik'}
               onClick={() => onPatch({ coverCompareId: 'kosmetik' })}
-              className={`flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-base font-bold transition-colors cursor-pointer ${
+              className={`flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-[16px] font-bold transition-colors cursor-pointer ${
                 interactions.coverCompareId === 'kosmetik'
                   ? 'bg-emerald-800 text-white'
                   : 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-200'
@@ -130,7 +147,7 @@ export const Slide01Cover: React.FC<Slide01Props> = ({ interactions, onPatch }) 
               role="tab"
               aria-selected={interactions.coverCompareId === 'terlarang'}
               onClick={() => onPatch({ coverCompareId: 'terlarang' })}
-              className={`flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-base font-bold transition-colors cursor-pointer ${
+              className={`flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-[16px] font-bold transition-colors cursor-pointer ${
                 interactions.coverCompareId === 'terlarang'
                   ? 'bg-red-700 text-white'
                   : 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-200'
@@ -146,73 +163,84 @@ export const Slide01Cover: React.FC<Slide01Props> = ({ interactions, onPatch }) 
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
-            className="mt-6 grid grid-cols-12 gap-5 items-center"
+            className="mt-5 grid grid-cols-12 gap-5 items-center"
           >
             <div className="col-span-5 bg-[#FBF9F5] dark:bg-stone-950 rounded-2xl p-4 flex flex-col items-center">
-              {interactions.coverCompareId === 'ubat' ? (
-                <svg viewBox="0 0 180 140" className="w-full h-36" aria-hidden="true">
-                  <rect x="24" y="24" width="132" height="32" rx="16" fill="#DBEAFE" stroke="#1E40AF" strokeWidth="2.5" />
-                  <line x1="90" y1="24" x2="90" y2="56" stroke="#1E40AF" strokeWidth="2" strokeDasharray="3 3" />
-                  <text x="90" y="44" textAnchor="middle" fontSize="11.5" fontWeight="700" fill="#1E3A8A">
-                    Dos Terkawal
-                  </text>
-                  <path d="M90,62 L90,86" stroke="#1E40AF" strokeWidth="3" strokeLinecap="round" />
-                  <polygon points="84,82 96,82 90,92" fill="#1E40AF" />
-                  <rect x="30" y="96" width="120" height="28" rx="8" fill="#EFF6FF" stroke="#1E40AF" strokeWidth="2" />
-                  <text x="90" y="114" textAnchor="middle" fontSize="11.5" fontWeight="700" fill="#1E3A8A">
-                    Rawat Sasaran Penyakit
-                  </text>
-                </svg>
-              ) : interactions.coverCompareId === 'kosmetik' ? (
-                <svg viewBox="0 0 180 140" className="w-full h-36" aria-hidden="true">
-                  <circle cx="90" cy="30" r="14" fill="#D1FAE5" stroke="#2D6A4F" strokeWidth="2.5" />
-                  <text x="90" y="34" textAnchor="middle" fontSize="10.5" fontWeight="700" fill="#065F46">
-                    NOT
-                  </text>
-                  <path d="M90,48 L90,66" stroke="#2D6A4F" strokeWidth="3" strokeLinecap="round" />
-                  <rect x="20" y="70" width="140" height="24" rx="6" fill="#A7F3D0" stroke="#2D6A4F" strokeWidth="2.5" />
-                  <text x="90" y="86" textAnchor="middle" fontSize="11.5" fontWeight="700" fill="#064E3B">
-                    Permukaan Kulit Sahaja
-                  </text>
-                  <rect x="20" y="102" width="140" height="22" rx="6" fill="#F5F5F4" stroke="#A8A29E" strokeWidth="1.5" strokeDasharray="4 3" />
-                  <text x="90" y="117" textAnchor="middle" fontSize="10.5" fontWeight="600" fill="#57534E">
-                    Salur Darah Terlindung
-                  </text>
-                </svg>
-              ) : (
-                <svg viewBox="0 0 180 140" className="w-full h-36" aria-hidden="true">
-                  <line x1="18" y1="28" x2="18" y2="108" stroke="#B91C1C" strokeWidth="3" strokeLinecap="round" />
-                  <polygon points="12,104 24,104 18,114" fill="#B91C1C" />
-                  <rect x="34" y="18" width="134" height="22" rx="6" fill="#FDE68A" stroke="#D97706" strokeWidth="2" />
-                  <text x="101" y="33" textAnchor="middle" fontSize="10.5" fontWeight="700" fill="#78350F">
-                    Krim Haram / Merkuri
-                  </text>
-                  <rect x="34" y="54" width="134" height="22" rx="6" fill="#FECACA" stroke="#DC2626" strokeWidth="2" />
-                  <text x="101" y="69" textAnchor="middle" fontSize="10" fontWeight="700" fill="#7F1D1D">
-                    Tembus Kulit → Darah
-                  </text>
-                  <rect x="34" y="96" width="134" height="26" rx="6" fill="#B91C1C" />
-                  <text x="101" y="113" textAnchor="middle" fontSize="10" fontWeight="700" fill="#FFFFFF">
-                    Rosak Buah Pinggang
-                  </text>
-                </svg>
-              )}
-              <div className="text-sm font-semibold text-stone-700 dark:text-stone-300 text-center">
+              <svg viewBox="0 0 200 185" className="w-full h-48" aria-label="Gambar rajah kedalaman serapan molekul">
+                <rect x="14" y="16" width="172" height="36" rx="8" fill="#FEF3C7" stroke="#D97706" strokeWidth="2" />
+                <text x="100" y="39" textAnchor="middle" fontSize="13" fontWeight="700" fill="#78350F">
+                  1. Permukaan Luar Kulit
+                </text>
+
+                <rect x="14" y="72" width="172" height="36" rx="8" fill="#E0F2FE" stroke="#0369A1" strokeWidth="2" />
+                <text x="100" y="95" textAnchor="middle" fontSize="13" fontWeight="700" fill="#0C4A6E">
+                  2. Tisu / Sasaran Sakit
+                </text>
+
+                <rect
+                  x="14"
+                  y="128"
+                  width="172"
+                  height="40"
+                  rx="8"
+                  fill={interactions.coverCompareId === 'terlarang' ? '#FEE2E2' : '#F5F5F4'}
+                  stroke={interactions.coverCompareId === 'terlarang' ? '#B91C1C' : '#A8A29E'}
+                  strokeWidth="2"
+                />
+                <text
+                  x="100"
+                  y="152"
+                  textAnchor="middle"
+                  fontSize="13"
+                  fontWeight="700"
+                  fill={interactions.coverCompareId === 'terlarang' ? '#7F1D1D' : '#44403C'}
+                >
+                  3. Salur Darah &amp; Ginjal
+                </text>
+
+                {interactions.coverCompareId === 'ubat' && (
+                  <g>
+                    <circle cx="34" cy="90" r="8" fill="#1E3A8A" />
+                    <path d="M34,20 L34,78" stroke="#1E3A8A" strokeWidth="4" strokeLinecap="round" />
+                    <polygon points="27,74 41,74 34,85" fill="#1E3A8A" />
+                  </g>
+                )}
+
+                {interactions.coverCompareId === 'kosmetik' && (
+                  <g>
+                    <circle cx="34" cy="34" r="8" fill="#15803D" />
+                    <line x1="20" y1="62" x2="180" y2="62" stroke="#15803D" strokeWidth="3" strokeDasharray="5 4" />
+                  </g>
+                )}
+
+                {interactions.coverCompareId === 'terlarang' && (
+                  <g>
+                    <path d="M34,20 L34,136" stroke="#B91C1C" strokeWidth="4" strokeLinecap="round" />
+                    <polygon points="27,132 41,132 34,144" fill="#B91C1C" />
+                    <circle cx="34" cy="148" r="7" fill="#B91C1C" />
+                  </g>
+                )}
+              </svg>
+              <div className="text-[15px] font-bold text-stone-700 dark:text-stone-300 text-center mt-1">
                 {interactions.coverCompareId === 'ubat'
-                  ? 'Rawatan dalaman / luaran'
+                  ? 'Sukatan tepat ke sasaran rawatan'
                   : interactions.coverCompareId === 'kosmetik'
-                  ? 'Kegunaan luaran'
-                  : 'Menyerap ke salur darah'}
+                  ? 'Berhenti di permukaan luar kulit'
+                  : 'Menembusi kulit masuk ke darah'}
               </div>
             </div>
 
             <div className="col-span-7 space-y-3">
               <div>
-                <div className="text-xl font-bold text-stone-900 dark:text-stone-100 leading-snug">{active.title}</div>
-                <div className="text-sm font-medium text-stone-500 dark:text-stone-400 mt-1">{active.moleculeExample}</div>
+                <div className="text-[20px] font-bold text-stone-900 dark:text-stone-100 leading-snug">
+                  {active.title}
+                </div>
+                <div className="text-[15px] font-semibold text-stone-500 dark:text-stone-400 mt-1">
+                  {active.moleculeExample}
+                </div>
               </div>
-              <p className="text-base leading-relaxed text-stone-700 dark:text-stone-300">{active.mechanism}</p>
-              <div className="pt-2.5 border-t border-stone-200 dark:border-stone-800 text-sm font-bold text-stone-900 dark:text-stone-100">
+              <p className="text-[17px] leading-relaxed text-stone-800 dark:text-stone-200">{active.mechanism}</p>
+              <div className="pt-3 border-t border-stone-200 dark:border-stone-800 text-[16px] font-bold text-stone-900 dark:text-stone-100 leading-snug">
                 {active.verdict}
               </div>
             </div>

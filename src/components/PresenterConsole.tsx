@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import {
+  Atom,
   ChevronLeft,
   ChevronRight,
   Crosshair,
   ExternalLink,
   EyeOff,
+  Lightbulb,
   MonitorCheck,
   Moon,
   Pause,
@@ -109,7 +111,6 @@ export const PresenterConsole: React.FC<PresenterConsoleProps> = ({
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-[#F3EFE8] text-stone-900 flex flex-col select-none">
-      {/* Clean Warm Keynote-Style Top Bar */}
       <header className="border-b border-stone-200 bg-white px-5 py-3 flex flex-wrap items-center justify-between gap-3 shrink-0">
         <div className="flex items-center gap-4">
           <div>
@@ -159,6 +160,19 @@ export const PresenterConsole: React.FC<PresenterConsoleProps> = ({
 
           <button
             type="button"
+            onClick={() => onPatchInteractions({ molecularLens: !interactions.molecularLens })}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer ${
+              interactions.molecularLens
+                ? 'border-indigo-700 bg-indigo-50 text-indigo-800'
+                : 'border-stone-300 bg-white text-stone-700 hover:bg-stone-50'
+            }`}
+          >
+            <Atom className="w-3.5 h-3.5" />
+            <span>Zum Biokimia</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => {
               const nextArmed = !laserArmed;
               setLaserArmed(nextArmed);
@@ -171,7 +185,7 @@ export const PresenterConsole: React.FC<PresenterConsoleProps> = ({
             }`}
           >
             <Crosshair className="w-3.5 h-3.5" />
-            <span>Penunjuk Laser</span>
+            <span>Laser</span>
           </button>
 
           <button
@@ -217,9 +231,7 @@ export const PresenterConsole: React.FC<PresenterConsoleProps> = ({
         </div>
       </header>
 
-      {/* Main Two-Column Presenter Studio */}
       <div className="flex-1 min-h-0 grid grid-cols-12 gap-4 p-4">
-        {/* Left: Live Slide Mirror + Navigation */}
         <div className="col-span-12 lg:col-span-7 flex flex-col gap-3 min-h-0">
           <div className="flex items-center justify-between text-xs text-stone-600">
             <span className="font-semibold">
@@ -228,7 +240,7 @@ export const PresenterConsole: React.FC<PresenterConsoleProps> = ({
             <span>
               {laserArmed
                 ? 'Gerakkan tetikus pada slaid di bawah untuk menggerakkan laser di skrin projektor.'
-                : 'Anda boleh mengklik terus butang di dalam pratonton untuk mengawal slaid.'}
+                : 'Klik terus butang di dalam pratonton untuk mengawal slaid secara langsung.'}
             </span>
           </div>
 
@@ -272,7 +284,6 @@ export const PresenterConsole: React.FC<PresenterConsoleProps> = ({
             )}
           </div>
 
-          {/* Slide Navigation Strip */}
           <div className="flex items-center justify-between gap-2 bg-white border border-stone-200 rounded-xl px-3 py-2 shrink-0">
             <button
               type="button"
@@ -323,7 +334,6 @@ export const PresenterConsole: React.FC<PresenterConsoleProps> = ({
           </div>
         </div>
 
-        {/* Right: Clean, Plain-Language Speaker Notes for the 4 Presenters */}
         <div className="col-span-12 lg:col-span-5 flex flex-col gap-3 min-h-0 overflow-y-auto pr-1">
           <div className="border border-stone-200 bg-white rounded-2xl p-4 space-y-2">
             <div className="flex items-center justify-between text-xs text-stone-500">
@@ -341,8 +351,16 @@ export const PresenterConsole: React.FC<PresenterConsoleProps> = ({
             </div>
           </div>
 
+          <div className="border border-emerald-200 bg-emerald-50/70 rounded-2xl p-4 space-y-1.5">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-900">
+              <Lightbulb className="w-4 h-4" />
+              <span>Analogi Feynman (Mudah Difahami Semua Pelajar)</span>
+            </div>
+            <p className="text-sm text-stone-900 leading-relaxed">{currentMeta.presenterNotes.feynmanAnalogy}</p>
+          </div>
+
           <div className="border border-stone-200 bg-white rounded-2xl p-4 space-y-2.5">
-            <div className="text-xs font-bold text-stone-700">Isi Utama Pembentang</div>
+            <div className="text-xs font-bold text-stone-700">Langkah Penyampaian Pembentang</div>
             <ol className="space-y-2 text-sm text-stone-800 leading-relaxed list-decimal list-inside">
               {currentMeta.presenterNotes.talkingPoints.map((line, i) => (
                 <li key={i}>{line}</li>
@@ -352,13 +370,13 @@ export const PresenterConsole: React.FC<PresenterConsoleProps> = ({
 
           <div className="border border-amber-200 bg-amber-50/70 rounded-2xl p-4 space-y-3">
             <div>
-              <div className="text-xs font-bold text-amber-900">Soalan untuk Ditanya kepada Kelas</div>
+              <div className="text-xs font-bold text-amber-900">Soalan Mendorong Pemikiran Kelas</div>
               <p className="text-sm text-stone-800 mt-1 leading-relaxed">
                 {currentMeta.presenterNotes.questionForClass}
               </p>
             </div>
             <div className="pt-2.5 border-t border-amber-200/80">
-              <div className="text-xs font-bold text-stone-800">Nota Tambahan Pembentang</div>
+              <div className="text-xs font-bold text-stone-800">Nota Pedagogi</div>
               <p className="text-xs text-stone-700 mt-1 leading-relaxed">
                 {currentMeta.presenterNotes.reminder}
               </p>

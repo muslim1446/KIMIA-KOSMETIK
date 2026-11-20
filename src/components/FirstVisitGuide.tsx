@@ -25,7 +25,7 @@ const steps = [
     title: 'Slaid ini memang untuk diteroka',
     description:
       'Pilih tab, tekan pilihan, dan cuba aktiviti pada slaid. Perubahan pada slaid interaktif akan terus kelihatan; gunakan anak panah untuk bergerak antara slaid.',
-    note: '← / → pada papan kekunci juga menukar slaid',
+    note: '',
     scene: 'explore',
   },
   {
@@ -33,7 +33,7 @@ const steps = [
     title: 'Gerakkan kanvas dengan sentuhan',
     description:
       'Pada telefon, seret ruang kosong dengan satu jari dalam mod kursor atau mod lain. Cubit dua jari untuk zum dan seret untuk bergerak ke mana-mana arah. Pen dan pemadam kekal untuk melukis.',
-    note: 'Komputer: roda tetikus untuk gerak; Ctrl / ⌘ + roda untuk zum',
+    note: '',
     scene: 'move',
   },
   {
@@ -41,7 +41,7 @@ const steps = [
     title: 'Tukar teks yang sudah ada',
     description:
       'Klik kanan pada teks dengan tetikus, atau tekan lama pada telefon. Cara lain: pilih alat Teks, kemudian ketik teks. Simpan perubahan atau pulihkan ayat asal.',
-    note: 'Alat Teks mengaktifkan suntingan dengan satu klik',
+    note: '',
     scene: 'edit',
   },
   {
@@ -49,7 +49,7 @@ const steps = [
     title: 'Letak nota anda pada slaid',
     description:
       'Tekan butang T+ untuk mencipta kotak teks. Taip terus, kemudian seret kotak untuk alihkannya. Pilih kotak untuk ubah gaya atau tarik pemegang penjuru untuk ubah saiz.',
-    note: 'Kotak teks boleh dipadam dengan kekunci Delete',
+    note: '',
     scene: 'text',
   },
   {
@@ -57,7 +57,7 @@ const steps = [
     title: 'Pen untuk menerangkan, pemadam untuk membetulkan',
     description:
       'Pilih Pen dan lukis pada slaid. Tetapan Pen membolehkan anda pilih warna, saiz, dan lakaran kekal atau sementara. Pilih pemadam, kemudian sapu pada lakaran yang hendak dibuang.',
-    note: 'Lakaran sementara akan pudar sendiri; Padam Slaid Ini buang semua dakwat slaid',
+    note: '',
     scene: 'draw',
   },
   {
@@ -65,7 +65,7 @@ const steps = [
     title: 'Bawa masuk gambar dan susun pada kanvas',
     description:
       'Gunakan butang gambar untuk pilih fail, atau tampal imej dengan Ctrl+V / ⌘V. Klik dua kali gambar untuk mengaktifkan seretan; tarik penjuru untuk ubah saiz. Ikon pin memilih sama ada gambar ikut tab atau kekal pada slaid.',
-    note: 'Pada telefon, ketik dua kali untuk mengaktifkan seretan',
+    note: '',
     scene: 'image',
   },
   {
@@ -73,7 +73,7 @@ const steps = [
     title: 'Tunjukkan satu titik tanpa meninggalkan dakwat',
     description:
       'Pilih Laser kemudian gerakkan jari atau tetikus pada slaid. Pada komputer, anda juga boleh tahan kekunci L sambil menggerakkan tetikus; lepaskan L untuk berhenti.',
-    note: 'Titik laser dikongsi dengan ahli bilik yang sama',
+    note: '',
     scene: 'laser',
   },
   {
@@ -112,7 +112,7 @@ function markGuideComplete() {
 }
 
 const sceneTitles: Record<(typeof steps)[number]['scene'], string> = {
-  explore: 'Slaid interaktif',
+  explore: '',
   move: 'Gerakan sentuhan',
   edit: 'Sunting teks',
   text: 'Kotak teks',
@@ -344,7 +344,7 @@ export const FirstVisitGuide: React.FC<{ disabled?: boolean }> = ({ disabled = f
               </div>
 
               <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-stone-200 pt-4">
-                <button type="button" onClick={() => setOpen(false)} className="text-xs font-semibold text-stone-500 underline decoration-stone-300 underline-offset-4 hover:text-stone-800">Sambung kemudian</button>
+                <button type="button" onClick={() => setOpen(false)} className="text-xs font-semibold text-stone-500 underline decoration-stone-300 underline-offset-4 hover:text-stone-800"></button>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"

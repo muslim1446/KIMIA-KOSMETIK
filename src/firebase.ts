@@ -1,10 +1,21 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { doc, getDocFromServer, getFirestore } from 'firebase/firestore';
-import firebaseConfig from '../firebase-applet-config.json';
+import { doc, getDocFromServer, initializeFirestore } from 'firebase/firestore';
+
+const firebaseConfig = {
+  apiKey: 'AIzaSyDv5d2cKN4PjfSvxf8uvdDs3phY8nHCJgo',
+  authDomain: 'kimia-kosmetik.firebaseapp.com',
+  databaseURL: 'https://kimia-kosmetik-default-rtdb.asia-southeast1.firebasedatabase.app',
+  projectId: 'kimia-kosmetik',
+  storageBucket: 'kimia-kosmetik.firebasestorage.app',
+  messagingSenderId: '556624800580',
+  appId: '1:556624800580:web:329814cb6e9756d17c0511',
+};
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const db = initializeFirestore(app, {
+  experimentalAutoDetectLongPolling: true,
+});
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });

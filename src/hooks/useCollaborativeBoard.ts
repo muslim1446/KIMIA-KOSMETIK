@@ -273,12 +273,18 @@ export function useCollaborativeBoard({
       ).slice(0, 80);
 
       try {
-        const roomSnap = await getDoc(roomRef).catch(async (err) => {
-          if (err?.code === 'permission-denied') {
-            return null;
-          }
-          throw err;
-        });
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          window.setTimeout(() => reject(new Error('FIRESTORE_TIMEOUT')), 7000),
+        );
+        const roomSnap = await Promise.race([
+          getDoc(roomRef).catch(async (err) => {
+            if (err?.code === 'permission-denied') {
+              return null;
+            }
+            throw err;
+          }),
+          timeoutPromise,
+        ]);
 
         if (cancelled) return;
 
@@ -502,8 +508,10 @@ export function useCollaborativeBoard({
           setSyncStatus('error');
           const msg = err instanceof Error ? err.message : 'Gagal menyambung ke bilik Firebase.';
           setSyncError(
-            msg.includes('permission') || msg.includes('PERMISSION_DENIED')
-              ? 'Kod bilik salah atau tiada kebenaran menyertai bilik ini.'
+            msg === 'FIRESTORE_TIMEOUT'
+              ? 'Firestore Database belum diaktifkan atau belum bersedia. Sila pastikan Build -> Firestore Database telah dicipta dan firestore.rules telah diterbitkan (Publish) di Firebase Console.'
+              : msg.includes('permission') || msg.includes('PERMISSION_DENIED')
+              ? 'Kod bilik salah atau peraturan Firestore (firestore.rules) belum diterbitkan.'
               : msg,
           );
         }

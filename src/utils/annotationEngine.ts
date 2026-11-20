@@ -1,6 +1,6 @@
 export type PenMode = 'permanent' | 'temporary';
 export type TempDurationSeconds = 3 | 5 | 6;
-export type AnnotationTool = 'pointer' | 'pen' | 'eraser' | 'text-edit';
+export type AnnotationTool = 'pointer' | 'pen' | 'eraser' | 'text-edit' | 'laser';
 
 export interface Point2D {
   x: number;

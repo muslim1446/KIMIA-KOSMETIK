@@ -8,6 +8,8 @@ export interface LaserPoint {
   active: boolean;
   x: number;
   y: number;
+  authorId?: string;
+  updatedAt?: number;
 }
 
 export interface SharedSlideInteractions {
@@ -240,10 +242,29 @@ export function usePresentationSync(
   }, [updateSharedState]);
 
   const setLaserPoint = useCallback(
-    (laser: LaserPoint) => {
-      updateSharedState((prev) => ({ ...prev, laser }));
+    (laser: LaserPoint, skipRemoteCallback = false) => {
+      setState((prev) => {
+        const next: SyncedPresentationState = {
+          ...prev,
+          laser,
+          updatedAt: Date.now(),
+          senderId: senderIdRef.current,
+        };
+        try {
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        } catch {
+        }
+        try {
+          channelRef.current?.postMessage({ type: 'SYNC_STATE', payload: next });
+        } catch {
+        }
+        if (!skipRemoteCallback) {
+          onLocalBroadcastRef.current?.(next);
+        }
+        return next;
+      });
     },
-    [updateSharedState],
+    [],
   );
 
   const resetPresentation = useCallback(() => {

@@ -31,7 +31,7 @@ import {
   sanitizeTextOverride,
   SlideImageItem,
 } from '../utils/annotationEngine';
-import { SyncedPresentationState } from './usePresentationSync';
+import { LaserPoint, SyncedPresentationState } from './usePresentationSync';
 
 export type BoardSyncStatus = 'local' | 'connecting' | 'synced' | 'error';
 
@@ -141,6 +141,10 @@ export function useCollaborativeBoard({
   const roomImageIdsRef = useRef<string[]>([]);
   const slideTxQueueRef = useRef<Record<number, Promise<void>>>({});
   const ephemeralTxQueueRef = useRef<Record<number, Promise<void>>>({});
+  const lastLocalLaserPushRef = useRef<number>(0);
+  const lastLocalLaserActiveRef = useRef<boolean>(false);
+  const laserPushTimerRef = useRef<number | null>(null);
+  const pendingLaserRef = useRef<LaserPoint | null>(null);
   const presentationStateRef = useRef(presentationState);
   presentationStateRef.current = presentationState;
 
@@ -398,11 +402,13 @@ export function useCollaborativeBoard({
             if (!snap.exists()) return;
             const data = snap.data();
             if (!snap.metadata.hasPendingWrites) {
+              const suppressLaserEcho =
+                lastLocalLaserActiveRef.current || Date.now() - lastLocalLaserPushRef.current < 450;
               onRemotePresentationSync({
                 slideIndex: typeof data.slideIndex === 'number' ? data.slideIndex : 0,
                 blackout: Boolean(data.blackout),
                 projectorDark: Boolean(data.projectorDark),
-                laser: data.laser,
+                ...(suppressLaserEcho ? {} : { laser: data.laser }),
                 interactions: data.interactions,
               });
             }
@@ -555,7 +561,11 @@ export function useCollaborativeBoard({
           slideIndex: next.slideIndex,
           blackout: next.blackout,
           projectorDark: next.projectorDark,
-          laser: next.laser,
+          laser: {
+            active: Boolean(next.laser?.active),
+            x: Number((next.laser?.x ?? 50).toFixed(2)),
+            y: Number((next.laser?.y ?? 50).toFixed(2)),
+          },
           interactions: next.interactions,
           updatedAt: serverTimestamp(),
         });
@@ -564,6 +574,70 @@ export function useCollaborativeBoard({
       }
     },
     [isFirebaseActive, user, roomId],
+  );
+
+  // Throttled real-time laser coordinate broadcast (immediate on start/stop, ~120ms while moving)
+  const broadcastLaserToFirebase = useCallback(
+    (laser: LaserPoint) => {
+      lastLocalLaserActiveRef.current = Boolean(laser.active);
+      if (!isFirebaseActive || !user) return;
+
+      const cleanLaser = {
+        active: Boolean(laser.active),
+        x: Number(laser.x.toFixed(2)),
+        y: Number(laser.y.toFixed(2)),
+      };
+
+      const flush = async (payload: { active: boolean; x: number; y: number }) => {
+        lastLocalLaserPushRef.current = Date.now();
+        try {
+          await updateDoc(doc(db, 'rooms', roomId), {
+            laser: payload,
+            updatedAt: serverTimestamp(),
+          });
+        } catch {
+          // Non-fatal for transient laser updates
+        }
+      };
+
+      const now = Date.now();
+      if (!cleanLaser.active) {
+        if (laserPushTimerRef.current) {
+          window.clearTimeout(laserPushTimerRef.current);
+          laserPushTimerRef.current = null;
+        }
+        pendingLaserRef.current = null;
+        void flush(cleanLaser);
+        return;
+      }
+
+      const elapsed = now - lastLocalLaserPushRef.current;
+      if (elapsed >= 115) {
+        if (laserPushTimerRef.current) {
+          window.clearTimeout(laserPushTimerRef.current);
+          laserPushTimerRef.current = null;
+        }
+        pendingLaserRef.current = null;
+        void flush(cleanLaser);
+      } else {
+        pendingLaserRef.current = cleanLaser;
+        if (!laserPushTimerRef.current) {
+          laserPushTimerRef.current = window.setTimeout(() => {
+            laserPushTimerRef.current = null;
+            const pending = pendingLaserRef.current;
+            pendingLaserRef.current = null;
+            if (pending) {
+              void flush({
+                active: Boolean(pending.active),
+                x: Number(pending.x.toFixed(2)),
+                y: Number(pending.y.toFixed(2)),
+              });
+            }
+          }, 115 - elapsed);
+        }
+      }
+    },
+    [isFirebaseActive, roomId, user],
   );
 
   // Atomic transaction helper for SlideBoard (serialized per slide locally, merged via transaction remotely)
@@ -1117,6 +1191,7 @@ export function useCollaborativeBoard({
     signOutUser,
     joinRoom,
     pushPresentationStateToFirebase,
+    broadcastLaserToFirebase,
     updateLiveStroke,
     commitStroke,
     deleteStrokesById,

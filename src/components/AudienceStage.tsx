@@ -8,15 +8,21 @@ import {
   getRootSlideScope,
   LOGICAL_HEIGHT,
   LOGICAL_WIDTH,
+  LogicalRect,
   PenMode,
   PenStroke,
   SlideImageItem,
   TempDurationSeconds,
 } from '../utils/annotationEngine';
+import {
+  laserClientToSlidePercent,
+  laserSlidePercentToClient,
+} from '../utils/presentationContext';
 import { compressImageBlob, loadImageFromUrl } from '../utils/imageCompression';
 import { SlideStageContent } from './SlideStageContent';
 import { SlideAnnotationLayer } from './SlideAnnotationLayer';
 import { InvisibleTextEditor } from './InvisibleTextEditor';
+import { GeminiAssistantFrame } from './GeminiAssistantFrame';
 import { PresentationIsland } from './PresentationIsland';
 
 interface AudienceStageProps {
@@ -67,6 +73,7 @@ interface AudienceStageProps {
   ) => void;
   onDeleteImage: (imageId: string) => void;
   onSaveTextEdit: (slideIndex: number, textKey: string, value: string | null) => void;
+  onLaserBroadcast: (laser: LaserPoint) => void;
 }
 
 export const AudienceStage: React.FC<AudienceStageProps> = ({
@@ -103,6 +110,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
   onUpdateImage,
   onDeleteImage,
   onSaveTextEdit,
+  onLaserBroadcast,
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [zoomScale, setZoomScale] = useState(1);
@@ -113,9 +121,24 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
   const [penSize, setPenSize] = useState(4);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [closePopoverSignal, setClosePopoverSignal] = useState(0);
+  const [geminiOpen, setGeminiOpen] = useState(false);
+  const [laserKeyHeld, setLaserKeyHeld] = useState(false);
+  const [stageSlideRect, setStageSlideRect] = useState<LogicalRect>({
+    left: 0,
+    top: 0,
+    width: LOGICAL_WIDTH,
+    height: LOGICAL_HEIGHT,
+  });
+  const [laserTrail, setLaserTrail] = useState<Array<{ x: number; y: number; t: number }>>([]);
+  const [laserExpired, setLaserExpired] = useState(false);
 
   const slideContainerRef = useRef<HTMLDivElement | null>(null);
   const toastTimerRef = useRef<number | null>(null);
+  const lastPointerPosRef = useRef<{ x: number; y: number }>({ x: 640, y: 360 });
+  const laserKeyHeldRef = useRef(false);
+  const laserTouchDraggingRef = useRef(false);
+  const onLaserBroadcastRef = useRef(onLaserBroadcast);
+  onLaserBroadcastRef.current = onLaserBroadcast;
 
   const showToast = useCallback((msg: string) => {
     setToastMsg(msg);
@@ -238,8 +261,151 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
     return () => window.removeEventListener('wheel', onWheel);
   }, [isRemoteProjector]);
 
+  // Measure slide bounding rect for accurate cross-screen laser coordinates
+  useEffect(() => {
+    const updateRect = () => {
+      const el = slideContainerRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      if (r.width > 0 && r.height > 0) {
+        setStageSlideRect({ left: r.left, top: r.top, width: r.width, height: r.height });
+      }
+    };
+    updateRect();
+    const el = slideContainerRef.current;
+    let ro: ResizeObserver | null = null;
+    if (el && typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(updateRect);
+      ro.observe(el);
+    }
+    window.addEventListener('resize', updateRect);
+    window.addEventListener('scroll', updateRect, true);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener('resize', updateRect);
+      window.removeEventListener('scroll', updateRect, true);
+    };
+  }, [slideIndex, zoomScale]);
+
+  // Real-time Collaborative Laser Pointer: hold 'L' key + move mouse/touch OR use Laser tool
+  const emitLaserAtClientPos = useCallback(
+    (clientX: number, clientY: number, active: boolean) => {
+      const el = slideContainerRef.current;
+      const r = el?.getBoundingClientRect();
+      const rect: LogicalRect =
+        r && r.width > 0 && r.height > 0
+          ? { left: r.left, top: r.top, width: r.width, height: r.height }
+          : stageSlideRect;
+      const pct = laserClientToSlidePercent(clientX, clientY, rect);
+      onLaserBroadcastRef.current({ active, x: pct.x, y: pct.y, updatedAt: Date.now() });
+    },
+    [stageSlideRect],
+  );
+
+  useEffect(() => {
+    if (isRemoteProjector) return;
+
+    const isEditableTarget = (target: EventTarget | null) => {
+      const el = target as HTMLElement | null;
+      return Boolean(
+        el &&
+          (el.tagName === 'INPUT' ||
+            el.tagName === 'TEXTAREA' ||
+            el.tagName === 'SELECT' ||
+            el.isContentEditable),
+      );
+    };
+
+    const onPointerMoveWindow = (e: PointerEvent) => {
+      lastPointerPosRef.current = { x: e.clientX, y: e.clientY };
+      if (laserKeyHeldRef.current) {
+        emitLaserAtClientPos(e.clientX, e.clientY, true);
+      }
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (isEditableTarget(e.target)) return;
+      if ((e.key === 'l' || e.key === 'L') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        if (!laserKeyHeldRef.current) {
+          laserKeyHeldRef.current = true;
+          setLaserKeyHeld(true);
+          emitLaserAtClientPos(lastPointerPosRef.current.x, lastPointerPosRef.current.y, true);
+        }
+      } else if (e.key === 'Escape' && tool === 'laser') {
+        setTool('pointer');
+        onLaserBroadcastRef.current({ active: false, x: 50, y: 50, updatedAt: Date.now() });
+      }
+    };
+
+    const stopLaserHold = () => {
+      if (laserKeyHeldRef.current) {
+        laserKeyHeldRef.current = false;
+        setLaserKeyHeld(false);
+        onLaserBroadcastRef.current({
+          active: false,
+          x: 50,
+          y: 50,
+          updatedAt: Date.now(),
+        });
+      }
+    };
+
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'l' || e.key === 'L') {
+        stopLaserHold();
+      }
+    };
+
+    window.addEventListener('pointermove', onPointerMoveWindow);
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+    window.addEventListener('blur', stopLaserHold);
+    return () => {
+      window.removeEventListener('pointermove', onPointerMoveWindow);
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('blur', stopLaserHold);
+    };
+  }, [emitLaserAtClientPos, isRemoteProjector, tool]);
+
+  // Turn off laser if user switches away from laser tool
+  useEffect(() => {
+    if (tool !== 'laser' && !laserKeyHeldRef.current && laser.active) {
+      // Only clear if we were the ones driving laser tool locally
+      if (laserTouchDraggingRef.current) {
+        laserTouchDraggingRef.current = false;
+        onLaserBroadcastRef.current({ active: false, x: 50, y: 50, updatedAt: Date.now() });
+      }
+    }
+  }, [tool, laser.active]);
+
+  // Transient laser trail + 4s inactivity auto-hide so stale lasers never stick
+  useEffect(() => {
+    if (!laser.active || blackout) {
+      setLaserTrail([]);
+      setLaserExpired(false);
+      return;
+    }
+    setLaserExpired(false);
+    const clientPt = laserSlidePercentToClient(laser.x, laser.y, stageSlideRect);
+    const now = Date.now();
+    setLaserTrail((prev) => [...prev.filter((p) => now - p.t < 280), { x: clientPt.x, y: clientPt.y, t: now }].slice(-7));
+
+    const expireTimer = window.setTimeout(() => {
+      if (!laserKeyHeldRef.current && !laserTouchDraggingRef.current) {
+        setLaserExpired(true);
+      }
+    }, 4000);
+    return () => window.clearTimeout(expireTimer);
+  }, [laser.active, laser.x, laser.y, blackout, stageSlideRect]);
+
   const interactionsKey = useMemo(() => JSON.stringify(interactions), [interactions]);
   const progressPct = ((slideIndex + 1) / SLIDES_META.length) * 100;
+  const showLaserOverlay = Boolean(laser.active && !blackout && !laserExpired);
+  const laserClientPt = useMemo(
+    () => laserSlidePercentToClient(laser.x, laser.y, stageSlideRect),
+    [laser.x, laser.y, stageSlideRect],
+  );
 
   return (
     <main className="relative w-screen h-screen overflow-hidden no-scrollbar">
@@ -291,13 +457,77 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
         />
       )}
 
-      {/* Synchronized virtual laser pointer, if a connected controller supplies one. */}
-      {laser.active && !blackout && (
+      {/* Interactive Laser Pointer capture surface when 'laser' Island tool is active */}
+      {tool === 'laser' && !isRemoteProjector && !blackout && (
         <div
-          aria-hidden="true"
-          className="pointer-events-none fixed z-40 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-red-600/85 ring-4 ring-red-500/30 shadow-md transition-all duration-75"
-          style={{ left: `${laser.x}%`, top: `${laser.y}%` }}
+          data-testid="laser-capture-surface"
+          onPointerDown={(e) => {
+            e.preventDefault();
+            laserTouchDraggingRef.current = true;
+            e.currentTarget.setPointerCapture(e.pointerId);
+            emitLaserAtClientPos(e.clientX, e.clientY, true);
+          }}
+          onPointerMove={(e) => {
+            if (e.pointerType === 'mouse' || laserTouchDraggingRef.current) {
+              emitLaserAtClientPos(e.clientX, e.clientY, true);
+            }
+          }}
+          onPointerUp={(e) => {
+            if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+              e.currentTarget.releasePointerCapture(e.pointerId);
+            }
+            if (e.pointerType !== 'mouse') {
+              laserTouchDraggingRef.current = false;
+              onLaserBroadcastRef.current({ active: false, x: 50, y: 50, updatedAt: Date.now() });
+            }
+          }}
+          onPointerLeave={() => {
+            if (!laserKeyHeldRef.current) {
+              onLaserBroadcastRef.current({ active: false, x: 50, y: 50, updatedAt: Date.now() });
+            }
+          }}
+          className="fixed inset-0 z-30 cursor-crosshair touch-none"
         />
+      )}
+
+      {/* Synchronized transient collaborative laser pointer & comet trail across all clients */}
+      {showLaserOverlay && (
+        <div
+          data-testid="collaborative-laser"
+          data-laser-active="true"
+          data-laser-x={laser.x}
+          data-laser-y={laser.y}
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-0 z-50 overflow-hidden"
+        >
+          {laserTrail.length > 1 && (
+            <svg className="fixed inset-0 w-screen h-screen overflow-visible">
+              {laserTrail.slice(0, -1).map((pt, idx) => {
+                const next = laserTrail[idx + 1];
+                const alpha = ((idx + 1) / laserTrail.length) * 0.45;
+                return (
+                  <line
+                    key={`${pt.t}-${idx}`}
+                    x1={pt.x}
+                    y1={pt.y}
+                    x2={next.x}
+                    y2={next.y}
+                    stroke="#EF4444"
+                    strokeWidth={3 + idx * 0.6}
+                    strokeLinecap="round"
+                    opacity={alpha}
+                  />
+                );
+              })}
+            </svg>
+          )}
+          <div
+            className="fixed -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-red-600/90 ring-4 ring-red-500/35 shadow-[0_0_14px_rgba(239,68,68,0.85)] transition-all duration-75"
+            style={{ left: `${laserClientPt.x}px`, top: `${laserClientPt.y}px` }}
+          >
+            <span className="absolute inset-1.5 rounded-full bg-white/90" />
+          </div>
+        </div>
       )}
 
       {/* Blackout Curtain (Keyboard 'B' or Presenter toggle) */}
@@ -308,10 +538,10 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
         />
       )}
 
-      {/* Subtle status toast when pasting/adding image */}
-      {toastMsg && !isRemoteProjector && (
+      {/* Subtle laser hold indicator or paste toast */}
+      {(toastMsg || (laserKeyHeld && !isRemoteProjector)) && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 rounded-xl bg-stone-900/90 text-white px-3.5 py-2 text-xs font-semibold shadow-lg pointer-events-none">
-          {toastMsg}
+          {laserKeyHeld ? 'Mod Laser Aktif — Gerakkan tetikus (Lepaskan L untuk berhenti)' : toastMsg}
         </div>
       )}
 
@@ -323,6 +553,22 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
             style={{ width: `${progressPct}%` }}
           />
         </div>
+      )}
+
+      {/* Floating Draggable & Resizable Gemini AI Frame (Stage mode only) */}
+      {!isRemoteProjector && (
+        <GeminiAssistantFrame
+          open={geminiOpen}
+          onClose={() => setGeminiOpen(false)}
+          slideIndex={slideIndex}
+          interactions={interactions}
+          slideContainerRef={slideContainerRef}
+          permanentStrokes={permanentStrokes}
+          tempStrokes={tempStrokes}
+          textEdits={textEdits}
+          slideImages={slideImages}
+          onAddImage={onAddImage}
+        />
       )}
 
       {/* Presentation Island: absent in ?mode=audiens dedicated projector window */}
@@ -350,6 +596,8 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
           onPenSizeChange={setPenSize}
           onClearSlideRootStrokes={onClearSlideRootStrokes}
           onPickImageFile={(file) => void addCompressedImageToSlide(file)}
+          geminiOpen={geminiOpen}
+          onToggleGemini={() => setGeminiOpen((o) => !o)}
           user={user}
           anonBlocked={anonBlocked}
           roomId={roomId}

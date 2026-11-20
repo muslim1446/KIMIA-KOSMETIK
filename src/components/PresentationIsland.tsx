@@ -8,6 +8,7 @@ import {
   Copy,
   Eraser,
   ImagePlus,
+  LocateFixed,
   LogIn,
   LogOut,
   Maximize2,
@@ -15,6 +16,7 @@ import {
   Moon,
   MousePointer2,
   PenTool,
+  Sparkles,
   Sun,
   Trash2,
   Type,
@@ -55,6 +57,8 @@ interface PresentationIslandProps {
   onPenSizeChange: (next: number) => void;
   onClearSlideRootStrokes: () => void;
   onPickImageFile: (file: File) => void;
+  geminiOpen: boolean;
+  onToggleGemini: () => void;
   // Firebase / Live Sync props
   user: User | null;
   anonBlocked?: boolean;
@@ -93,6 +97,8 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
   onPenSizeChange,
   onClearSlideRootStrokes,
   onPickImageFile,
+  geminiOpen,
+  onToggleGemini,
   user,
   anonBlocked = false,
   roomId,
@@ -597,6 +603,46 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
           }`}
         >
           <Type className="w-4 h-4" />
+        </button>
+
+        {/* Collaborative Laser Pointer Tool (also holds key 'L') */}
+        <button
+          type="button"
+          data-testid="island-laser-button"
+          aria-label="Penunjuk Laser Kolaboratif"
+          title="Penunjuk Laser (Klik di sini atau tahan kekunci L sambil gerakkan tetikus)"
+          onClick={() => {
+            onToolChange(tool === 'laser' ? 'pointer' : 'laser');
+            setOpenPopover('none');
+          }}
+          className={`flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+            tool === 'laser'
+              ? 'bg-red-600 text-white shadow-sm'
+              : 'hover:bg-stone-100 dark:hover:bg-stone-800'
+          }`}
+        >
+          <LocateFixed className="w-4 h-4" />
+          <span className="hidden md:inline text-[11px]">L</span>
+        </button>
+
+        {/* Gemini AI Assistant Toggle */}
+        <button
+          type="button"
+          data-testid="island-gemini-button"
+          aria-label="Pembantu Gemini AI"
+          title="Pembantu Gemini AI (Seret, ubah saiz, Mod Bukti & tampal gambar)"
+          onClick={() => {
+            onToggleGemini();
+            setOpenPopover('none');
+          }}
+          className={`flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+            geminiOpen
+              ? 'bg-emerald-700 text-white shadow-sm'
+              : 'hover:bg-stone-100 dark:hover:bg-stone-800 text-emerald-700 dark:text-emerald-400'
+          }`}
+        >
+          <Sparkles className="w-4 h-4" />
+          <span className="hidden sm:inline">AI</span>
         </button>
 
         <div className="w-px h-5 bg-stone-200 dark:bg-stone-700 mx-1" />

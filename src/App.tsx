@@ -15,6 +15,7 @@ export default function App() {
     prevSlide,
     toggleBlackout,
     toggleProjectorDark,
+    setLaserPoint,
     patchInteractions,
     applyRemoteState,
   } = usePresentationSync((next) => {
@@ -109,6 +110,10 @@ export default function App() {
         onUpdateImage={board.updateImage}
         onDeleteImage={board.deleteImage}
         onSaveTextEdit={board.setTextEdit}
+        onLaserBroadcast={(nextLaser) => {
+          setLaserPoint(nextLaser, true);
+          board.broadcastLaserToFirebase(nextLaser);
+        }}
       />
     </ErrorBoundary>
   );

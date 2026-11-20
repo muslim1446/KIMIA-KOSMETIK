@@ -16,6 +16,8 @@ interface SlideStageContentProps {
   interactions: SharedSlideInteractions;
   onPatch: (partial: Partial<SharedSlideInteractions>) => void;
   projectorDark?: boolean;
+  zoomScale?: number;
+  slideContainerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 export const LOGICAL_SLIDE_WIDTH = 1280;
@@ -26,6 +28,8 @@ export const SlideStageContent: React.FC<SlideStageContentProps> = ({
   interactions,
   onPatch,
   projectorDark = false,
+  zoomScale = 1,
+  slideContainerRef,
 }) => {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const [stageScale, setStageScale] = useState(1);
@@ -80,17 +84,19 @@ export const SlideStageContent: React.FC<SlideStageContentProps> = ({
     }
   };
 
+  const effectiveScale = stageScale * zoomScale;
+
   return (
     <div
       ref={hostRef}
-      className={`relative w-full h-full overflow-hidden flex items-center justify-center ${
+      className={`relative w-full h-full overflow-auto no-scrollbar flex items-center justify-center ${
         projectorDark ? 'dark bg-[#181715] text-stone-100' : 'bg-[#FBF9F5] text-stone-900'
       }`}
     >
       {/* Subtle warm ambient backdrop filling 100% of physical screen */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0"
+        className="pointer-events-none fixed inset-0"
         style={{
           background: projectorDark
             ? 'radial-gradient(circle at 85% 15%, rgba(217, 119, 6, 0.08), transparent 45%), radial-gradient(circle at 12% 88%, rgba(45, 106, 79, 0.12), transparent 50%)'
@@ -98,12 +104,14 @@ export const SlideStageContent: React.FC<SlideStageContentProps> = ({
         }}
       />
 
-      {/* Scaled 1280x720 Slide Canvas with Safe Overscan Margin */}
+      {/* Scaled 1280x720 Slide Canvas with Safe Overscan Margin + Zoom */}
       <div
+        ref={slideContainerRef}
+        data-slide-root="true"
         className="relative z-10 shrink-0 overflow-hidden"
         style={{
-          width: `${LOGICAL_SLIDE_WIDTH * stageScale}px`,
-          height: `${LOGICAL_SLIDE_HEIGHT * stageScale}px`,
+          width: `${LOGICAL_SLIDE_WIDTH * effectiveScale}px`,
+          height: `${LOGICAL_SLIDE_HEIGHT * effectiveScale}px`,
         }}
       >
         <div
@@ -111,7 +119,7 @@ export const SlideStageContent: React.FC<SlideStageContentProps> = ({
           style={{
             width: `${LOGICAL_SLIDE_WIDTH}px`,
             height: `${LOGICAL_SLIDE_HEIGHT}px`,
-            transform: `scale(${stageScale})`,
+            transform: `scale(${effectiveScale})`,
           }}
         >
           <AnimatePresence mode="wait">

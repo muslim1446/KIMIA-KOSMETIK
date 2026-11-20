@@ -63,7 +63,10 @@ export const Slide08BannedForensics: React.FC<Slide08Props> = ({ interactions, o
       </div>
 
       <div className="flex-1 min-h-0 grid grid-cols-12 gap-4 content-start">
-        <div className="col-span-12">
+        <div
+          data-storage-scope={`slide:7/compare:${interactions.cosmeticCompareTab}`}
+          className="col-span-12"
+        >
           {interactions.cosmeticCompareTab === 'buatan_sendiri' ? (
             <div className="border border-emerald-200 bg-emerald-50/80 rounded-2xl px-4 py-3 grid grid-cols-3 gap-4">
               <div className="flex items-start gap-2.5 text-[15px] text-emerald-950">
@@ -133,7 +136,10 @@ export const Slide08BannedForensics: React.FC<Slide08Props> = ({ interactions, o
           })}
         </div>
 
-        <div className="col-span-7 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-5 flex flex-col justify-between">
+        <div
+          data-storage-scope={`slide:7/chem:${activeChemical.id}`}
+          className="col-span-7 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-5 flex flex-col justify-between"
+        >
           <div className="grid grid-cols-12 gap-4 items-center">
             <div className="col-span-5 bg-[#FBF9F5] dark:bg-stone-950 rounded-2xl p-3">
               <svg viewBox="0 0 215 190" className="w-full h-48" role="img" aria-label="Kesan serapan bahan kimia pada lapisan kulit dan organ">

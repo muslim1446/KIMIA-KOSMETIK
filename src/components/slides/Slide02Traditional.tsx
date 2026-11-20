@@ -120,6 +120,7 @@ export const Slide02Traditional: React.FC<Slide02Props> = ({ interactions, onPat
         <div className="col-span-8">
           {interactions.ketumOpen ? (
             <motion.div
+              data-storage-scope="slide:1/ketum"
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               className="h-full border border-red-200 dark:border-red-800 bg-white dark:bg-stone-900 rounded-3xl p-6 flex flex-col justify-between"
@@ -162,6 +163,7 @@ export const Slide02Traditional: React.FC<Slide02Props> = ({ interactions, onPat
           ) : (
             <motion.div
               key={activeHerb.id}
+              data-storage-scope={`slide:1/herb:${activeHerb.id}`}
               initial={{ opacity: 0, x: 8 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.2 }}
@@ -231,7 +233,10 @@ export const Slide02Traditional: React.FC<Slide02Props> = ({ interactions, onPat
                   </div>
                 </div>
 
-                <div className="bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 rounded-2xl px-5 py-3 text-[16px] font-medium text-stone-900 dark:text-stone-100 leading-snug">
+                <div
+                  data-storage-scope={`slide:1/herb:${activeHerb.id}/prep:${interactions.herbPrep}`}
+                  className="bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 rounded-2xl px-5 py-3 text-[16px] font-medium text-stone-900 dark:text-stone-100 leading-snug"
+                >
                   {activeHerb.prepNotes[interactions.herbPrep]}
                 </div>
               </div>

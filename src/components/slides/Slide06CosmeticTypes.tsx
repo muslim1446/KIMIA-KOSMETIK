@@ -148,7 +148,10 @@ export const Slide06CosmeticTypes: React.FC<Slide06Props> = ({ interactions, onP
           })}
         </div>
 
-        <div className="col-span-7 grid grid-cols-2 gap-3 content-start">
+        <div
+          data-storage-scope={`slide:5/cat:${interactions.cosmeticSortCategory}`}
+          className="col-span-7 grid grid-cols-2 gap-3 content-start"
+        >
           {filteredItems.map((item) => {
             const selected = item.id === selectedItem.id;
             return (
@@ -171,7 +174,10 @@ export const Slide06CosmeticTypes: React.FC<Slide06Props> = ({ interactions, onP
           })}
         </div>
 
-        <div className="col-span-5 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-5 flex flex-col justify-between">
+        <div
+          data-storage-scope={`slide:5/item:${selectedItem.id}`}
+          className="col-span-5 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-5 flex flex-col justify-between"
+        >
           <div className="space-y-3">
             <div>
               <div className="text-[14px] font-bold text-emerald-800 dark:text-emerald-400">{selectedItem.categoryLabel}</div>

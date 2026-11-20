@@ -135,6 +135,7 @@ export const Slide01Cover: React.FC<Slide01Props> = ({ interactions, onPatch }) 
 
           <motion.div
             key={interactions.coverCompareId}
+            data-storage-scope={`slide:0/compare:${interactions.coverCompareId}`}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}

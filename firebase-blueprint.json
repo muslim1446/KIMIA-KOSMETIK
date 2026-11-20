@@ -1,0 +1,260 @@
+{
+  "entities": {
+    "Room": {
+      "title": "PresentationRoom",
+      "description": "Shared collaborative presentation room synchronizing slide navigation, interactions, and media index.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "joinCode": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 32,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "slideIndex": {
+          "type": "number"
+        },
+        "blackout": {
+          "type": "boolean"
+        },
+        "projectorDark": {
+          "type": "boolean"
+        },
+        "laser": {
+          "type": "object"
+        },
+        "interactions": {
+          "type": "object"
+        },
+        "imageIds": {
+          "type": "array"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "title",
+        "joinCode",
+        "slideIndex",
+        "blackout",
+        "projectorDark",
+        "laser",
+        "interactions",
+        "imageIds",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "RoomMember": {
+      "title": "RoomMember",
+      "description": "Authorized collaborator belonging to a presentation room.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "role": {
+          "type": "string",
+          "enum": ["owner", "editor"]
+        },
+        "joinCode": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 32,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "joinedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "displayName", "role", "joinCode", "joinedAt"]
+    },
+    "SlideBoard": {
+      "title": "SlideBoard",
+      "description": "Per-slide persistent storage for scoped permanent pen strokes and inline text overrides.",
+      "type": "object",
+      "properties": {
+        "roomId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "slideIndex": {
+          "type": "number"
+        },
+        "strokes": {
+          "type": "array"
+        },
+        "textEdits": {
+          "type": "object"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedBy": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        }
+      },
+      "required": ["roomId", "slideIndex", "strokes", "textEdits", "updatedAt", "updatedBy"]
+    },
+    "EphemeralBoard": {
+      "title": "EphemeralBoard",
+      "description": "Per-slide real-time temporary fading pen strokes and active live stroke stream.",
+      "type": "object",
+      "properties": {
+        "roomId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "slideIndex": {
+          "type": "number"
+        },
+        "tempStrokes": {
+          "type": "array"
+        },
+        "liveStrokes": {
+          "type": "object"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedBy": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        }
+      },
+      "required": ["roomId", "slideIndex", "tempStrokes", "liveStrokes", "updatedAt", "updatedBy"]
+    },
+    "SlideImage": {
+      "title": "SlideImage",
+      "description": "Pasted or uploaded image placed on a slide or scoped sub-element.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "roomId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "slideIndex": {
+          "type": "number"
+        },
+        "scopeKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "dataUrl": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 360000
+        },
+        "authorId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "roomId",
+        "slideIndex",
+        "scopeKey",
+        "x",
+        "y",
+        "width",
+        "height",
+        "dataUrl",
+        "authorId",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/rooms/{roomId}": {
+      "schema": { "$ref": "#/entities/Room" },
+      "description": "Shared presentation state and media index for a collaborative room."
+    },
+    "/rooms/{roomId}/members/{memberId}": {
+      "schema": { "$ref": "#/entities/RoomMember" },
+      "description": "Authorized team members for a room, gated by room joinCode or ownership."
+    },
+    "/rooms/{roomId}/slides/{slideKey}": {
+      "schema": { "$ref": "#/entities/SlideBoard" },
+      "description": "Per-slide permanent pen strokes (keyed by slide/tab/sub-element scope) and inline text edits."
+    },
+    "/rooms/{roomId}/ephemeral/{slideKey}": {
+      "schema": { "$ref": "#/entities/EphemeralBoard" },
+      "description": "Per-slide temporary fading pen strokes and real-time in-progress strokes."
+    },
+    "/rooms/{roomId}/images/{imageId}": {
+      "schema": { "$ref": "#/entities/SlideImage" },
+      "description": "Individual images attached to a slide or sub-element scope with position and size."
+    }
+  }
+}

@@ -143,7 +143,10 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
           </div>
         </div>
 
-        <div className="col-span-6 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-4 flex flex-col justify-between gap-2.5">
+        <div
+          data-storage-scope={`slide:6/emulsion:${em.air ? '1' : '0'}${em.pengemulsi ? '1' : '0'}${em.pengawet ? '1' : '0'}`}
+          className="col-span-6 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-4 flex flex-col justify-between gap-2.5"
+        >
           <div className="flex items-center justify-between gap-2">
             <span className="text-[15px] font-bold text-stone-700 dark:text-stone-300">Pemerhatian Bikar &amp; Molekul</span>
             <span

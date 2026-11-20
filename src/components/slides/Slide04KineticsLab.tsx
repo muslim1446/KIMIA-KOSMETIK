@@ -74,10 +74,16 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 grid grid-cols-12 gap-5">
+      <div
+        data-storage-scope={`slide:3/tab:${interactions.placeboTab}`}
+        className="flex-1 min-h-0 grid grid-cols-12 gap-5"
+      >
         {interactions.placeboTab === 'antibiotik' && (
           <>
-            <div className="col-span-7 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-5 flex flex-col justify-between">
+            <div
+              data-storage-scope={`slide:3/tab:antibiotik/mode:${interactions.antibioticMode}`}
+              className="col-span-7 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-5 flex flex-col justify-between"
+            >
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <div className="text-[15px] font-semibold text-stone-500">Populasi Bakteria (Hari 0–7)</div>
@@ -170,7 +176,10 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
               </div>
             </div>
 
-            <div className="col-span-5 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-5 flex flex-col justify-between">
+            <div
+              data-storage-scope={`slide:3/tab:antibiotik/mode:${interactions.antibioticMode}/body`}
+              className="col-span-5 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-5 flex flex-col justify-between"
+            >
               <div className="text-center">
                 <div className="text-[17px] font-bold text-stone-800 dark:text-stone-200">
                   Keadaan Dalam Badan (Hari ke-{currentDayPoint.day})

@@ -68,7 +68,10 @@ export const Slide05AbuseNpra: React.FC<Slide05Props> = ({ interactions, onPatch
                     <AlertOctagon className={`w-5 h-5 shrink-0 ${active ? 'text-red-600' : 'text-stone-400'}`} />
                   </div>
                   {active && (
-                    <div className="mt-2.5 space-y-1.5 text-[15px] text-stone-800 dark:text-stone-200 leading-snug">
+                    <div
+                      data-storage-scope={`slide:4/misuse:${idx}`}
+                      className="mt-2.5 space-y-1.5 text-[15px] text-stone-800 dark:text-stone-200 leading-snug"
+                    >
                       <p>
                         <strong>Punca:</strong> {item.cause}
                       </p>
@@ -147,6 +150,7 @@ export const Slide05AbuseNpra: React.FC<Slide05Props> = ({ interactions, onPatch
           </div>
 
           <div
+            data-storage-scope={`slide:4/npra:${npraResult.category}`}
             className={`mt-4 rounded-2xl border p-4 flex items-start gap-3 ${
               npraResult.validFormat
                 ? 'border-emerald-300 bg-emerald-50 text-emerald-950'

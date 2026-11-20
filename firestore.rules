@@ -1,0 +1,290 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net: Deny all by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Primitive Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidSlideKey(key) {
+      return key is string && key.matches('^slide_[0-8]$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isRoomMember(roomId) {
+      return exists(/databases/$(database)/documents/rooms/$(roomId)/members/$(request.auth.uid));
+    }
+
+    function isRoomOwner(roomId) {
+      return get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId == request.auth.uid;
+    }
+
+    // --- Validation Blueprints ---
+    function isValidRoom(data) {
+      return data.keys().hasAll([
+        'ownerId', 'title', 'joinCode', 'slideIndex', 'blackout',
+        'projectorDark', 'laser', 'interactions', 'imageIds', 'createdAt', 'updatedAt'
+      ])
+      && data.keys().hasOnly([
+        'ownerId', 'title', 'joinCode', 'slideIndex', 'blackout',
+        'projectorDark', 'laser', 'interactions', 'imageIds', 'createdAt', 'updatedAt'
+      ])
+      && isValidId(data.ownerId)
+      && data.title is string && data.title.size() >= 1 && data.title.size() <= 120
+      && data.joinCode is string && data.joinCode.size() >= 3 && data.joinCode.size() <= 32
+      && data.joinCode.matches('^[a-zA-Z0-9_\\-]+$')
+      && data.slideIndex is number && data.slideIndex >= 0 && data.slideIndex <= 8
+      && data.blackout is bool
+      && data.projectorDark is bool
+      && data.laser is map
+      && data.laser.keys().hasAll(['active', 'x', 'y'])
+      && data.laser.keys().hasOnly(['active', 'x', 'y'])
+      && data.laser.active is bool
+      && data.laser.x is number && data.laser.y is number
+      && data.interactions is map
+      && data.interactions.size() <= 40
+      && data.imageIds is list
+      && data.imageIds.size() <= 50
+      && (data.imageIds.size() == 0 || (data.imageIds[0] is string && data.imageIds[0].size() <= 128))
+      && data.createdAt is timestamp
+      && data.updatedAt is timestamp;
+    }
+
+    function isValidRoomMember(data) {
+      return data.keys().hasAll(['uid', 'displayName', 'role', 'joinCode', 'joinedAt'])
+      && data.keys().hasOnly(['uid', 'displayName', 'role', 'joinCode', 'joinedAt'])
+      && isValidId(data.uid)
+      && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80
+      && data.role in ['owner', 'editor']
+      && data.joinCode is string && data.joinCode.size() >= 3 && data.joinCode.size() <= 32
+      && data.joinCode.matches('^[a-zA-Z0-9_\\-]+$')
+      && data.joinedAt is timestamp;
+    }
+
+    function isValidSlideBoard(data, roomId) {
+      return data.keys().hasAll(['roomId', 'slideIndex', 'strokes', 'textEdits', 'updatedAt', 'updatedBy'])
+      && data.keys().hasOnly(['roomId', 'slideIndex', 'strokes', 'textEdits', 'updatedAt', 'updatedBy'])
+      && data.roomId == roomId
+      && isValidId(data.roomId)
+      && data.slideIndex is number && data.slideIndex >= 0 && data.slideIndex <= 8
+      && data.strokes is list && data.strokes.size() <= 400
+      && (data.strokes.size() == 0 || data.strokes[0] is map)
+      && data.textEdits is map && data.textEdits.size() <= 200
+      && data.updatedAt is timestamp
+      && data.updatedBy == request.auth.uid
+      && isValidId(data.updatedBy);
+    }
+
+    function isValidEphemeralBoard(data, roomId) {
+      return data.keys().hasAll(['roomId', 'slideIndex', 'tempStrokes', 'liveStrokes', 'updatedAt', 'updatedBy'])
+      && data.keys().hasOnly(['roomId', 'slideIndex', 'tempStrokes', 'liveStrokes', 'updatedAt', 'updatedBy'])
+      && data.roomId == roomId
+      && isValidId(data.roomId)
+      && data.slideIndex is number && data.slideIndex >= 0 && data.slideIndex <= 8
+      && data.tempStrokes is list && data.tempStrokes.size() <= 120
+      && (data.tempStrokes.size() == 0 || data.tempStrokes[0] is map)
+      && data.liveStrokes is map && data.liveStrokes.size() <= 20
+      && data.updatedAt is timestamp
+      && data.updatedBy == request.auth.uid
+      && isValidId(data.updatedBy);
+    }
+
+    function isValidSlideImage(data, roomId, imageId) {
+      return data.keys().hasAll([
+        'id', 'roomId', 'slideIndex', 'scopeKey', 'x', 'y', 'width', 'height',
+        'dataUrl', 'authorId', 'createdAt', 'updatedAt'
+      ])
+      && data.keys().hasOnly([
+        'id', 'roomId', 'slideIndex', 'scopeKey', 'x', 'y', 'width', 'height',
+        'dataUrl', 'authorId', 'createdAt', 'updatedAt'
+      ])
+      && data.id == imageId
+      && isValidId(data.id)
+      && data.roomId == roomId
+      && isValidId(data.roomId)
+      && data.slideIndex is number && data.slideIndex >= 0 && data.slideIndex <= 8
+      && data.scopeKey is string && data.scopeKey.size() >= 1 && data.scopeKey.size() <= 160
+      && data.x is number && data.y is number
+      && data.width is number && data.width >= 24 && data.width <= 1600
+      && data.height is number && data.height >= 24 && data.height <= 1200
+      && data.dataUrl is string && data.dataUrl.size() >= 1 && data.dataUrl.size() <= 360000
+      && isValidId(data.authorId)
+      && data.createdAt is timestamp
+      && data.updatedAt is timestamp;
+    }
+
+    // --- Collection Rules ---
+    match /rooms/{roomId} {
+      allow list: if false;
+      allow get: if isSignedIn() && isValidId(roomId) && (existing().ownerId == request.auth.uid || isRoomMember(roomId));
+
+      allow create: if isSignedIn()
+        && isValidId(roomId)
+        && isValidRoom(incoming())
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && existsAfter(/databases/$(database)/documents/rooms/$(roomId)/members/$(request.auth.uid));
+
+      allow update: if isSignedIn()
+        && isValidId(roomId)
+        && isValidRoom(incoming())
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && isRoomMember(roomId)
+        && (
+          // Action: Sync presentation slide, interactions, blackout, dark mode, laser, or media index
+          (incoming().diff(existing()).affectedKeys().hasOnly([
+            'slideIndex', 'blackout', 'projectorDark', 'laser', 'interactions', 'imageIds', 'updatedAt'
+          ]) && incoming().joinCode == existing().joinCode && incoming().title == existing().title) ||
+          // Action: Owner updates room title or joinCode
+          (existing().ownerId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly([
+            'title', 'joinCode', 'updatedAt'
+          ]))
+        );
+
+      // Anti-data-loss lock: rooms cannot be deleted from the client
+      allow delete: if false;
+
+      match /members/{memberId} {
+        allow list: if false;
+        allow get: if isSignedIn() && isValidId(roomId) && isValidId(memberId)
+          && (memberId == request.auth.uid || isRoomMember(roomId));
+
+        allow create: if isSignedIn()
+          && isValidId(roomId)
+          && isValidId(memberId)
+          && memberId == request.auth.uid
+          && isValidRoomMember(incoming())
+          && incoming().uid == request.auth.uid
+          && incoming().joinedAt == request.time
+          && (
+            // Owner bootstrapping membership atomically with room creation
+            (incoming().role == 'owner'
+              && getAfter(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId == request.auth.uid
+              && getAfter(/databases/$(database)/documents/rooms/$(roomId)).data.joinCode == incoming().joinCode) ||
+            // Collaborator joining an existing room with matching joinCode
+            (incoming().role == 'editor'
+              && exists(/databases/$(database)/documents/rooms/$(roomId))
+              && get(/databases/$(database)/documents/rooms/$(roomId)).data.joinCode == incoming().joinCode)
+          );
+
+        allow update: if isSignedIn()
+          && isValidId(roomId)
+          && isValidId(memberId)
+          && memberId == request.auth.uid
+          && isValidRoomMember(incoming())
+          && incoming().uid == existing().uid
+          && incoming().role == existing().role
+          && incoming().joinCode == existing().joinCode
+          && incoming().joinedAt == existing().joinedAt
+          && incoming().diff(existing()).affectedKeys().hasOnly(['displayName']);
+
+        allow delete: if isSignedIn()
+          && isValidId(roomId)
+          && isValidId(memberId)
+          && (memberId == request.auth.uid || isRoomOwner(roomId));
+      }
+
+      match /slides/{slideKey} {
+        allow list: if false;
+        allow get: if isSignedIn() && isValidId(roomId) && isValidSlideKey(slideKey) && isRoomMember(roomId);
+
+        allow create: if isSignedIn()
+          && isValidId(roomId)
+          && isValidSlideKey(slideKey)
+          && isValidSlideBoard(incoming(), roomId)
+          && incoming().updatedAt == request.time
+          && isRoomMember(roomId);
+
+        allow update: if isSignedIn()
+          && isValidId(roomId)
+          && isValidSlideKey(slideKey)
+          && isValidSlideBoard(incoming(), roomId)
+          && incoming().roomId == existing().roomId
+          && incoming().slideIndex == existing().slideIndex
+          && incoming().updatedAt == request.time
+          && isRoomMember(roomId)
+          && incoming().diff(existing()).affectedKeys().hasOnly(['strokes', 'textEdits', 'updatedAt', 'updatedBy']);
+
+        // Anti-data-loss lock: slide history documents cannot be deleted wholesale
+        allow delete: if false;
+      }
+
+      match /ephemeral/{slideKey} {
+        allow list: if false;
+        allow get: if isSignedIn() && isValidId(roomId) && isValidSlideKey(slideKey) && isRoomMember(roomId);
+
+        allow create: if isSignedIn()
+          && isValidId(roomId)
+          && isValidSlideKey(slideKey)
+          && isValidEphemeralBoard(incoming(), roomId)
+          && incoming().updatedAt == request.time
+          && isRoomMember(roomId);
+
+        allow update: if isSignedIn()
+          && isValidId(roomId)
+          && isValidSlideKey(slideKey)
+          && isValidEphemeralBoard(incoming(), roomId)
+          && incoming().roomId == existing().roomId
+          && incoming().slideIndex == existing().slideIndex
+          && incoming().updatedAt == request.time
+          && isRoomMember(roomId)
+          && incoming().diff(existing()).affectedKeys().hasOnly(['tempStrokes', 'liveStrokes', 'updatedAt', 'updatedBy']);
+
+        allow delete: if false;
+      }
+
+      match /images/{imageId} {
+        allow list: if false;
+        allow get: if isSignedIn() && isValidId(roomId) && isValidId(imageId) && isRoomMember(roomId);
+
+        allow create: if isSignedIn()
+          && isValidId(roomId)
+          && isValidId(imageId)
+          && isValidSlideImage(incoming(), roomId, imageId)
+          && incoming().authorId == request.auth.uid
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && isRoomMember(roomId);
+
+        allow update: if isSignedIn()
+          && isValidId(roomId)
+          && isValidId(imageId)
+          && isValidSlideImage(incoming(), roomId, imageId)
+          && incoming().id == existing().id
+          && incoming().roomId == existing().roomId
+          && incoming().slideIndex == existing().slideIndex
+          && incoming().authorId == existing().authorId
+          && incoming().createdAt == existing().createdAt
+          && incoming().dataUrl == existing().dataUrl
+          && incoming().updatedAt == request.time
+          && isRoomMember(roomId)
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'scopeKey', 'x', 'y', 'width', 'height', 'updatedAt'
+          ]);
+
+        allow delete: if isSignedIn() && isValidId(roomId) && isValidId(imageId) && isRoomMember(roomId);
+      }
+    }
+  }
+}

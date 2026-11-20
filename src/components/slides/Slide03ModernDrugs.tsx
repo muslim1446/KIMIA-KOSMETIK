@@ -122,7 +122,10 @@ export const Slide03ModernDrugs: React.FC<Slide03Props> = ({ interactions, onPat
         </div>
 
         <div className="col-span-7 flex flex-col justify-between gap-3.5">
-          <div className="border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-5 space-y-3">
+          <div
+            data-storage-scope={`slide:2/drug:${activeDrug.id}`}
+            className="border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-5 space-y-3"
+          >
             <div className="flex items-baseline justify-between gap-2 border-b border-stone-100 dark:border-stone-800 pb-2">
               <div>
                 <span className="text-[15px] font-bold text-blue-900 dark:text-blue-400">{activeDrug.categoryName}</span>
@@ -194,6 +197,7 @@ export const Slide03ModernDrugs: React.FC<Slide03Props> = ({ interactions, onPat
             </div>
 
             <div
+              data-storage-scope={`slide:2/drug:${activeDrug.id}/patient:${interactions.selectedPatient}`}
               className={`mt-2.5 rounded-xl border p-3.5 flex items-start gap-3 ${
                 assessment.riskLevel === 'selamat'
                   ? 'border-emerald-300 bg-emerald-50 text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-100'

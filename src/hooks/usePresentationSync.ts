@@ -122,9 +122,13 @@ export function getInitialModeFromUrl(): AppViewMode {
   return 'stage';
 }
 
-export function usePresentationSync() {
+export function usePresentationSync(
+  onLocalBroadcast?: (next: SyncedPresentationState) => void,
+) {
   const senderIdRef = useRef<string>(`tab-${Math.random().toString(36).slice(2, 9)}`);
   const channelRef = useRef<BroadcastChannel | null>(null);
+  const onLocalBroadcastRef = useRef(onLocalBroadcast);
+  onLocalBroadcastRef.current = onLocalBroadcast;
 
   const [mode] = useState<AppViewMode>(() => getInitialModeFromUrl());
   const [state, setState] = useState<SyncedPresentationState>(() => createInitialState(senderIdRef.current));
@@ -138,6 +142,39 @@ export function usePresentationSync() {
       channelRef.current?.postMessage({ type: 'SYNC_STATE', payload: next });
     } catch {
     }
+    onLocalBroadcastRef.current?.(next);
+  }, []);
+
+  const applyRemoteState = useCallback((remote: Partial<SyncedPresentationState>) => {
+    setState((prev) => {
+      const nextIndex =
+        typeof remote.slideIndex === 'number'
+          ? clampSlideIndex(remote.slideIndex, SLIDES_META.length)
+          : prev.slideIndex;
+      const nextBlackout =
+        typeof remote.blackout === 'boolean' ? remote.blackout : prev.blackout;
+      const nextDark =
+        typeof remote.projectorDark === 'boolean' ? remote.projectorDark : prev.projectorDark;
+      const nextLaser = remote.laser ?? prev.laser;
+      const nextInteractions = remote.interactions
+        ? { ...DEFAULT_INTERACTIONS, ...remote.interactions }
+        : prev.interactions;
+
+      const next: SyncedPresentationState = {
+        ...prev,
+        slideIndex: nextIndex,
+        blackout: nextBlackout,
+        projectorDark: nextDark,
+        laser: nextLaser,
+        interactions: nextInteractions,
+        updatedAt: Date.now(),
+      };
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      } catch {
+      }
+      return next;
+    });
   }, []);
 
   const updateSharedState = useCallback(
@@ -286,5 +323,6 @@ export function usePresentationSync() {
     setLaserPoint,
     patchInteractions,
     resetPresentation,
+    applyRemoteState,
   };
 }

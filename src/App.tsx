@@ -1,8 +1,12 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { AudienceStage } from './components/AudienceStage';
-import { usePresentationSync } from './hooks/usePresentationSync';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { useCollaborativeBoard } from './hooks/useCollaborativeBoard';
+import { SyncedPresentationState, usePresentationSync } from './hooks/usePresentationSync';
 
 export default function App() {
+  const pushRemoteRef = useRef<((next: SyncedPresentationState) => void) | null>(null);
+
   const {
     mode,
     state,
@@ -12,13 +16,34 @@ export default function App() {
     toggleBlackout,
     toggleProjectorDark,
     patchInteractions,
-  } = usePresentationSync();
+    applyRemoteState,
+  } = usePresentationSync((next) => {
+    pushRemoteRef.current?.(next);
+  });
+
+  const board = useCollaborativeBoard({
+    currentSlideIndex: state.slideIndex,
+    presentationState: state,
+    onRemotePresentationSync: applyRemoteState,
+  });
+
+  useEffect(() => {
+    pushRemoteRef.current = (next) => {
+      void board.pushPresentationStateToFirebase(next);
+    };
+  }, [board]);
 
   // Global keyboard shortcuts for crisp presentation control
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT')) {
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable)
+      ) {
         return;
       }
 
@@ -49,16 +74,42 @@ export default function App() {
   }, [goToSlide, nextSlide, prevSlide, toggleBlackout]);
 
   return (
-    <AudienceStage
-      isRemoteProjector={mode === 'audiens'}
-      slideIndex={state.slideIndex}
-      blackout={state.blackout}
-      projectorDark={state.projectorDark}
-      laser={state.laser}
-      interactions={state.interactions}
-      onPatch={patchInteractions}
-      onNext={nextSlide}
-      onPrev={prevSlide}
-    />
+    <ErrorBoundary>
+      <AudienceStage
+        isRemoteProjector={mode === 'audiens'}
+        slideIndex={state.slideIndex}
+        blackout={state.blackout}
+        projectorDark={state.projectorDark}
+        laser={state.laser}
+        interactions={state.interactions}
+        onPatch={patchInteractions}
+        onNext={nextSlide}
+        onPrev={prevSlide}
+        onToggleDark={toggleProjectorDark}
+        user={board.user}
+        anonBlocked={board.anonBlocked}
+        roomId={board.roomId}
+        joinCode={board.joinCode}
+        syncStatus={board.syncStatus}
+        syncError={board.syncError}
+        currentAuthorId={board.currentAuthorId}
+        permanentStrokes={board.activePermanentStrokes}
+        tempStrokes={board.activeTempStrokes}
+        liveStrokes={board.activeLiveStrokes}
+        textEdits={board.activeTextEdits}
+        slideImages={board.activeSlideImages}
+        onSignInGoogle={board.signInWithGoogle}
+        onSignOut={board.signOutUser}
+        onJoinRoom={board.joinRoom}
+        onLiveStroke={(stroke) => board.updateLiveStroke(state.slideIndex, stroke)}
+        onCommitStroke={board.commitStroke}
+        onDeleteStrokes={(ids) => board.deleteStrokesById(state.slideIndex, ids)}
+        onClearSlideRootStrokes={() => board.clearSlideStrokes(state.slideIndex)}
+        onAddImage={board.addImage}
+        onUpdateImage={board.updateImage}
+        onDeleteImage={board.deleteImage}
+        onSaveTextEdit={board.setTextEdit}
+      />
+    </ErrorBoundary>
   );
 }

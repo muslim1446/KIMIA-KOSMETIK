@@ -43,7 +43,10 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
       </div>
 
       <div className="flex-1 min-h-0 grid grid-cols-12 gap-5">
-        <div className="col-span-5 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-5 flex flex-col justify-between">
+        <div
+          data-storage-scope={`slide:8/quiz:${interactions.quizIndex}`}
+          className="col-span-5 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-5 flex flex-col justify-between"
+        >
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-[15px] font-bold text-blue-900 dark:text-blue-400">
               <HelpCircle className="w-5 h-5" />
@@ -97,7 +100,10 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
                     </span>
                   </div>
                   {selected && (
-                    <p className="mt-1.5 pl-16 text-[14px] font-medium text-blue-950 dark:text-blue-200 leading-snug">
+                    <p
+                      data-storage-scope={`slide:8/quiz:${interactions.quizIndex}/hyp:${hyp.id}`}
+                      className="mt-1.5 pl-16 text-[14px] font-medium text-blue-950 dark:text-blue-200 leading-snug"
+                    >
                       {hyp.discussionNote}
                     </p>
                   )}
@@ -138,7 +144,10 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
             </div>
 
             {interactions.explanationRevealed ? (
-              <div className="grid grid-cols-3 gap-2.5">
+              <div
+                data-storage-scope={`slide:8/quiz:${interactions.quizIndex}/revealed`}
+                className="grid grid-cols-3 gap-2.5"
+              >
                 <div className="bg-[#FBF9F5] dark:bg-stone-950 rounded-xl p-3">
                   <div className="text-[13px] font-bold text-blue-900 dark:text-blue-400 flex items-center gap-1">
                     <span>1. Tindak Balas Molekul</span>

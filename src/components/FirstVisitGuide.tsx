@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Check, ChevronLeft, ChevronRight, CircleHelp, X } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, CircleHelp } from 'lucide-react';
 import { UiLanguage, uiText, useUiLanguage } from '../utils/uiLanguage';
 
 const GUIDE_COOKIE = 'kimia-guide-complete';
@@ -165,7 +165,6 @@ export const FirstVisitGuide: React.FC<{
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false);
       if (event.key === 'ArrowRight') setStepIndex((index) => Math.min(steps.length - 1, index + 1));
       if (event.key === 'ArrowLeft') setStepIndex((index) => Math.max(0, index - 1));
       if (event.key === 'Tab' && dialogRef.current) {
@@ -260,7 +259,7 @@ export const FirstVisitGuide: React.FC<{
               ? { top: 'max(16px, env(safe-area-inset-top))' }
               : { bottom: 'max(16px, env(safe-area-inset-bottom))' }}
           >
-            <div className="mb-3 flex items-start justify-between gap-3">
+            <div className="mb-3">
               <div>
                 <p className="mb-1 text-xs font-bold text-emerald-800">
                   {t('guide.section', { current: stepIndex + 1, total: steps.length })}
@@ -269,15 +268,6 @@ export const FirstVisitGuide: React.FC<{
                   {current.title[language]}
                 </h1>
               </div>
-              <button
-                type="button"
-                aria-label={t('guide.close')}
-                title={t('guide.closeTitle')}
-                onClick={() => setOpen(false)}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-stone-600 hover:bg-stone-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700"
-              >
-                <X className="h-5 w-5" />
-              </button>
             </div>
 
             <p className="mb-4 text-base leading-7 text-stone-700">
@@ -297,14 +287,7 @@ export const FirstVisitGuide: React.FC<{
               </p>
             </div>
 
-            <div className="flex items-center justify-between gap-3 border-t border-stone-200 pt-3">
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="min-h-11 px-1 text-sm font-semibold text-stone-600 underline decoration-stone-300 underline-offset-4 hover:text-stone-900"
-              >
-                {t('guide.pause')}
-              </button>
+            <div className="flex items-center justify-end gap-3 border-t border-stone-200 pt-3">
               <div className="flex items-center gap-2">
                 <button
                   type="button"

@@ -113,6 +113,7 @@ export default function App() {
         slideImages={board.activeSlideImages}
         slideTexts={board.activeSlideTexts}
         slidePdfs={board.activeSlidePdfs}
+        roomPdfLibrary={board.roomPdfLibrary}
         onJoinRoom={board.joinRoom}
         onLiveStroke={(stroke) => board.updateLiveStroke(state.slideIndex, stroke)}
         onCommitStroke={board.commitStroke}

@@ -30,6 +30,7 @@ import { SlideAnnotationLayer } from './SlideAnnotationLayer';
 import { SlideTextLayer } from './SlideTextLayer';
 import { SlidePdfLayer } from './SlidePdfLayer';
 import { PdfFrameDialog, PdfFrameAddInput } from './PdfFrameDialog';
+import { RoomPdfLibraryItem } from '../utils/pdfUtils';
 import { InvisibleTextEditor } from './InvisibleTextEditor';
 import { GoogleBrowserFrame, GoogleFrameMode } from './GoogleBrowserFrame';
 import { PresentationIsland } from './PresentationIsland';
@@ -64,6 +65,7 @@ interface AudienceStageProps {
   slideImages: SlideImageItem[];
   slideTexts: SlideTextItem[];
   slidePdfs: SlidePdfItem[];
+  roomPdfLibrary: RoomPdfLibraryItem[];
   onJoinRoom: (roomId: string, joinCode: string) => void;
   onLiveStroke: (stroke: PenStroke | null) => void;
   onCommitStroke: (stroke: PenStroke) => void;
@@ -158,6 +160,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
   slideImages,
   slideTexts,
   slidePdfs,
+  roomPdfLibrary,
   onJoinRoom,
   onLiveStroke,
   onCommitStroke,
@@ -957,6 +960,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
           open={pdfDialogOpen}
           onClose={() => setPdfDialogOpen(false)}
           onAddFrame={handleAddPdfFrame}
+          library={roomPdfLibrary}
         />
       )}
 

@@ -48,6 +48,7 @@ import {
   savePresenceDisplayName,
 } from '../utils/presence';
 import { LaserPoint, SyncedPresentationState } from './usePresentationSync';
+import { RoomPdfLibraryItem } from '../utils/pdfUtils';
 
 export type BoardSyncStatus = 'local' | 'connecting' | 'synced' | 'error';
 
@@ -1996,6 +1997,36 @@ export function useCollaborativeBoard({
   const activeSlideTexts = texts.filter((t) => t.slideIndex === currentSlideIndex);
   const activeSlidePdfs = pdfPages.filter((pdf) => pdf.slideIndex === currentSlideIndex);
 
+  // PDFs already added to this room by anyone, grouped by file name. Every page
+  // here is already stored in Firebase, so a teammate can drop in another page
+  // straight from the dialog without re-uploading the original document.
+  const roomPdfLibrary = useMemo<RoomPdfLibraryItem[]>(() => {
+    const byFile = new Map<string, RoomPdfLibraryItem>();
+    for (const pdf of pdfPages) {
+      const fileName = pdf.fileName || 'PDF';
+      let entry = byFile.get(fileName);
+      if (!entry) {
+        entry = { fileName, pageCount: Math.max(1, pdf.pageCount || 1), pages: [] };
+        byFile.set(fileName, entry);
+      }
+      entry.pageCount = Math.max(entry.pageCount, pdf.pageCount || 1);
+      if (!entry.pages.some((page) => page.pageNumber === pdf.pageNumber)) {
+        entry.pages.push({
+          pageNumber: pdf.pageNumber,
+          dataUrl: pdf.dataUrl,
+          width: pdf.width,
+          height: pdf.height,
+        });
+      }
+    }
+    return Array.from(byFile.values())
+      .map((entry) => ({
+        ...entry,
+        pages: [...entry.pages].sort((a, b) => a.pageNumber - b.pageNumber),
+      }))
+      .sort((a, b) => a.fileName.localeCompare(b.fileName));
+  }, [pdfPages]);
+
   return {
     user,
     authReady,
@@ -2014,6 +2045,7 @@ export function useCollaborativeBoard({
     activeSlideImages,
     activeSlideTexts,
     activeSlidePdfs,
+    roomPdfLibrary,
     presenceUsers: onlinePresenceUsers,
     presenceLocation,
     presenceLocationBusy,

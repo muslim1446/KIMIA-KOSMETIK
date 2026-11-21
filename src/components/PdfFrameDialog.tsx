@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  ArrowLeft,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -14,6 +15,8 @@ import {
   CachedPdfMeta,
   PdfSource,
   RenderedPdfPage,
+  RoomPdfLibraryItem,
+  RoomPdfLibraryPage,
   listCachedPdfs,
   renderPdfPage,
   resolveCachedPdf,
@@ -34,12 +37,15 @@ interface PdfFrameDialogProps {
   open: boolean;
   onClose: () => void;
   onAddFrame: (input: PdfFrameAddInput) => void | Promise<void>;
+  /** PDFs already added to this room by anyone, with their stored pages. */
+  library: RoomPdfLibraryItem[];
 }
 
 export const PdfFrameDialog: React.FC<PdfFrameDialogProps> = ({
   open,
   onClose,
   onAddFrame,
+  library,
 }) => {
   const t = useUiText();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -53,7 +59,13 @@ export const PdfFrameDialog: React.FC<PdfFrameDialogProps> = ({
   const [reused, setReused] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [libraryFileName, setLibraryFileName] = useState<string | null>(null);
   const previewTokenRef = useRef(0);
+
+  // Derived from the live room library so the page list always reflects the
+  // latest pages other teammates may have added while the dialog is open.
+  const libraryFile =
+    library.find((item) => item.fileName === libraryFileName) ?? null;
 
   const refreshRecent = useCallback(async () => {
     try {
@@ -70,6 +82,7 @@ export const PdfFrameDialog: React.FC<PdfFrameDialogProps> = ({
     setError(null);
     setBusy(false);
     setReused(false);
+    setLibraryFileName(null);
     setPageNumber(1);
     setPageInput('1');
     void refreshRecent();
@@ -207,6 +220,31 @@ export const PdfFrameDialog: React.FC<PdfFrameDialogProps> = ({
     }
   }, [busy, onAddFrame, onClose, pageNumber, source, t]);
 
+  // Adds a page that is already stored in the room — no upload, no rendering.
+  const handlePickLibraryPage = useCallback(
+    async (file: RoomPdfLibraryItem, page: RoomPdfLibraryPage) => {
+      if (busy) return;
+      setBusy(true);
+      setError(null);
+      try {
+        await onAddFrame({
+          fileName: file.fileName,
+          pageNumber: page.pageNumber,
+          pageCount: file.pageCount,
+          dataUrl: page.dataUrl,
+          renderedWidth: page.width,
+          renderedHeight: page.height,
+        });
+        onClose();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : t('pdf.error'));
+      } finally {
+        setBusy(false);
+      }
+    },
+    [busy, onAddFrame, onClose, t],
+  );
+
   if (!open) return null;
 
   const pageCount = source?.pageCount ?? 0;
@@ -251,94 +289,193 @@ export const PdfFrameDialog: React.FC<PdfFrameDialogProps> = ({
         </div>
 
         {!source ? (
-          <div className="p-4 space-y-4">
-            <input
-              ref={fileInputRef}
-              data-testid="pdf-file-input"
-              type="file"
-              accept="application/pdf,.pdf"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                void handleFile(file);
-                e.target.value = '';
-              }}
-            />
-            <button
-              type="button"
-              data-testid="pdf-upload-button"
-              disabled={busy}
-              onClick={() => fileInputRef.current?.click()}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDragOver(true);
-              }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setDragOver(false);
-                void handleFile(e.dataTransfer.files?.[0]);
-              }}
-              className={`w-full rounded-2xl border-2 border-dashed px-4 py-8 flex flex-col items-center gap-2 transition-colors cursor-pointer ${
-                dragOver
-                  ? 'border-red-500 bg-red-50/80 dark:bg-red-950/30'
-                  : 'border-stone-300 dark:border-stone-600 hover:border-red-400 hover:bg-white/70 dark:hover:bg-stone-800/60'
-              } disabled:opacity-60`}
-            >
-              {busy ? (
-                <Loader2 className="w-8 h-8 text-red-600 animate-spin" />
-              ) : (
-                <FileUp className="w-8 h-8 text-red-700 dark:text-red-300" />
-              )}
-              <span className="text-sm font-extrabold">{t('pdf.upload')}</span>
-              <span className="text-[11px] text-stone-500 dark:text-stone-400 text-center">
-                {t('pdf.uploadHint')}
-              </span>
-            </button>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-stone-500">
-                  {t('pdf.recent')}
-                </span>
+          libraryFile ? (
+            <div className="p-4 space-y-3">
+              <div className="flex items-center justify-between gap-2">
                 <button
                   type="button"
-                  onClick={() => void refreshRecent()}
-                  className="flex items-center gap-1 text-[11px] font-bold text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 cursor-pointer"
+                  data-testid="pdf-library-back"
+                  onClick={() => {
+                    setLibraryFileName(null);
+                    setError(null);
+                  }}
+                  disabled={busy}
+                  className="flex items-center gap-1 rounded-lg border border-stone-300 dark:border-stone-700 px-2 py-1 text-[11px] font-bold text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-50 cursor-pointer"
                 >
-                  <RefreshCw className="w-3 h-3" />
-                  <span>{t('pdf.refreshList')}</span>
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>{t('pdf.backToFiles')}</span>
                 </button>
+                <span className="min-w-0 truncate text-[11px] font-bold text-stone-600 dark:text-stone-300">
+                  {libraryFile.fileName}
+                </span>
               </div>
-              {recent.length === 0 ? (
-                <p className="rounded-xl border border-stone-200 dark:border-stone-700 bg-white/70 dark:bg-stone-950/40 px-3 py-2.5 text-[11px] text-stone-500 dark:text-stone-400">
-                  {t('pdf.noRecent')}
-                </p>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {recent.map((meta) => (
-                    <button
-                      key={meta.key}
-                      type="button"
-                      data-testid="pdf-recent-item"
-                      disabled={busy}
-                      onClick={() => void handlePickCached(meta)}
-                      className="flex items-center gap-2 rounded-xl border border-stone-200 dark:border-stone-700 bg-white/80 dark:bg-stone-950/40 px-3 py-2 text-left hover:border-red-400 hover:bg-white dark:hover:bg-stone-800/70 transition-colors disabled:opacity-50 cursor-pointer"
-                    >
-                      <FileText className="w-4 h-4 shrink-0 text-red-700 dark:text-red-300" />
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-xs font-bold truncate">{meta.fileName}</span>
-                        <span className="block text-[10px] text-stone-500">
-                          {t('pdf.pageCount', { count: meta.pageCount })}
-                        </span>
-                      </span>
-                      <ChevronRight className="w-3.5 h-3.5 shrink-0 text-stone-400" />
-                    </button>
-                  ))}
-                </div>
-              )}
+
+              <p className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-2 text-[11px] font-semibold text-emerald-800 dark:text-emerald-300">
+                {t('pdf.pickPageHint')}
+              </p>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[52vh] overflow-y-auto pr-0.5">
+                {libraryFile.pages.map((page) => (
+                  <button
+                    key={page.pageNumber}
+                    type="button"
+                    data-testid="pdf-library-page"
+                    disabled={busy}
+                    onClick={() => void handlePickLibraryPage(libraryFile, page)}
+                    className="flex flex-col items-center gap-1 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-950/40 p-1.5 hover:border-red-400 hover:bg-white dark:hover:bg-stone-800/80 transition-colors disabled:opacity-50 cursor-pointer"
+                  >
+                    <img
+                      src={page.dataUrl}
+                      alt={t('pdf.frameAlt', {
+                        name: libraryFile.fileName,
+                        page: page.pageNumber,
+                        count: libraryFile.pageCount,
+                      })}
+                      draggable={false}
+                      className="w-full h-auto max-h-[160px] object-contain rounded-lg border border-stone-200 dark:border-stone-700"
+                    />
+                    <span className="text-[10px] font-extrabold text-stone-600 dark:text-stone-300">
+                      {t('pdf.pageN', { page: page.pageNumber })}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-3 py-2 text-[11px] leading-snug text-amber-900 dark:text-amber-200">
+                {t('pdf.fixedHint')}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="p-4 space-y-4">
+              <input
+                ref={fileInputRef}
+                data-testid="pdf-file-input"
+                type="file"
+                accept="application/pdf,.pdf"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  void handleFile(file);
+                  e.target.value = '';
+                }}
+              />
+              <button
+                type="button"
+                data-testid="pdf-upload-button"
+                disabled={busy}
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragOver(true);
+                }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragOver(false);
+                  void handleFile(e.dataTransfer.files?.[0]);
+                }}
+                className={`w-full rounded-2xl border-2 border-dashed px-4 py-8 flex flex-col items-center gap-2 transition-colors cursor-pointer ${
+                  dragOver
+                    ? 'border-red-500 bg-red-50/80 dark:bg-red-950/30'
+                    : 'border-stone-300 dark:border-stone-600 hover:border-red-400 hover:bg-white/70 dark:hover:bg-stone-800/60'
+                } disabled:opacity-60`}
+              >
+                {busy ? (
+                  <Loader2 className="w-8 h-8 text-red-600 animate-spin" />
+                ) : (
+                  <FileUp className="w-8 h-8 text-red-700 dark:text-red-300" />
+                )}
+                <span className="text-sm font-extrabold">{t('pdf.upload')}</span>
+                <span className="text-[11px] text-stone-500 dark:text-stone-400 text-center">
+                  {t('pdf.uploadHint')}
+                </span>
+              </button>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-stone-500">
+                    {t('pdf.recent')}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => void refreshRecent()}
+                    className="flex items-center gap-1 text-[11px] font-bold text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 cursor-pointer"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    <span>{t('pdf.refreshList')}</span>
+                  </button>
+                </div>
+                {recent.length === 0 ? (
+                  <p className="rounded-xl border border-stone-200 dark:border-stone-700 bg-white/70 dark:bg-stone-950/40 px-3 py-2.5 text-[11px] text-stone-500 dark:text-stone-400">
+                    {t('pdf.noRecent')}
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {recent.map((meta) => (
+                      <button
+                        key={meta.key}
+                        type="button"
+                        data-testid="pdf-recent-item"
+                        disabled={busy}
+                        onClick={() => void handlePickCached(meta)}
+                        className="flex items-center gap-2 rounded-xl border border-stone-200 dark:border-stone-700 bg-white/80 dark:bg-stone-950/40 px-3 py-2 text-left hover:border-red-400 hover:bg-white dark:hover:bg-stone-800/70 transition-colors disabled:opacity-50 cursor-pointer"
+                      >
+                        <FileText className="w-4 h-4 shrink-0 text-red-700 dark:text-red-300" />
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-xs font-bold truncate">{meta.fileName}</span>
+                          <span className="block text-[10px] text-stone-500">
+                            {t('pdf.pageCount', { count: meta.pageCount })}
+                          </span>
+                        </span>
+                        <ChevronRight className="w-3.5 h-3.5 shrink-0 text-stone-400" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-stone-500">
+                    {t('pdf.roomFiles')}
+                  </span>
+                  <span className="text-[10px] font-semibold text-stone-400">
+                    {t('pdf.roomFilesShared')}
+                  </span>
+                </div>
+                {library.length === 0 ? (
+                  <p className="rounded-xl border border-stone-200 dark:border-stone-700 bg-white/70 dark:bg-stone-950/40 px-3 py-2.5 text-[11px] text-stone-500 dark:text-stone-400">
+                    {t('pdf.noRoomFiles')}
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {library.map((file) => (
+                      <button
+                        key={file.fileName}
+                        type="button"
+                        data-testid="pdf-library-item"
+                        disabled={busy}
+                        onClick={() => {
+                          setLibraryFileName(file.fileName);
+                          setError(null);
+                        }}
+                        className="flex items-center gap-2 rounded-xl border border-stone-200 dark:border-stone-700 bg-white/80 dark:bg-stone-950/40 px-3 py-2 text-left hover:border-red-400 hover:bg-white dark:hover:bg-stone-800/70 transition-colors disabled:opacity-50 cursor-pointer"
+                      >
+                        <FileText className="w-4 h-4 shrink-0 text-red-700 dark:text-red-300" />
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-xs font-bold truncate">{file.fileName}</span>
+                          <span className="block text-[10px] text-stone-500">
+                            {t('pdf.roomPagesAvailable', { count: file.pages.length })}
+                          </span>
+                        </span>
+                        <ChevronRight className="w-3.5 h-3.5 shrink-0 text-stone-400" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )
         ) : (
           <div className="p-4 space-y-3">
             {reused && (

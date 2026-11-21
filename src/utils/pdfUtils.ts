@@ -26,6 +26,26 @@ export interface RenderedPdfPage {
   height: number;
 }
 
+/** One already-rendered page of a PDF that exists in the shared room. */
+export interface RoomPdfLibraryPage {
+  pageNumber: number;
+  dataUrl: string;
+  width: number;
+  height: number;
+}
+
+/**
+ * A PDF file that someone already added to this room. Its pages are stored in
+ * Firebase, so any teammate can drop in another page without re-uploading the
+ * original document.
+ */
+export interface RoomPdfLibraryItem {
+  fileName: string;
+  /** Total pages in the original document (may exceed `pages.length`). */
+  pageCount: number;
+  pages: RoomPdfLibraryPage[];
+}
+
 interface StoredPdfRecord extends PdfSource {
   savedAt: number;
 }

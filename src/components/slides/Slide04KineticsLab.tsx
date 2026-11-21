@@ -23,15 +23,22 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
     .map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${mapX(p.day)} ${mapY(p.resistantBacteria)}`)
     .join(' ');
 
+  const doseLabel =
+    para.status === 'rendah'
+      ? 'Dos Rendah'
+      : para.status === 'terapeutik'
+      ? 'Dos Betul (Preskripsi)'
+      : 'Melebihi Dos';
+
   return (
     <div className="h-full w-full flex flex-col gap-4 px-10 py-6 select-none">
       <div className="shrink-0 flex items-end justify-between gap-3 border-b border-stone-200 dark:border-stone-800 pb-3">
         <div>
           <div className="text-[15px] font-bold text-blue-900 dark:text-blue-400">
-            5.4.2 · Kinetik Dos, Rintangan Bakteria &amp; Plasebo
+            5.4.2 · Mewajarkan Penggunaan Ubat (m.s. 182–184)
           </div>
           <h2 className="font-display text-[28px] font-bold text-stone-900 dark:text-stone-50 mt-0.5 leading-tight">
-            Dos &amp; Tempoh Menentukan Siapa Menang: Rawatan atau Kerosakan
+            Penggunaan Antibiotik, Dos Parasetamol &amp; Ujian Plasebo
           </h2>
         </div>
 
@@ -39,7 +46,7 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
           {(
             [
               { id: 'antibiotik', label: '1. Antibiotik' },
-              { id: 'parasetamol', label: '2. Perisai Hati' },
+              { id: 'parasetamol', label: '2. Dos Parasetamol' },
               { id: 'plasebo', label: '3. Plasebo' },
             ] as const
           ).map((tab) => (
@@ -69,7 +76,7 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
             }`}
           >
             <Atom className="w-4 h-4" />
-            <span>Perincian</span>
+            <span>Nota</span>
           </button>
         </div>
       </div>
@@ -86,9 +93,9 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
             >
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <div className="text-[15px] font-semibold text-stone-500">Populasi Bakteria (Hari 0–7)</div>
-                  <h3 className="font-display text-[24px] font-bold text-stone-900 dark:text-stone-100">
-                    Bukan Badan Anda yang Kebal — Bakteria Bermutasi!
+                  <div className="text-[15px] font-semibold text-stone-500">Kesan Pengambilan Antibiotik</div>
+                  <h3 className="font-display text-[23px] font-bold text-stone-900 dark:text-stone-100">
+                    Antibiotik Perlu Dihabiskan Supaya Semua Bakteria Dibunuh
                   </h3>
                 </div>
                 <div className="flex gap-2 shrink-0">
@@ -101,7 +108,7 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
                         : 'border-stone-200 text-stone-700'
                     }`}
                   >
-                    Habis 7 Hari
+                    Dihabiskan
                   </button>
                   <button
                     type="button"
@@ -112,7 +119,7 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
                         : 'border-stone-200 text-stone-700'
                     }`}
                   >
-                    Berhenti Hari 3
+                    Berhenti Awal
                   </button>
                 </div>
               </div>
@@ -134,7 +141,7 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
                         strokeWidth="2.5"
                       />
                       <text x={mapX(3) + 8} y="26" fontSize="13" fill="#B91C1C" fontWeight="700">
-                        Berhenti Hari 3 (Rasa Sihat)
+                        Berhenti Awal
                       </text>
                     </g>
                   )}
@@ -152,10 +159,8 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
                   ))}
                 </svg>
                 <div className="flex items-center justify-between text-[15px] font-semibold text-stone-800 dark:text-stone-200 px-2">
-                  <span>Biru: Semua bakteria · Merah putus: Bakteria kebal</span>
-                  <span className="tabular-nums-clean font-bold">
-                    Hari {currentDayPoint.day}: {currentDayPoint.totalBacteria} koloni
-                  </span>
+                  <span>Biru: Jumlah bakteria · Merah putus: Bakteria imun</span>
+                  <span className="tabular-nums-clean font-bold">Hari ke-{currentDayPoint.day}</span>
                 </div>
               </div>
 
@@ -182,7 +187,7 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
             >
               <div className="text-center">
                 <div className="text-[17px] font-bold text-stone-800 dark:text-stone-200">
-                  Keadaan Dalam Badan (Hari ke-{currentDayPoint.day})
+                  Keadaan Bakteria (Hari ke-{currentDayPoint.day})
                 </div>
                 <svg viewBox="0 0 180 170" className="w-48 h-44 mx-auto my-1" aria-hidden="true">
                   <circle cx="90" cy="85" r="76" fill="#FBF9F5" stroke="#A8A29E" strokeWidth="3.5" />
@@ -216,7 +221,7 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
                   })}
                 </svg>
                 <div className="text-[15px] font-semibold text-stone-700 dark:text-stone-300">
-                  Biru: Lemah ({currentDayPoint.sensitiveBacteria}) · Merah: Kebal ({currentDayPoint.resistantBacteria})
+                  Biru: Biasa · Merah: Imun kepada antibiotik
                 </div>
               </div>
 
@@ -229,8 +234,8 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
               >
                 <div className="text-[17px] font-bold mb-1">
                   {sim.outcome === 'sembuh_sepenuhnya'
-                    ? 'Semua bakteria berjaya dibunuh'
-                    : `Amaran: ${sim.resistanceRatio}% bakteria kebal membiak semula!`}
+                    ? 'Semua bakteria dibunuh'
+                    : 'Bakteria menjadi imun dan penyakit berulang!'}
                 </div>
                 <p>{sim.summary}</p>
                 {interactions.molecularLens && (
@@ -246,122 +251,129 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
             <div className="col-span-6 space-y-5">
               <div>
                 <div className="text-[15px] font-bold text-blue-900 dark:text-blue-400">
-                  Mekanisme Penyahtoksin Hati (Had Selamat 4000 mg/hari)
+                  Analgesik: Parasetamol (Jadual 5.7, m.s. 182)
                 </div>
                 <h3 className="font-display text-[30px] font-bold text-stone-900 dark:text-stone-100 mt-1 leading-tight">
-                  Mengapa Terlebih Parasetamol Merosakkan Hati?
+                  Mengapa Parasetamol Perlu Diambil Mengikut Dos?
                 </h3>
                 <p className="text-[17px] text-stone-700 dark:text-stone-300 mt-2 leading-relaxed">
-                  Hati mempunyai <strong>perisai antioksidan</strong> untuk meneutralkan sisa ubat. Apabila dos melampaui 4000 mg sehari, perisai habis dan sisa reaktif mula menyerang sel hati.
+                  Parasetamol melegakan sakit dalam keadaan sedar dan perlu diambil mengikut preskripsi doktor. Pengambilan <strong>melebihi dos</strong> dapat menyebabkan <strong>kerosakan hati</strong>.
                 </p>
               </div>
 
               <div className="bg-[#FBF9F5] dark:bg-stone-950 rounded-2xl p-5 space-y-3">
                 <div className="flex items-center justify-between">
                   <label htmlFor="para-slider" className="text-[17px] font-bold text-stone-800 dark:text-stone-200">
-                    Jumlah Dos Sehari
+                    Tahap Pengambilan Dos
                   </label>
-                  <span className="tabular-nums-clean text-[24px] font-bold text-stone-900 dark:text-stone-50">
-                    {interactions.paracetamolMg} mg / hari
+                  <span className="text-[20px] font-bold text-stone-900 dark:text-stone-50">
+                    {doseLabel}
                   </span>
                 </div>
-                <input
-                  id="para-slider"
-                  type="range"
-                  min={500}
-                  max={8000}
-                  step={500}
-                  value={interactions.paracetamolMg}
-                  onChange={(e) => onPatch({ paracetamolMg: Number(e.target.value) })}
-                  className="w-full accent-stone-900 dark:accent-stone-100 cursor-pointer h-2.5"
-                />
-                <div className="flex justify-between tabular-nums-clean text-[15px] font-bold text-stone-600 dark:text-stone-400">
-                  <span>500 mg (1 biji)</span>
-                  <span>Had selamat: 4000 mg</span>
-                  <span>8000 mg (Toksik)</span>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { label: 'Dos Rendah', value: 500 },
+                    { label: 'Dos Betul', value: 2000 },
+                    { label: 'Melebihi Dos', value: 6000 },
+                  ].map((opt) => (
+                    <button
+                      key={opt.label}
+                      type="button"
+                      onClick={() => onPatch({ paracetamolMg: opt.value })}
+                      className={`py-2.5 px-3 rounded-xl border text-[15px] font-bold cursor-pointer ${
+                        (opt.value === 500 && para.status === 'rendah') ||
+                        (opt.value === 2000 && para.status === 'terapeutik') ||
+                        (opt.value === 6000 && para.status === 'amaran_hati')
+                          ? 'bg-stone-900 text-white border-stone-900 dark:bg-stone-100 dark:text-stone-900'
+                          : 'bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-700 text-stone-800 dark:text-stone-200'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
 
             <div className="col-span-6 bg-[#FBF9F5] dark:bg-stone-950 rounded-2xl p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-[18px] font-bold text-stone-900 dark:text-stone-100">Simulasi Perisai Hati</span>
+                <span className="text-[18px] font-bold text-stone-900 dark:text-stone-100">Kesan Pada Hati</span>
                 <Activity className="w-6 h-6 text-blue-900 dark:text-blue-400" />
               </div>
 
-              <svg viewBox="0 0 360 135" className="w-full h-36" aria-label="Gambar rajah perisai hati menentang dos berlebihan">
-                <rect x="12" y="24" width="94" height="86" rx="14" fill="#DBEAFE" stroke="#1E3A8A" strokeWidth="2" />
-                <text x="59" y="58" textAnchor="middle" fontSize="14" fontWeight="700" fill="#1E3A8A">
-                  Dos Masuk
+              <svg viewBox="0 0 360 135" className="w-full h-36" aria-label="Gambar rajah kesan dos parasetamol pada hati">
+                <rect x="12" y="24" width="100" height="86" rx="14" fill="#DBEAFE" stroke="#1E3A8A" strokeWidth="2" />
+                <text x="62" y="60" textAnchor="middle" fontSize="14" fontWeight="700" fill="#1E3A8A">
+                  Parasetamol
                 </text>
-                <text x="59" y="82" textAnchor="middle" fontSize="16" fontWeight="800" fill="#1E3A8A">
-                  {interactions.paracetamolMg} mg
+                <text x="62" y="82" textAnchor="middle" fontSize="13.5" fontWeight="800" fill="#1E3A8A">
+                  {para.status === 'rendah' ? 'Dos Rendah' : para.status === 'terapeutik' ? 'Dos Betul' : 'Lebih Dos'}
                 </text>
 
-                <path d="M110,67 L138,67" stroke="#44403C" strokeWidth="3.5" strokeLinecap="round" />
-                <polygon points="134,60 146,67 134,74" fill="#44403C" />
+                <path d="M116,67 L144,67" stroke="#44403C" strokeWidth="3.5" strokeLinecap="round" />
+                <polygon points="140,60 152,67 140,74" fill="#44403C" />
 
                 <rect
-                  x="150"
+                  x="156"
                   y="24"
-                  width="98"
+                  width="94"
                   height="86"
                   rx="14"
-                  fill={para.glutathioneShieldPercent > 35 ? '#DCFCE7' : '#FEE2E2'}
-                  stroke={para.glutathioneShieldPercent > 35 ? '#15803D' : '#B91C1C'}
+                  fill={para.status === 'amaran_hati' ? '#FEE2E2' : '#DCFCE7'}
+                  stroke={para.status === 'amaran_hati' ? '#B91C1C' : '#15803D'}
                   strokeWidth="2.5"
                 />
                 <text
-                  x="199"
-                  y="56"
+                  x="203"
+                  y="60"
                   textAnchor="middle"
-                  fontSize="13.5"
+                  fontSize="14"
                   fontWeight="700"
-                  fill={para.glutathioneShieldPercent > 35 ? '#14532D' : '#7F1D1D'}
+                  fill={para.status === 'amaran_hati' ? '#7F1D1D' : '#14532D'}
                 >
-                  Perisai Hati
+                  Keadaan Hati
                 </text>
                 <text
-                  x="199"
+                  x="203"
                   y="82"
                   textAnchor="middle"
-                  fontSize="17"
+                  fontSize="14"
                   fontWeight="800"
-                  fill={para.glutathioneShieldPercent > 35 ? '#15803D' : '#B91C1C'}
+                  fill={para.status === 'amaran_hati' ? '#B91C1C' : '#15803D'}
                 >
-                  {para.glutathioneShieldPercent}% Baki
+                  {para.status === 'amaran_hati' ? 'Terbeban' : 'Selamat'}
                 </text>
 
-                <path d="M252,67 L276,67" stroke="#44403C" strokeWidth="3.5" strokeLinecap="round" />
-                <polygon points="272,60 284,67 272,74" fill="#44403C" />
+                <path d="M254,67 L278,67" stroke="#44403C" strokeWidth="3.5" strokeLinecap="round" />
+                <polygon points="274,60 286,67 274,74" fill="#44403C" />
 
                 <rect
-                  x="286"
+                  x="288"
                   y="24"
-                  width="64"
+                  width="62"
                   height="86"
                   rx="14"
                   fill={para.status === 'amaran_hati' ? '#B91C1C' : '#DCFCE7'}
                 />
                 <text
-                  x="318"
+                  x="319"
                   y="62"
                   textAnchor="middle"
                   fontSize="13"
                   fontWeight="800"
                   fill={para.status === 'amaran_hati' ? '#FFFFFF' : '#14532D'}
                 >
-                  {para.status === 'amaran_hati' ? 'Sel Hati' : 'Sisa'}
+                  {para.status === 'amaran_hati' ? 'Hati' : 'Sakit'}
                 </text>
                 <text
-                  x="318"
+                  x="319"
                   y="82"
                   textAnchor="middle"
                   fontSize="13"
                   fontWeight="800"
                   fill={para.status === 'amaran_hati' ? '#FFFFFF' : '#14532D'}
                 >
-                  {para.status === 'amaran_hati' ? 'ROSAK!' : 'Keluar'}
+                  {para.status === 'amaran_hati' ? 'ROSAK!' : 'Lega'}
                 </text>
               </svg>
 
@@ -385,22 +397,21 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
           <div className="col-span-12 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-7 grid grid-cols-12 gap-7 items-center">
             <div className="col-span-6 space-y-4">
               <div className="text-[15px] font-bold text-blue-900 dark:text-blue-400">
-                Ujian Klinikal Perubatan (m.s. 184)
+                Tahukah Anda? (m.s. 184)
               </div>
               <h3 className="font-display text-[30px] font-bold text-stone-900 dark:text-stone-100 leading-tight">
-                Bagaimana Saintis Tahu Ubat Benar-benar Berkesan?
+                Apakah Plasebo?
               </h3>
               <p className="text-[18px] text-stone-700 dark:text-stone-300 leading-relaxed">
-                <strong>Plasebo</strong> ialah bahan yang menyerupai ubat sebenar, tetapi{' '}
-                <strong>tiada sebarang nilai terapeutik</strong> atau bahan ubat aktif.
+                <strong>Plasebo tidak mempunyai sebarang nilai terapeutik walaupun menyerupai ubat sebenar.</strong>
               </p>
               <div className="bg-[#FBF9F5] dark:bg-stone-950 rounded-2xl p-5 text-[16px] text-stone-800 dark:text-stone-200 space-y-2">
                 <div className="flex items-center gap-2 font-bold text-stone-900 dark:text-stone-100">
                   <FlaskConical className="w-5 h-5 text-blue-900 dark:text-blue-400" />
-                  <span>Prinsip Eksperimen Terkawal</span>
+                  <span>Ujian Klinikal Ubat Moden (m.s. 183–184)</span>
                 </div>
                 <p>
-                  Pesakit yang diberi pil gula sering berasa sedikit lega kerana <strong>harapan otak</strong>. Saintis membandingkan ubat sebenar dengan plasebo supaya hanya molekul yang benar-benar berkesan secara kimia diluluskan!
+                  Ubat moden menjalani pelbagai ujian klinikal sebelum boleh digunakan untuk mengesahkan keberkesanan dan keselamatan rawatan.
                 </p>
               </div>
             </div>
@@ -409,26 +420,26 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
               <div className="border-2 border-blue-800 bg-blue-50/70 dark:bg-blue-950/40 rounded-2xl p-6 space-y-3">
                 <div className="flex items-center gap-2 text-blue-900 dark:text-blue-300 font-bold text-[17px]">
                   <ShieldCheck className="w-6 h-6" />
-                  <span>Kumpulan Ubat Sebenar</span>
+                  <span>Ubat Sebenar</span>
                 </div>
-                <div className="text-[24px] font-bold text-stone-900 dark:text-stone-100 leading-snug">
-                  Ada Molekul Aktif
+                <div className="text-[22px] font-bold text-stone-900 dark:text-stone-100 leading-snug">
+                  Ada Nilai Terapeutik
                 </div>
                 <p className="text-[16px] text-stone-800 dark:text-stone-200 leading-relaxed">
-                  Harapan otak <strong>+ Tindak balas kimia sebenar</strong> terhadap punca penyakit.
+                  Mengandungi bahan ubat untuk merawat atau mencegah penyakit.
                 </p>
               </div>
 
               <div className="border-2 border-stone-300 dark:border-stone-700 bg-[#FBF9F5] dark:bg-stone-950 rounded-2xl p-6 space-y-3">
                 <div className="flex items-center gap-2 text-stone-800 dark:text-stone-200 font-bold text-[17px]">
                   <AlertTriangle className="w-6 h-6 text-amber-600" />
-                  <span>Kumpulan Plasebo</span>
+                  <span>Plasebo</span>
                 </div>
-                <div className="text-[24px] font-bold text-stone-900 dark:text-stone-100 leading-snug">
-                  0% Bahan Ubat
+                <div className="text-[22px] font-bold text-stone-900 dark:text-stone-100 leading-snug">
+                  Tiada Nilai Terapeutik
                 </div>
                 <p className="text-[16px] text-stone-700 dark:text-stone-300 leading-relaxed">
-                  Rupa pil sama persis, tetapi hanya mengandungi gula atau kanji sebagai kawalan perbandingan.
+                  Hanya menyerupai ubat sebenar tanpa sebarang kesan rawatan ubat.
                 </p>
               </div>
             </div>

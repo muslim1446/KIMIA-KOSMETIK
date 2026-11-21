@@ -412,6 +412,36 @@ export function removeStrokesFromList(
   return existing.filter((s) => !idsToDelete.has(s.id));
 }
 
+export const TEXT_EDIT_EPOCH_KEY = '__kssmRev';
+export const TEXT_EDIT_EPOCH_VALUE = '2026-kssm-audit-v1';
+
+export function filterCurrentTextEdits(
+  raw: Record<string, string> | undefined | null,
+): { edits: Record<string, string>; isLegacy: boolean } {
+  if (!raw || typeof raw !== 'object') return { edits: {}, isLegacy: false };
+  const keys = Object.keys(raw);
+  if (keys.length === 0) return { edits: {}, isLegacy: false };
+  if (raw[TEXT_EDIT_EPOCH_KEY] !== TEXT_EDIT_EPOCH_VALUE) {
+    return { edits: {}, isLegacy: true };
+  }
+  const clean: Record<string, string> = {};
+  for (const [k, v] of Object.entries(raw)) {
+    if (k !== TEXT_EDIT_EPOCH_KEY && !k.startsWith('__') && typeof v === 'string') {
+      clean[k] = v;
+    }
+  }
+  return { edits: clean, isLegacy: false };
+}
+
+export function stampCurrentTextEdits(
+  edits: Record<string, string>,
+): Record<string, string> {
+  return {
+    ...edits,
+    [TEXT_EDIT_EPOCH_KEY]: TEXT_EDIT_EPOCH_VALUE,
+  };
+}
+
 export function mergeTextEditMap(
   existing: Record<string, string>,
   textKey: string,

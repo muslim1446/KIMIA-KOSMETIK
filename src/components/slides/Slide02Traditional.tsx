@@ -66,10 +66,10 @@ export const Slide02Traditional: React.FC<Slide02Props> = ({ interactions, onPat
       <div className="shrink-0 flex items-end justify-between gap-4 border-b border-stone-200 dark:border-stone-800 pb-3">
         <div>
           <div className="text-[15px] font-bold text-emerald-800 dark:text-emerald-400">
-            5.4.1 · Ubat Tradisional (Rajah 5.13 &amp; Gambar foto 5.9)
+            5.4.1 · Ubat Tradisional (Rajah 5.13 &amp; Gambar foto 5.9 · m.s. 181)
           </div>
           <h2 className="font-display text-[30px] font-bold text-stone-900 dark:text-stone-50 mt-0.5 leading-tight">
-            Tumbuhan Membekalkan Molekul Aktif Semula Jadi — Tetapi Dosnya Tidak Sekata
+            Ubat Tradisional: Daripada Tumbuh-tumbuhan Herba atau Haiwan
           </h2>
         </div>
       </div>
@@ -112,7 +112,7 @@ export const Slide02Traditional: React.FC<Slide02Props> = ({ interactions, onPat
               <AlertTriangle className="w-5 h-5 text-red-700 shrink-0" />
             </div>
             <div className="text-[15px] text-stone-700 dark:text-stone-300 mt-0.5">
-              Mengapa herba semula jadi ini diharamkan?
+              Gambar foto 5.9 · Mengapa diharamkan?
             </div>
           </button>
         </div>
@@ -127,29 +127,29 @@ export const Slide02Traditional: React.FC<Slide02Props> = ({ interactions, onPat
             >
               <div>
                 <div className="text-[15px] font-bold text-red-700 dark:text-red-400">
-                  Cabaran Minda · Semula Jadi Tidak Bermaksud Sentiasa Selamat
+                  Cabaran Minda · Gambar foto 5.9 Daun ketum (m.s. 181)
                 </div>
                 <h3 className="font-display text-[30px] font-bold text-stone-900 dark:text-stone-100 mt-1">
-                  Daun Ketum (<span className="italic">Mitragyna speciosa</span>)
+                  Daun Ketum
                 </h3>
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <div className="rounded-2xl p-5 bg-[#FBF9F5] dark:bg-stone-950 border border-stone-200 dark:border-stone-800">
                     <div className="text-[15px] font-bold text-stone-500">Kegunaan Tradisional</div>
                     <p className="text-[17px] text-stone-800 dark:text-stone-200 mt-2 leading-relaxed">
-                      Digunakan secara tradisi untuk melegakan sakit belakang dan sebagai pemulih tenaga.
+                      Digunakan secara tradisional untuk melegakan sakit belakang dan pemulih tenaga.
                     </p>
                   </div>
                   <div className="rounded-2xl p-5 bg-red-50/70 dark:bg-red-950/40 border border-red-200 dark:border-red-900">
                     <div className="text-[15px] font-bold text-red-800 dark:text-red-300">Sebab Diharamkan</div>
                     <p className="text-[17px] text-stone-900 dark:text-stone-100 mt-2 leading-relaxed">
-                      Mengandungi bahan psikoaktif (mitraginina) yang melekat pada reseptor otak dan menyebabkan <strong>ketagihan</strong> — sebab itu produknya diharamkan di sisi undang-undang.
+                      Penjualan produk yang diproses daripada daun ketum diharamkan di sisi undang-undang kerana mengandungi bahan yang menyebabkan <strong>ketagihan dan penyalahgunaan</strong>.
                     </p>
                   </div>
                 </div>
               </div>
               <div className="pt-4 border-t border-stone-200 dark:border-stone-800 flex items-center justify-between gap-4">
                 <span className="text-[16px] font-semibold text-stone-700 dark:text-stone-300">
-                  Molekul aktif menentukan kesan pada badan — sama ada daripada tumbuhan atau makmal.
+                  Ubat tradisional tidak diproses secara kimia, tetapi masih boleh memudaratkan jika disalahgunakan.
                 </span>
                 <button
                   type="button"
@@ -173,19 +173,14 @@ export const Slide02Traditional: React.FC<Slide02Props> = ({ interactions, onPat
                 <div className="col-span-4 bg-[#FBF9F5] dark:bg-stone-950 rounded-2xl p-4">
                   <HerbIllustration herb={activeHerb} />
                   <div className="text-center text-[15px] font-bold text-stone-800 dark:text-stone-200 mt-1">
-                    {activeHerb.partUsed}
+                    Bahagian: {activeHerb.partUsed}
                   </div>
                 </div>
 
                 <div className="col-span-8 space-y-2.5">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <div>
-                      <div className="text-[15px] italic text-emerald-800 dark:text-emerald-400">{activeHerb.scientificName}</div>
-                      <h3 className="font-display text-[28px] font-bold text-stone-900 dark:text-stone-100 leading-tight">{activeHerb.name}</h3>
-                    </div>
-                    <span className="text-[15px] font-bold text-amber-800 dark:text-amber-300 text-right">
-                      {activeHerb.activeMolecule}
-                    </span>
+                  <div>
+                    <div className="text-[15px] italic text-emerald-800 dark:text-emerald-400">{activeHerb.scientificName}</div>
+                    <h3 className="font-display text-[28px] font-bold text-stone-900 dark:text-stone-100 leading-tight">{activeHerb.name}</h3>
                   </div>
 
                   <ul className="space-y-1">
@@ -198,7 +193,7 @@ export const Slide02Traditional: React.FC<Slide02Props> = ({ interactions, onPat
                   </ul>
 
                   <div className="rounded-xl bg-[#FBF9F5] dark:bg-stone-950 px-4 py-2.5 text-[16px] text-stone-800 dark:text-stone-200 leading-snug">
-                    <strong>Bagaimana ia bertindak:</strong> {activeHerb.molecularMechanism}
+                    {activeHerb.explanation}
                   </div>
                 </div>
               </div>
@@ -206,12 +201,12 @@ export const Slide02Traditional: React.FC<Slide02Props> = ({ interactions, onPat
               <div className="mt-3 pt-3 border-t border-stone-200 dark:border-stone-800">
                 <div className="flex items-center justify-between gap-2 mb-2.5">
                   <span className="text-[16px] font-bold text-stone-700 dark:text-stone-300">
-                    Cara Membebaskan Bahan Aktif:
+                    Cara Penyediaan Ubat Tradisional:
                   </span>
                   <div className="flex gap-2">
                     {(
                       [
-                        { id: 'lesung', label: 'Lesung Batu', Icon: Hammer },
+                        { id: 'lesung', label: 'Lesung', Icon: Hammer },
                         { id: 'rebusan', label: 'Direbus', Icon: Flame },
                         { id: 'kapsul', label: 'Pil / Kapsul', Icon: Pill },
                       ] as const

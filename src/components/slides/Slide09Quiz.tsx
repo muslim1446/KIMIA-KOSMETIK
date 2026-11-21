@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, Atom, Eye, HelpCircle, Lightbulb } from 'lucide-react';
+import { ArrowRight, Eye, HelpCircle, Lightbulb } from 'lucide-react';
 import { DAILY_MYSTERIES } from '../../data/slidesData';
 import { SharedSlideInteractions } from '../../hooks/usePresentationSync';
 
@@ -17,10 +17,10 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
       <div className="shrink-0 flex items-end justify-between gap-3 border-b border-stone-200 dark:border-stone-800 pb-3">
         <div>
           <div className="text-[15px] font-bold text-blue-900 dark:text-blue-400">
-            5.4.5 · Perbincangan &amp; Aplikasi Kimia
+            5.4.1–5.4.4 · Uji Diri 5.4 (m.s. 186)
           </div>
           <h2 className="font-display text-[28px] font-bold text-stone-900 dark:text-stone-50 mt-0.5 leading-tight">
-            Mengapa Ia Berlaku? Memahami Punca Kimia di Sebalik Situasi Harian
+            Uji Diri 5.4 &amp; Rumusan Topik Ubat-ubatan dan Bahan Kosmetik
           </h2>
         </div>
 
@@ -36,7 +36,7 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
                   : 'border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-200 hover:bg-stone-50'
               }`}
             >
-              Situasi {idx + 1}
+              Soalan {idx + 1}
             </button>
           ))}
         </div>
@@ -50,7 +50,7 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-[15px] font-bold text-blue-900 dark:text-blue-400">
               <HelpCircle className="w-5 h-5" />
-              <span>Situasi Sebenar</span>
+              <span>{mystery.kssmRef}</span>
             </div>
             <h3 className="font-display text-[21px] font-bold text-stone-900 dark:text-stone-100 leading-snug">
               {mystery.title}
@@ -65,10 +65,11 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
 
           <div className="pt-3 border-t border-stone-200 dark:border-stone-800 space-y-1.5">
             <div className="text-[14px] font-bold text-emerald-800 dark:text-emerald-400">
-              Rumusan 3 Prinsip Utama Bab 5.4:
+              Rumusan Standard Pembelajaran 5.4:
             </div>
             <div className="text-[14px] text-stone-700 dark:text-stone-300 leading-snug">
-              1. <strong>Struktur &amp; Kekutuban</strong> · 2. <strong>Dos &amp; Tempoh</strong> · 3. <strong>Sasaran &amp; Pengawasan NPRA</strong>
+              1. <strong>Jenis &amp; Fungsi Ubat (5.4.1)</strong> · 2. <strong>Penggunaan Selamat (5.4.2)</strong> · 3.{' '}
+              <strong>Bahan &amp; Keselamatan Kosmetik (5.4.3–5.4.4)</strong>
             </div>
           </div>
         </div>
@@ -76,7 +77,7 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
         <div className="col-span-7 flex flex-col justify-between gap-3">
           <div className="space-y-2">
             <div className="text-[15px] font-bold text-stone-700 dark:text-stone-300">
-              Ramalan Bersama Kelas (Klik satu pandangan untuk dibincangkan):
+              Pilih Jawapan:
             </div>
             {mystery.hypotheses.map((hyp, i) => {
               const selected = interactions.quizSelectedOption === hyp.id;
@@ -93,7 +94,7 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
                 >
                   <div className="flex items-start gap-2.5">
                     <span className="text-[14px] font-bold px-2.5 py-0.5 rounded-lg border border-stone-300 bg-[#FBF9F5] text-stone-800 shrink-0">
-                      Idea {i + 1}
+                      Pilihan {i + 1}
                     </span>
                     <span className="text-[15px] font-semibold text-stone-900 dark:text-stone-100 leading-snug">
                       {hyp.label}
@@ -102,7 +103,7 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
                   {selected && (
                     <p
                       data-storage-scope={`slide:8/quiz:${interactions.quizIndex}/hyp:${hyp.id}`}
-                      className="mt-1.5 pl-16 text-[14px] font-medium text-blue-950 dark:text-blue-200 leading-snug"
+                      className="mt-1.5 pl-20 text-[14px] font-medium text-blue-950 dark:text-blue-200 leading-snug"
                     >
                       {hyp.discussionNote}
                     </p>
@@ -116,31 +117,17 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-[15px] font-bold text-emerald-900 dark:text-emerald-400">
                 <Lightbulb className="w-5 h-5" />
-                <span>Penjelasan Mekanisme Kimia</span>
+                <span>Jawapan &amp; Penerangan Buku Teks</span>
               </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => onPatch({ molecularLens: !interactions.molecularLens })}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[13px] font-bold cursor-pointer ${
-                    interactions.molecularLens
-                      ? 'border-indigo-700 bg-indigo-900 text-white'
-                      : 'border-stone-300 bg-white text-stone-800'
-                  }`}
-                >
-                  <Atom className="w-3.5 h-3.5" />
-                  <span>Perincian</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onPatch({ explanationRevealed: !interactions.explanationRevealed })}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-[14px] font-bold cursor-pointer"
-                >
-                  <Eye className="w-4 h-4" />
-                  <span>{interactions.explanationRevealed ? 'Tutup Penjelasan' : 'Dedah Penjelasan'}</span>
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => onPatch({ explanationRevealed: !interactions.explanationRevealed })}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-[14px] font-bold cursor-pointer"
+              >
+                <Eye className="w-4 h-4" />
+                <span>{interactions.explanationRevealed ? 'Tutup Jawapan' : 'Dedah Jawapan'}</span>
+              </button>
             </div>
 
             {interactions.explanationRevealed ? (
@@ -150,41 +137,36 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
               >
                 <div className="bg-[#FBF9F5] dark:bg-stone-950 rounded-xl p-3">
                   <div className="text-[13px] font-bold text-blue-900 dark:text-blue-400 flex items-center gap-1">
-                    <span>1. Tindak Balas Molekul</span>
+                    <span>1. Fakta Buku Teks</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </div>
                   <p className="text-[14px] text-stone-800 dark:text-stone-200 mt-1 leading-snug">
-                    {mystery.causalChain.step1Molecule}
+                    {mystery.causalChain.step1Fact}
                   </p>
                 </div>
                 <div className="bg-[#FBF9F5] dark:bg-stone-950 rounded-xl p-3">
                   <div className="text-[13px] font-bold text-amber-800 dark:text-amber-400 flex items-center gap-1">
-                    <span>2. Kesan Dalam Badan</span>
+                    <span>2. Huraian &amp; Contoh</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </div>
                   <p className="text-[14px] text-stone-800 dark:text-stone-200 mt-1 leading-snug">
-                    {mystery.causalChain.step2Body}
+                    {mystery.causalChain.step2Reason}
                   </p>
                 </div>
                 <div className="bg-emerald-50 dark:bg-emerald-950/40 rounded-xl p-3">
                   <div className="text-[13px] font-bold text-emerald-900 dark:text-emerald-300">
-                    3. Prinsip Kimia
+                    3. Prinsip Utama
                   </div>
                   <p className="text-[14px] font-bold text-emerald-950 dark:text-emerald-100 mt-1 leading-snug">
                     {mystery.causalChain.step3Principle}
                   </p>
-                  {interactions.molecularLens && (
-                    <p className="text-[13px] text-indigo-900 dark:text-indigo-300 mt-1 leading-snug">
-                      {mystery.deepChemNote}
-                    </p>
-                  )}
                 </div>
               </div>
             ) : (
               <p className="text-[15px] text-stone-600 dark:text-stone-400 leading-snug">
                 {pickedHypothesis
-                  ? 'Bincangkan ramalan di atas bersama kelas, kemudian klik "Dedah Penjelasan" untuk melihat rantaian sebab-akibat kimianya.'
-                  : 'Minta rakan sekelas mengemukakan ramalan dahulu sebelum mendedahkan penjelasan kimia.'}
+                  ? 'Bincangkan pilihan di atas bersama kelas, kemudian klik "Dedah Jawapan" untuk menyemak jawapan buku teks.'
+                  : 'Minta rakan sekelas memilih jawapan dahulu sebelum mendedahkan penerangan buku teks.'}
               </p>
             )}
           </div>

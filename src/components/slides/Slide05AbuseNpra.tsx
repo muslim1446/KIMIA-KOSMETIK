@@ -10,22 +10,22 @@ interface Slide05Props {
 
 const MISUSE_CASES = [
   {
-    title: 'Penyalahgunaan Antibiotik',
-    cause: 'Berhenti awal atau makan antibiotik tanpa preskripsi doktor.',
-    bodyProcess: 'Baki bakteria tahan lasak terselamat dan membiak menjadi koloni kebal.',
-    impact: 'Rintangan antibiotik — jangkitan berulang lebih sukar dirawat.',
+    title: 'Antibiotik',
+    cause: 'Tidak dihabiskan tempoh pengambilannya atau diambil tanpa arahan doktor.',
+    bodyProcess: 'Bakteria tidak dibunuh sepenuhnya lalu membina ketahanan.',
+    impact: 'Rintangan antibiotik.',
   },
   {
-    title: 'Ubat Herba Tanpa Pengesahan',
-    cause: 'Mengambil produk herba tanpa ujian klinikal atau dicampur bahan terlarang.',
-    bodyProcess: 'Hati dan buah pinggang terpaksa menapis bahan kimia tidak diketahui dan logam berat.',
+    title: 'Ubat tradisional berasaskan herba',
+    cause: 'Tiada data kajian mengesahkan keberkesanan atau dos yang betul.',
+    bodyProcess: 'Dos yang tidak tepat membebankan fungsi hati dan buah pinggang.',
     impact: 'Kegagalan fungsi hati dan buah pinggang.',
   },
   {
-    title: 'Penyalahgunaan Kodeina',
-    cause: 'Mengambil ubat batuk atau ubat tahan sakit kodeina melebihi dos.',
-    bodyProcess: 'Molekul mengikat reseptor saraf otak secara berterusan sehingga otak menuntut dos lebih tinggi.',
-    impact: 'Menyebabkan ketagihan dan kebergantungan kepada ubat.',
+    title: 'Kodeina',
+    cause: 'Diambil tidak mengikut preskripsi doktor atau disalah guna.',
+    bodyProcess: 'Pengambilan berterusan atau berlebihan menyebabkan kebergantungan ubat.',
+    impact: 'Ketagihan.',
   },
 ];
 
@@ -37,10 +37,10 @@ export const Slide05AbuseNpra: React.FC<Slide05Props> = ({ interactions, onPatch
       <div className="shrink-0 border-b border-stone-200 dark:border-stone-800 pb-3 flex items-end justify-between gap-4">
         <div>
           <div className="text-[15px] font-bold text-red-700 dark:text-red-400">
-            5.4.2 &amp; 5.4.3 · Penyalahgunaan Ubat &amp; Kawalan KKM
+            5.4.2 · Keberkesanan, Penyalahgunaan Ubat &amp; Kawalan KKM (Gambar foto 5.10 · m.s. 183–184)
           </div>
           <h2 className="font-display text-[29px] font-bold text-stone-900 dark:text-stone-50 mt-0.5 leading-tight">
-            Rantaian Kesan Penyalahgunaan Ubat &amp; Semakan Pendaftaran NPRA
+            Kesan Penyalahgunaan Ubat &amp; Penyeliaan NPRA
           </h2>
         </div>
       </div>
@@ -77,12 +77,10 @@ export const Slide05AbuseNpra: React.FC<Slide05Props> = ({ interactions, onPatch
                       </p>
                       <p className="flex items-start gap-1.5">
                         <ArrowRight className="w-4 h-4 text-red-700 shrink-0 mt-1" />
-                        <span>
-                          <strong>Apa berlaku di dalam badan:</strong> {item.bodyProcess}
-                        </span>
+                        <span>{item.bodyProcess}</span>
                       </p>
                       <p className="text-red-800 dark:text-red-300 font-bold">
-                        <strong>Akibat:</strong> {item.impact}
+                        <strong>Kesan penyalahgunaan:</strong> {item.impact}
                       </p>
                     </div>
                   )}
@@ -94,14 +92,17 @@ export const Slide05AbuseNpra: React.FC<Slide05Props> = ({ interactions, onPatch
           <div className="border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-4 space-y-1.5">
             <div className="flex items-center gap-2 font-display text-[17px] font-bold text-stone-900 dark:text-stone-100">
               <FileCheck2 className="w-5 h-5 text-blue-900 dark:text-blue-400" />
-              <span>Kawalan Undang-undang di Malaysia</span>
+              <span>Penyelarasan &amp; Kawalan di Malaysia (m.s. 184)</span>
             </div>
-            <ul className="text-[15px] text-stone-800 dark:text-stone-200 space-y-1 leading-snug">
+            <ul className="text-[14.5px] text-stone-800 dark:text-stone-200 space-y-1 leading-snug">
               <li>
-                · <strong>Akta Perubatan Tradisional &amp; Komplementari 2016</strong> dan <strong>Dasar PT&amp;K Kebangsaan</strong>
+                · <strong>Akta Perubatan Tradisional dan Komplementari 2016</strong> — memastikan rawatan tradisional memenuhi kriteria kerajaan.
               </li>
               <li>
-                · <strong>NPRA</strong> (Bahagian Regulatori Farmasi Negara) — menyemak kualiti, dos dan keselamatan produk.
+                · <strong>Dasar Perubatan Tradisional dan Komplementari Kebangsaan</strong> — memastikan ubat dan rawatan selamat serta berkualiti.
+              </li>
+              <li>
+                · <strong>Bahagian Regulatori Farmasi Negara (NPRA)</strong> — menyelia kualiti dan keselamatan ubat serta kosmetik.
               </li>
             </ul>
           </div>
@@ -109,17 +110,19 @@ export const Slide05AbuseNpra: React.FC<Slide05Props> = ({ interactions, onPatch
 
         <div className="col-span-6 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-6 flex flex-col justify-between">
           <div>
-            <div className="text-[15px] font-bold text-blue-900 dark:text-blue-400">Penyahkod Label Produk</div>
+            <div className="text-[15px] font-bold text-blue-900 dark:text-blue-400">
+              Cara Semak Pendaftaran KKM (m.s. 184)
+            </div>
             <h3 className="font-display text-[26px] font-bold text-stone-900 dark:text-stone-100 mt-0.5 leading-tight">
-              Kenali Perbezaan Kod MAL &amp; NOT
+              Semak Nombor MAL (Ubat) &amp; NOT (Kosmetik)
             </h3>
             <p className="text-[16px] text-stone-700 dark:text-stone-300 mt-1.5 leading-snug">
-              <strong>MAL</strong> = Ubat Berdaftar (diuji ketulenan dan sukatan dos). <strong>NOT</strong> = Kosmetik Bernotifikasi (luaran sahaja, bebas bahan terlarang).
+              <strong>MAL</strong> = Ubat berdaftar. <strong>NOT</strong> = Kosmetik bernotifikasi yang diselia oleh NPRA.
             </p>
 
             <div className="mt-4">
               <label htmlFor="npra-code-input" className="block text-[15px] font-bold text-stone-800 dark:text-stone-200 mb-1.5">
-                Uji nombor pada kotak produk:
+                Masukkan nombor pendaftaran pada label:
               </label>
               <input
                 id="npra-code-input"
@@ -135,7 +138,7 @@ export const Slide05AbuseNpra: React.FC<Slide05Props> = ({ interactions, onPatch
               {[
                 { code: 'MAL19981234X', label: 'Contoh Ubat (MAL)' },
                 { code: 'NOT230501234K', label: 'Contoh Kosmetik (NOT)' },
-                { code: 'KRIM-PUTIH-99', label: 'Tanpa Kod Sah' },
+                { code: 'TIADA-KOD', label: 'Tiada Kod Sah' },
               ].map((preset) => (
                 <button
                   key={preset.code}

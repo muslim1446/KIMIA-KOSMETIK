@@ -4,6 +4,7 @@ import {
   clientToLogicalPoint,
   computeTempStrokeOpacity,
   doesEraserHitStroke,
+  filterCurrentTextEdits,
   isScopeVisible,
   logicalToClientPoint,
   mergeIdList,
@@ -20,6 +21,9 @@ import {
   sanitizeTextOverride,
   ScopeRect,
   simplifyStrokePoints,
+  stampCurrentTextEdits,
+  TEXT_EDIT_EPOCH_KEY,
+  TEXT_EDIT_EPOCH_VALUE,
   toScopeLocalPoints,
   toSlideGlobalPoints,
 } from './annotationEngine.ts';
@@ -238,5 +242,25 @@ test('pruneStaleLiveStrokes removes orphaned live strokes older than maxAgeMs', 
   const pruned = pruneStaleLiveStrokes({ u1: fresh, u2: stale }, 105_000, 45_000);
   assert.deepEqual(Object.keys(pruned), ['u1']);
 });
+
+test('filterCurrentTextEdits ignores legacy pre-audit Firebase edits while preserving stamped post-audit edits', () => {
+  const legacy = filterCurrentTextEdits({
+    'slide:0|h1': 'Tajuk Lama Sebelum Audit',
+  });
+  assert.equal(legacy.isLegacy, true);
+  assert.deepEqual(legacy.edits, {});
+
+  const stamped = stampCurrentTextEdits({
+    'slide:0|h1': 'Tajuk Baru Selepas Audit',
+  });
+  assert.equal(stamped[TEXT_EDIT_EPOCH_KEY], TEXT_EDIT_EPOCH_VALUE);
+
+  const current = filterCurrentTextEdits(stamped);
+  assert.equal(current.isLegacy, false);
+  assert.deepEqual(current.edits, {
+    'slide:0|h1': 'Tajuk Baru Selepas Audit',
+  });
+});
+
 
 

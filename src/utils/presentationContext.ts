@@ -94,9 +94,9 @@ export function describeActiveSubElement(
   switch (slideIndex) {
     case 0: {
       const map = {
-        ubat: 'Tab Ubat (bertindak di tisu/sasaran sakit, sukatan tepat)',
-        kosmetik: 'Tab Kosmetik (bertindak di permukaan luar kulit sahaja)',
-        terlarang: 'Tab Terlarang (meresap ke salur darah & merosakkan ginjal)',
+        ubat: 'Tab Ubat (merawat atau mencegah penyakit mengikut dos yang betul)',
+        kosmetik: 'Tab Kosmetik (kegunaan luaran untuk membersih, melindungi atau mencantikkan)',
+        terlarang: 'Tab Terlarang (bahan kimia terlarang seperti merkuri & hidrokuinon)',
       };
       return {
         label: `Tab: ${interactions.coverCompareId}`,
@@ -107,36 +107,36 @@ export function describeActiveSubElement(
       const herb = TRADITIONAL_HERBS.find((h) => h.id === interactions.herbId) ?? TRADITIONAL_HERBS[0];
       return {
         label: `${herb.name} · ${interactions.herbPrep}`,
-        detail: `Herba: ${herb.name} (${herb.scientificName}), Bahan aktif: ${herb.activeMolecule}, Cara penyediaan: ${interactions.herbPrep} — ${herb.prepNotes[interactions.herbPrep]}. Ketum terbuka: ${interactions.ketumOpen ? 'Ya' : 'Tidak'}.`,
+        detail: `Herba: ${herb.name} (${herb.scientificName}), Bahagian: ${herb.partUsed}, Kegunaan: ${herb.uses.join('; ')}, Cara penyediaan: ${interactions.herbPrep} — ${herb.prepNotes[interactions.herbPrep]}. Ketum terbuka: ${interactions.ketumOpen ? 'Ya' : 'Tidak'}.`,
       };
     }
     case 2: {
       const drug = MODERN_DRUGS.find((d) => d.id === interactions.selectedDrugId) ?? MODERN_DRUGS[0];
       return {
         label: `${drug.name} · ${interactions.selectedPatient}`,
-        detail: `Kategori: ${drug.categoryName}, Ubat dipilih: ${drug.name} (${drug.functionDesc}; Kesan sampingan: ${drug.sideEffects}), Profil pesakit: ${interactions.selectedPatient}, Kanta molekul: ${interactions.molecularLens ? 'Aktif' : 'Tutup'}.`,
+        detail: `Kategori: ${drug.categoryName}, Ubat dipilih: ${drug.name} (${drug.functionDesc}; Kesan sampingan: ${drug.sideEffects}), Profil pesakit: ${interactions.selectedPatient}, Perincian: ${interactions.molecularLens ? 'Aktif' : 'Tutup'}.`,
       };
     }
     case 3:
       return {
-        label: `Antibiotik ${interactions.antibioticMode} · Hari ${interactions.antibioticDay} · ${interactions.paracetamolMg}mg`,
-        detail: `Mod antibiotik: ${interactions.antibioticMode} (Hari ke-${interactions.antibioticDay}), Gelangsar Parasetamol: ${interactions.paracetamolMg} mg/hari, Tab Plasebo: ${interactions.placeboTab}.`,
+        label: `Antibiotik ${interactions.antibioticMode} · Hari ${interactions.antibioticDay}`,
+        detail: `Mod antibiotik: ${interactions.antibioticMode} (Hari ke-${interactions.antibioticDay}), Paras dos Parasetamol: ${interactions.paracetamolMg}, Tab aktif: ${interactions.placeboTab}.`,
       };
     case 4:
       return {
         label: `Kes ${interactions.misuseCaseIndex + 1} · Kod ${interactions.npraInput}`,
-        detail: `Kes penyalahgunaan ke-${interactions.misuseCaseIndex + 1}, Input pengesahan kod NPRA: "${interactions.npraInput}".`,
+        detail: `Kes penyalahgunaan ke-${interactions.misuseCaseIndex + 1}, Input semakan NPRA: "${interactions.npraInput}".`,
       };
     case 5:
       return {
         label: `Kategori: ${interactions.cosmeticSortCategory} · ${interactions.selectedCosmeticItemId}`,
-        detail: `Penapis kategori kosmetik: ${interactions.cosmeticSortCategory}, Item dipilih: ${interactions.selectedCosmeticItemId}.`,
+        detail: `Jenis kosmetik: ${interactions.cosmeticSortCategory}, Contoh dipilih: ${interactions.selectedCosmeticItemId}.`,
       };
     case 6: {
       const activeIngs = COSMETIC_INGREDIENTS.filter((c) => interactions.emulsion[c.id]).map((c) => c.name);
       return {
-        label: `Emulsi (${activeIngs.length} bahan)`,
-        detail: `Bahan emulsi aktif di makmal: ${activeIngs.join(', ') || 'Tiada'}.`,
+        label: `Bahan Asas (${activeIngs.length} bahan)`,
+        detail: `Bahan asas kosmetik aktif: ${activeIngs.join(', ') || 'Tiada'}.`,
       };
     }
     case 7: {
@@ -150,8 +150,8 @@ export function describeActiveSubElement(
     case 8: {
       const mystery = DAILY_MYSTERIES[interactions.quizIndex] ?? DAILY_MYSTERIES[0];
       return {
-        label: `Situasi ${interactions.quizIndex + 1}`,
-        detail: `${mystery.title}. Hipotesis dipilih: ${interactions.quizSelectedOption ?? 'Belum dipilih'}, Penjelasan didedah: ${interactions.explanationRevealed ? 'Ya' : 'Belum'}.`,
+        label: `Soalan ${interactions.quizIndex + 1}`,
+        detail: `${mystery.title}. Jawapan dipilih: ${interactions.quizSelectedOption ?? 'Belum dipilih'}, Penerangan didedah: ${interactions.explanationRevealed ? 'Ya' : 'Belum'}.`,
       };
     }
     default:
@@ -190,7 +190,7 @@ export function buildPresentationDigest(args: {
   const strokeScopes = Array.from(new Set([...slideStrokes, ...slideTemp].map((s) => s.scopeKey)));
   const strokeColors = Array.from(new Set([...slideStrokes, ...slideTemp].map((s) => s.color)));
 
-  const textEditEntries = Object.entries(textEdits);
+  const textEditEntries = Object.entries(textEdits).filter(([k]) => !k.startsWith('__'));
   const textEditsSummary =
     textEditEntries.length > 0
       ? textEditEntries

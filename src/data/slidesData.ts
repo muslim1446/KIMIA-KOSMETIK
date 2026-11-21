@@ -21,8 +21,6 @@ export interface TraditionalHerb {
   name: string;
   scientificName: string;
   partUsed: string;
-  activeMolecule: string;
-  molecularMechanism: string;
   uses: string[];
   explanation: string;
   prepNotes: {
@@ -42,9 +40,7 @@ export interface ModernDrugItem {
   functionDesc: string;
   usageRule: string;
   sideEffects: string;
-  molecularKey: string;
-  targetLock: string;
-  whySideEffectHappens: string;
+  summaryNote: string;
 }
 
 export interface CosmeticIngredient {
@@ -52,8 +48,7 @@ export interface CosmeticIngredient {
   name: string;
   role: string;
   examples: string;
-  polarityType: 'berkutub' | 'dwikutub' | 'sokongan';
-  molecularRole: string;
+  simpleNote: string;
 }
 
 export interface BannedChemical {
@@ -64,7 +59,6 @@ export interface BannedChemical {
   severeHarm: string;
   bodyTarget: 'sistem_saraf_ginjal' | 'melanosit_uv' | 'pigmentasi_epidermis' | 'lapisan_luar';
   explanation: string;
-  molecularMechanism: string;
 }
 
 export interface DailyMystery {
@@ -74,11 +68,10 @@ export interface DailyMystery {
   questionWhy: string;
   hypotheses: { id: string; label: string; discussionNote: string }[];
   causalChain: {
-    step1Molecule: string;
-    step2Body: string;
+    step1Fact: string;
+    step2Reason: string;
     step3Principle: string;
   };
-  deepChemNote: string;
   kssmRef: string;
 }
 
@@ -92,191 +85,200 @@ export interface QuizQuestion {
 }
 
 export const TEAM_PRESENTERS: Record<PresenterId, { name: string; focus: string }> = {
-  1: { name: 'Pembentang 1', focus: 'Prinsip Kimia & Ubat Tradisional' },
-  2: { name: 'Pembentang 2', focus: 'Mekanisme Ubat Moden & Dos' },
-  3: { name: 'Pembentang 3', focus: 'Rintangan Bakteria, Plasebo & NPRA' },
-  4: { name: 'Pembentang 4', focus: 'Kekutuban Kosmetik & Bahan Terlarang' },
+  1: { name: 'Pembentang 1', focus: 'Pengenalan & Ubat Tradisional' },
+  2: { name: 'Pembentang 2', focus: 'Ubat Moden & Penggunaan Ubat' },
+  3: { name: 'Pembentang 3', focus: 'Penyalahgunaan Ubat, NPRA & Jenis Kosmetik' },
+  4: { name: 'Pembentang 4', focus: 'Bahan Asas Kosmetik & Bahan Kimia Terlarang' },
 };
 
 export const SLIDES_META: SlideMeta[] = [
   {
     index: 0,
-    title: 'Molekul yang Sama, Tujuan Berbeza',
-    subtitle: 'Bagaimana bahan kimia menjadi ubat, kosmetik, atau racun bergantung pada struktur, dos, dan tempat tindakan.',
+    title: '5.4 Ubat-ubatan dan Bahan Kosmetik',
+    subtitle:
+      'Ubat merawat atau mencegah penyakit; kosmetik digunakan secara luaran untuk membersih, melindungi atau mencantikkan.',
     presenterLabel: 'Pembentang 1',
     presenters: [1],
     durationSeconds: 70,
     textbookRef: 'Kimia Tingkatan 5 · Bab 5.4 (m.s. 181–186)',
     presenterNotes: {
       simpleAnalogy:
-        'Bayangkan pisau dapur dan pisau bedah: bahan logamnya sama, tetapi sukatan dan tempat digunakan menentukan sama ada ia menyembuhkan atau mencederakan.',
+        'Ubat bertindak di dalam badan untuk merawat penyakit, manakala kosmetik kekal di permukaan luar badan.',
       talkingPoints: [
-        'Mulakan dengan menerangkan bahawa bukan semua bahan kimia berbahaya, dan bukan semua bahan semula jadi sentiasa selamat.',
-        'Tunjukkan 3 faktor penentu pada sebelah kiri: Struktur Molekul, Dos/Tempoh, dan Lapisan Sasaran.',
-        'Klik tiga tab di sebelah kanan supaya kelas melihat di lapisan mana ubat, kosmetik, dan krim haram berhenti atau menembusi salur darah.',
+        'Nyatakan definisi ubat (m.s. 181): bahan kimia untuk merawat atau mencegah penyakit.',
+        'Nyatakan dua kelas ubat: ubat tradisional dan ubat moden.',
+        'Ubat selamat jika diambil dengan betul; jika disalahgunakan boleh memudaratkan diri sendiri.',
       ],
-      questionForClass: 'Mengapa Betamethasone valerate dibenarkan oleh doktor di hospital, tetapi diharamkan dalam krim pemutih di pasaran?',
-      reminder: 'Beri tumpuan kepada pemahaman sebab-akibat kimia, bukan hafalan senarai semata-mata.',
+      questionForClass: 'Apakah perbezaan tujuan antara ubat dengan bahan kosmetik?',
+      reminder: 'Pastikan kelas memahami empat Standard Pembelajaran (5.4.1 hingga 5.4.4).',
     },
   },
   {
     index: 1,
-    title: 'Ubat Tradisional ialah Ekstrak Molekul Alam',
-    subtitle: 'Tumbuhan menghasilkan bahan aktif semula jadi, tetapi tanpa pemprosesan kimia kepekatannya sukar disukat tepat.',
+    title: 'Ubat Tradisional',
+    subtitle:
+      'Diperoleh daripada tumbuh-tumbuhan herba atau haiwan dan tidak diproses secara kimia.',
     presenterLabel: 'Pembentang 1',
     presenters: [1],
     durationSeconds: 120,
-    textbookRef: 'Rajah 5.13 & Gambar foto 5.9 (m.s. 181)',
+    textbookRef: '5.4.1 · Rajah 5.13 & Gambar foto 5.9 (m.s. 181)',
     presenterNotes: {
       simpleAnalogy:
-        'Meminum air rebusan halia umpama membancuh teh tanpa penimbang — bahan penyembuhnya ada di dalam tumbuhan, tetapi kepekatannya berbeza-beza.',
+        'Herba ditumbuk dengan lesung atau direbus untuk patinya sebelum dijadikan pil atau kapsul moden.',
       talkingPoints: [
-        'Klik setiap tumbuhan dan terangkan bahagian tumbuhan serta bahan aktif yang bertindak dalam badan.',
-        'Klik 3 cara penyediaan (Lesung Batu, Direbus, Pil/Kapsul) untuk menerangkan bagaimana menghancurkan atau merebus membebaskan bahan aktif.',
-        'Buka Cabaran Minda Daun Ketum untuk menunjukkan bahawa tumbuhan semula jadi juga boleh mengandungi molekul psikoaktif yang menyebabkan ketagihan.',
+        'Klik 4 tumbuhan dalam Rajah 5.13: Halia, Lidah buaya, Ginseng dan Asam jawa.',
+        'Tunjukkan 3 cara penyediaan: lesung, direbus dan dipasarkan sebagai pil atau kapsul.',
+        'Buka Cabaran Minda (Gambar foto 5.9 Daun ketum) dan bincangkan sebab penjualannya diharamkan.',
       ],
-      questionForClass: 'Jika serbuk halia dimasukkan ke dalam kapsul moden, adakah ia bertukar menjadi ubat moden? Mengapa?',
-      reminder: 'Tekankan perbezaan antara bentuk pembungkusan (kapsul) dengan proses kimia penulenan dan sukatan dos.',
+      questionForClass: 'Mengapakah penjualan produk daripada daun ketum diharamkan di sisi undang-undang?',
+      reminder: 'Ikut contoh dan kegunaan tepat dalam Rajah 5.13.',
     },
   },
   {
     index: 2,
-    title: 'Ubat Moden: Kunci Molekul & Sasaran Pesakit',
-    subtitle: 'Setiap kelas ubat direka mengunci sasaran tertentu dalam badan; salah pesakit atau dos mengubahnya menjadi bahaya.',
+    title: 'Ubat Moden',
+    subtitle:
+      'Dihasilkan melalui bioteknologi, nanoteknologi dan kejuruteraan genetik dalam bentuk pil, kapsul, serbuk dan larutan.',
     presenterLabel: 'Pembentang 2',
     presenters: [2],
     durationSeconds: 150,
-    textbookRef: 'Rajah 5.14 & Jadual 5.7 (m.s. 182–183)',
+    textbookRef: '5.4.1 & 5.4.2 · Rajah 5.14 & Jadual 5.7 (m.s. 182–183)',
     presenterNotes: {
       simpleAnalogy:
-        'Fikirkan ubat seperti kunci dan tapak tindakan badan seperti mangga: jika kuncinya berasid (Aspirin), ia meredakan sakit tetapi turut mengikis dinding perut.',
+        'Setiap jenis ubat moden ada fungsi khusus dan peraturan penggunaannya supaya selamat dan berkesan.',
       talkingPoints: [
-        'Mulakan dengan 5 kategori utama di sebelah kiri serta sumbangan Ibnu Sina sebagai Bapa Perubatan Moden.',
-        'Pilih Aspirin vs Parasetamol, dan Antiseptik vs Disinfektan untuk menerangkan sebab molekulnya bertindak berbeza.',
-        'Gunakan Padanan Pesakit di bawah (Pesakit Gastrik + Aspirin, Alahan Penisilin + Antibiotik) serta butang Perincian Molekul jika perlu.',
+        'Sebutkan 5 jenis ubat moden (Rajah 5.14): Analgesik, Antimikrob, Ubat psikotik, Antialergi, Kortikosteroid.',
+        'Terangkan contoh, fungsi, cara penggunaan dan kesan sampingan daripada Jadual 5.7.',
+        'Uji kesesuaian ubat bagi pesakit gastrik, kanak-kanak, alahan penisilin dan luka luar.',
       ],
-      questionForClass: 'Mengapa alkohol dan formaldehid membunuh kuman di lantai tetapi merosakkan tisu jika disapu pada luka terbuka?',
-      reminder: 'Fokuskan kepada punca kesan sampingan (sifat asid, kepekatan, sasaran sel), bukan sekadar membaca jadual.',
+      questionForClass: 'Mengapakah aspirin tidak sesuai untuk pesakit gastrik dan kanak-kanak?',
+      reminder: 'Tekankan peranan Ibnu Sina sebagai Bapa Perubatan Moden.',
     },
   },
   {
     index: 3,
-    title: 'Kinetik Rawatan: Evolusi Bakteria, Hati & Plasebo',
-    subtitle: 'Mengapa antibiotik mesti dihabiskan, bagaimana perisai hati kehabisan pada dos tinggi, dan peranan ujian plasebo.',
+    title: 'Mewajarkan Penggunaan Ubat',
+    subtitle:
+      'Antibiotik perlu dihabiskan, parasetamol diambil mengikut dos, dan plasebo tiada nilai terapeutik.',
     presenterLabel: 'Pembentang 2 & 3',
     presenters: [2, 3],
-    durationSeconds: 160,
-    textbookRef: 'Penggunaan Ubat & Ujian Klinikal (m.s. 182–184)',
+    durationSeconds: 150,
+    textbookRef: '5.4.2 · Jadual 5.7 & Tahukah Anda (m.s. 182–184)',
     presenterNotes: {
       simpleAnalogy:
-        'Berhenti makan antibiotik pada Hari ke-3 umpama mencabut rumput yang lemah di kebun lalu meninggalkan rumput paling liat membiak memenuhi seluruh tanah.',
+        'Berhenti makan antibiotik separuh jalan membiarkan bakteria yang belum mati membina ketahanan.',
       talkingPoints: [
-        'Tunjukkan pada Hari ke-3 pesakit terasa sihat kerana bakteria biru yang lemah sudah mati — tetapi bakteria merah yang kebal sedang menunggu peluang membiak.',
-        'Pada tab Perisai Hati, gerakkan gelangsar melebihi 4000 mg dan tunjukkan perisai hati habis digunakan sehingga sel hati diserang.',
-        'Pada tab Plasebo, terangkan bagaimana saintis memisahkan kesan harapan otak daripada kesan kimia sebenar molekul ubat.',
+        'Tab 1: Tunjukkan sebab antibiotik perlu dihabiskan — jika tidak, bakteria menjadi imun dan penyakit berulang.',
+        'Tab 2: Terangkan parasetamol melebihi dos boleh menyebabkan kerosakan hati.',
+        'Tab 3: Terangkan maksud plasebo (m.s. 184) — menyerupai ubat sebenar tetapi tiada nilai terapeutik.',
       ],
-      questionForClass: 'Jika antibiotik tidak dihabiskan, siapakah sebenarnya yang menjadi imun: badan kita atau bakteria?',
-      reminder: 'Gunakan butang Perincian jika pelajar ingin mengetahui nama bahan di hati (glutation) dan dinding sel bakteria (peptidoglikan).',
+      questionForClass: 'Apakah yang berlaku jika pesakit berhenti mengambil antibiotik selepas rasa sihat?',
+      reminder: 'Kekalkan istilah ringkas mengikut Jadual 5.7 dan kotak Tahukah Anda.',
     },
   },
   {
     index: 4,
-    title: 'Penyalahgunaan Ubat & Pengawasan NPRA',
-    subtitle: 'Kesan rantaian biologi penyalahgunaan ubat dan bagaimana kod MAL dan NOT mengesahkan keselamatan bahan.',
+    title: 'Keberkesanan, Penyalahgunaan Ubat & NPRA',
+    subtitle:
+      'Dos tidak tepat menjurus kepada penyalahgunaan ubat; NPRA menyelia kualiti dan keselamatan ubat serta kosmetik.',
     presenterLabel: 'Pembentang 3',
     presenters: [3],
     durationSeconds: 120,
-    textbookRef: 'Gambar foto 5.10 & Dasar PT&K (m.s. 183–184)',
+    textbookRef: '5.4.2 · Gambar foto 5.10 & Kawalan KKM (m.s. 183–184)',
     presenterNotes: {
       simpleAnalogy:
-        'Buah pinggang dan hati ialah pusat penapisan sisa kimia tubuh; produk tanpa ujian dos umpama menuang bahan kimia tidak diketahui ke dalam penapis hingga tersumbat dan rosak.',
+        'Ubat moden melalui ujian klinikal; sesetengah ubat tradisional tiada data kajian untuk mengesahkan dos yang betul.',
       talkingPoints: [
-        'Klik tiga kes penyalahgunaan untuk menerangkan rantaian punca, proses dalam badan, dan akibatnya.',
-        'Terangkan peranan Akta PT&K 2016, Dasar PT&K Kebangsaan, dan Bahagian Regulatori Farmasi Negara (NPRA).',
-        'Tunjukkan perbezaan struktur kod MAL (Ubat Berdaftar) dan NOT (Kosmetik Bernotifikasi) menggunakan kotak penyemak.',
+        'Tunjukkan 3 contoh penyalahgunaan dalam Gambar foto 5.10: Antibiotik, Ubat tradisional berasaskan herba, Kodeina.',
+        'Terangkan Akta PT&K 2016, Dasar PT&K Kebangsaan dan peranan NPRA (m.s. 184).',
+        'Tunjukkan cara menyemak nombor pendaftaran ubat (MAL) dan notifikasi kosmetik (NOT).',
       ],
-      questionForClass: 'Apakah beza pemeriksaan di sebalik kod MAL berbanding kod NOT?',
-      reminder: 'Tegaskan bahawa bentuk pil atau bungkusan cantik tidak menggantikan semakan pendaftaran NPRA.',
+      questionForClass: 'Apakah kesan penyalahgunaan ubat tradisional berasaskan herba tanpa kawalan dos?',
+      reminder: 'Ingatkan kelas untuk menyemak pendaftaran KKM sebelum membeli produk.',
     },
   },
   {
     index: 5,
-    title: 'Kimia Fizikal Tiga Kategori Kosmetik',
-    subtitle: 'Kosmetik hanya bertindak secara luaran; perbezaannya ditentukan oleh pigmen padat, emulsi lembap, atau minyak mudah meruap.',
+    title: 'Bahan Kosmetik & Jenis-jenis Kosmetik',
+    subtitle:
+      'Kosmetik digunakan secara luaran dan dikelaskan kepada kosmetik rias, kosmetik perawatan dan pewangi.',
     presenterLabel: 'Pembentang 3 & 4',
     presenters: [3, 4],
     durationSeconds: 100,
-    textbookRef: 'Rajah 5.16 & Peraturan 1984 (m.s. 184–185)',
+    textbookRef: '5.4.3 · Rajah 5.16 & Peraturan 1984 (m.s. 184–185)',
     presenterNotes: {
       simpleAnalogy:
-        'Kosmetik rias bertindak seperti lapisan warna di permukaan kulit; kosmetik perawatan seperti span mengunci air pada kulit; pewangi pula molekul kecil ringan yang terbang ke udara.',
+        'Kosmetik rias mencantikkan wajah, kosmetik perawatan merawat tubuh, dan pewangi memberikan haruman.',
       talkingPoints: [
-        'Tekankan definisi teras: kosmetik digunakan secara LUARAN untuk membersih, melindungi atau mencantikkan.',
-        'Tunjukkan mengapa Deodoran diletakkan di bawah Pewangi (molekul meruap mengawal bau) manakala Masker dan Krim di bawah Kosmetik Perawatan.',
-        'Sebutkan Peraturan-peraturan Kawalan Dadah dan Kosmetik 1984 yang mengawal keselamatan pengguna.',
+        'Bacakan definisi kosmetik (m.s. 184): digunakan secara luaran untuk membersih, melindungi atau mencantikkan.',
+        'Tunjukkan 3 kumpulan utama dalam Rajah 5.16 bersama contohnya.',
+        'Nyatakan Peraturan-peraturan Kawalan Dadah dan Kosmetik 1984 (m.s. 185).',
       ],
-      questionForClass: 'Mengapakah molekul minyak wangi boleh sampai ke hidung rakan dari jauh, tetapi pigmen gincu kekal melekat pada bibir?',
-      reminder: 'Kaitkan sifat saiz molekul dan kemeruapan dengan 3 kategori kosmetik.',
+      questionForClass: 'Berikan contoh produk bagi setiap tiga jenis kosmetik utama.',
+      reminder: 'Rujuk semua contoh produk tepat dalam Rajah 5.16.',
     },
   },
   {
     index: 6,
-    title: 'Minyak, Air & Jambatan Pengemulsi',
-    subtitle: 'Minyak tidak larut dalam air kerana perbezaan kekutuban; pengemulsi menyatukan kedua-duanya menjadi krim stabil.',
+    title: 'Bahan-bahan Asas Kosmetik',
+    subtitle:
+      'Gabungan air, pengemulsi, pemekat, pelembap, pewangi, pengawet dan pewarna.',
     presenterLabel: 'Pembentang 4',
     presenters: [4],
-    durationSeconds: 150,
-    textbookRef: 'Rajah 5.15 Bahan Asas Kosmetik (m.s. 184)',
+    durationSeconds: 140,
+    textbookRef: '5.4.3 · Rajah 5.15 (m.s. 184–185)',
     presenterNotes: {
       simpleAnalogy:
-        'Air dan minyak umpama dua kumpulan yang enggan berpegang tangan. Pengemulsi ialah jambatan bertangan dua: kepala memegang air, ekor memegang minyak!',
+        'Air dan minyak tidak bercampur secara semula jadi; pengemulsi menyatukannya menjadi campuran homogen.',
       talkingPoints: [
-        'Mulakan dengan klik "Fasa Terpisah" supaya kelas melihat lapisan minyak terapung di atas air.',
-        'Tunjukkan gambar rajah molekul di bahagian kanan: air berkutub vs minyak tidak berkutub.',
-        'Klik "2. Pengemulsi" dan tunjukkan bagaimana kepala hidrofilik + ekor hidrofobik membalut titisan minyak membentuk campuran homogen, lalu lengkapkan bahan lain termasuk Pengawet.',
+        'Tunjukkan 7 bahan asas kosmetik dalam Rajah 5.15 bersama fungsi dan contoh setiap satunya.',
+        'Klik butang "Fasa Terpisah" lalu tambahkan Pengemulsi untuk menunjukkan campuran homogen.',
+        'Tunjukkan kepentingan Pengawet untuk mengelakkan kerosakan kosmetik.',
       ],
-      questionForClass: 'Jika produk penjagaan kulit mengandungi air tanpa pengawet, apa yang akan tumbuh dalam beberapa hari?',
-      reminder: 'Luangkan masa pada gambar rajah molekul pengemulsi kerana inilah konsep kimia utama dalam penghasilan losen dan krim.',
+      questionForClass: 'Apakah fungsi pengemulsi dan pengawet dalam pembuatan kosmetik?',
+      reminder: 'Gunakan contoh tepat daripada Rajah 5.15 seperti lesitin, gliserin dan ferum(III) oksida.',
     },
   },
   {
     index: 7,
-    title: 'Forensik Bahan Kimia Terlarang',
-    subtitle: 'Kesan cerah segera berpunca daripada sekatan enzim melanin atau kecutan salur darah yang merosakkan sel dan organ.',
+    title: 'Mewajarkan Penggunaan Kosmetik & Bahan Terlarang',
+    subtitle:
+      'Kebaikan kosmetik buatan sendiri berbanding keburukan kosmetik komersial serta kesan bahan kimia terlarang.',
     presenterLabel: 'Pembentang 4',
     presenters: [4],
     durationSeconds: 140,
-    textbookRef: 'Rajah 5.17 & Jadual 5.8 (m.s. 185–186)',
+    textbookRef: '5.4.4 · Rajah 5.17 & Jadual 5.8 (m.s. 185–186)',
     presenterNotes: {
       simpleAnalogy:
-        'Memakai krim hidrokuinon umpama membuang payung melanin kulit di tengah hari terik; kulit nampak cerah sementara tetapi sinar UV menembak terus sel kulit!',
+        'Kosmetik buatan sendiri murah dan selamat; kosmetik haram pula mencampurkan bahan beracun untuk kesan pantas.',
       talkingPoints: [
-        'Bandingkan kebaikan kosmetik buatan sendiri dengan risiko kosmetik komersial haram (Rajah 5.17).',
-        'Klik kesemua 4 bahan terlarang (Merkuri, Hidrokuinon, Betamethasone valerate, Tretinoin) untuk menunjukkan lapisan badan yang diserang.',
-        'Terangkan mengapa Merkuri amat berbahaya: ion logam berat menembusi kulit masuk ke salur darah lalu merosakkan buah pinggang dan saraf.',
+        'Bandingkan Kebaikan Kosmetik Buatan Sendiri dengan Keburukan Kosmetik Komersial (Rajah 5.17).',
+        'Terangkan 4 bahan kimia terlarang dalam Jadual 5.8: Merkuri, Hidrokuinon, Betamethasone valerate dan Tretinoin.',
+        'Tegaskan supaya memilih kosmetik yang berdaftar dengan Bahagian Regulatori Farmasi Negara (NPRA).',
       ],
-      questionForClass: 'Mengapa pengguna krim pemutih merkuri berasa kulit cerah pada minggu pertama, tetapi rosak buah pinggang bertahun kemudian?',
-      reminder: 'Gunakan butang Perincian jika ingin menerangkan kesan ke atas enzim penghasil melanin dan protein buah pinggang.',
+      questionForClass: 'Apakah kesan sampingan merkuri dan hidrokuinon dalam krim pemutih tidak sah?',
+      reminder: 'Pastikan semua catatan dan kesan sampingan mengikut Jadual 5.8.',
     },
   },
   {
     index: 8,
-    title: 'Penaakulan Kimia dalam Situasi Harian',
-    subtitle: 'Memahami punca molekul di sebalik empat situasi harian berkaitan ubat dan bahan kosmetik.',
+    title: 'Uji Diri 5.4 & Rumusan Bab',
+    subtitle:
+      'Menjawab empat soalan Uji Diri 5.4 bagi merumuskan keseluruhan topik Ubat-ubatan dan Bahan Kosmetik.',
     presenterLabel: 'Semua Ahli',
     presenters: [1, 2, 3, 4],
-    durationSeconds: 130,
-    textbookRef: 'Sintesis & Aplikasi Bab 5.4 (m.s. 181–186)',
+    durationSeconds: 120,
+    textbookRef: '5.4.1–5.4.4 · Uji Diri 5.4 (m.s. 186)',
     presenterNotes: {
       simpleAnalogy:
-        'Tujuan mempelajari kimia ialah supaya kita boleh menjelaskan KENAPA sesuatu fenomena berlaku pada badan dan bahan harian — bukan sekadar meneka jawapan ujian.',
+        'Empat soalan Uji Diri 5.4 menguji empat Standard Pembelajaran utama topik ini.',
       talkingPoints: [
-        'Bacakan satu situasi harian, minta 2–3 orang rakan sekelas mengemukakan ramalan (klik idea mereka untuk berbincang).',
-        'Kemudian tekan butang "Dedah Penjelasan" untuk meneliti rantaian tindak balas molekul dan kesannya dalam badan.',
-        'Akhiri pembentangan dengan merumuskan 3 faktor utama di sebelah kiri: Struktur & Kekutuban, Dos & Tempoh, Sasaran & Pengawasan NPRA.',
+        'Bincangkan setiap soalan Uji Diri 5.4 bersama rakan sekelas.',
+        'Minta kelas memilih jawapan dahulu sebelum mendedahkan penerangan buku teks.',
+        'Rumuskan keseluruhan topik 5.4 dengan kemas.',
       ],
-      questionForClass: 'Jika seorang rakan ingin membuat losen herba buatan sendiri, apakah 3 prinsip kimia yang mesti dipatuhinya?',
-      reminder: 'Kekalkan suasana perbincangan makmal yang santai dan terbuka.',
+      questionForClass: 'Aida berasa sakit kepala. Apakah jenis ubat yang sesuai untuk meredakan kesakitannya?',
+      reminder: 'Pastikan jawapan ringkas dan tepat mengikut buku teks.',
     },
   },
 ];
@@ -286,20 +288,18 @@ export const TRADITIONAL_HERBS: TraditionalHerb[] = [
     id: 'halia',
     name: 'Halia',
     scientificName: 'Zingiber officinale',
-    partUsed: 'Rizom (batang bawah tanah)',
-    activeMolecule: 'Sebatian Fenolik Semula Jadi (Gingerol)',
-    molecularMechanism: 'Merangsang reseptor haba dan melegakan pengecutan otot usus untuk menolak angin serta memanaskan badan.',
+    partUsed: 'Rizom',
     uses: [
-      'Menyingkirkan angin dalam badan',
-      'Mencegah selesema',
-      'Membantu memanaskan badan',
+      'Menyingkirkan angin dalam badan.',
+      'Mencegah selesema.',
+      'Membantu memanaskan badan.',
     ],
     explanation:
-      'Rizom halia menghasilkan sebatian aktif semula jadi tanpa pemprosesan kimia yang membantu melancarkan peredaran dan melegakan ketidakselesaan perut.',
+      'Diperoleh daripada tumbuhan herba tanpa pemprosesan kimia untuk kegunaan kesihatan tradisional.',
     prepNotes: {
-      lesung: 'Dihancurkan dengan lesung: memecahkan dinding sel tumbuhan supaya pati molekul aktif terus menyentuh bahagian badan yang sakit.',
-      rebusan: 'Direbus untuk mendapatkan pati: haba dan air melarutkan molekul aktif menjadi minuman suam yang mudah diserap.',
-      kapsul: 'Dipasarkan dalam bentuk pil atau kapsul: memudahkan pengambilan serbuk tumbuhan, namun kepekatan bahan aktifnya tidak setulen ubat moden.',
+      lesung: 'Dihancurkan menggunakan lesung dan disapu pada anggota badan yang sakit.',
+      rebusan: 'Direbus untuk mendapatkan patinya dan diminum.',
+      kapsul: 'Dipasarkan dalam bentuk pil atau kapsul melalui evolusi pemprosesan masa ini.',
     },
     accentColor: '#B45309',
   },
@@ -307,19 +307,17 @@ export const TRADITIONAL_HERBS: TraditionalHerb[] = [
     id: 'lidah_buaya',
     name: 'Lidah buaya',
     scientificName: 'Aloe barbadensis miller',
-    partUsed: 'Daun (gel daun)',
-    activeMolecule: 'Gel Polisakarida Berair & Sebatian Penenang',
-    molecularMechanism: 'Rangkaian gula panjang memerangkap molekul air membentuk lapisan penyejuk pada kulit melecur supaya sel kulit dapat pulih.',
+    partUsed: 'Daun',
     uses: [
-      'Merawat penyakit kulit',
-      'Melegakan luka pada kulit akibat melecur atau terbakar',
+      'Merawat penyakit kulit.',
+      'Melegakan luka pada kulit akibat melecur atau terbakar.',
     ],
     explanation:
-      'Gel lutsinar daripada daun lidah buaya kaya dengan air terikat yang menurunkan haba permukaan kulit yang tercedera.',
+      'Lendir daun digunakan secara tradisional untuk merawat masalah dan kecederaan kulit.',
     prepNotes: {
-      lesung: 'Isi daun dihancurkan segar: membebaskan gel berair pekat untuk disapu terus pada kulit yang melecur atau terbakar.',
-      rebusan: 'Ekstrak gel dicairkan: dicampurkan dengan air bersih untuk membasuh atau menyejukkan permukaan kulit.',
-      kapsul: 'Diproses dalam bentuk kapsul atau salap: memudahkan penyimpanan gel dan ekstrak untuk kegunaan harian.',
+      lesung: 'Bahagian daun dihancurkan menggunakan lesung lalu disapu pada kulit yang sakit atau melecur.',
+      rebusan: 'Ekstrak tumbuhan direbus untuk kegunaan tradisional.',
+      kapsul: 'Dipasarkan dalam bentuk pil atau kapsul serta produk sapuan moden.',
     },
     accentColor: '#15803D',
   },
@@ -328,18 +326,16 @@ export const TRADITIONAL_HERBS: TraditionalHerb[] = [
     name: 'Ginseng',
     scientificName: 'Panax ginseng',
     partUsed: 'Akar',
-    activeMolecule: 'Glikosida Tumbuhan (Ginsenosida)',
-    molecularMechanism: 'Membantu sel pertahanan tubuh bertindak balas terhadap jangkitan serta menyokong kelenturan salur darah.',
     uses: [
-      'Membina pertahanan badan terhadap jangkitan',
-      'Merendahkan tekanan darah dan paras kolesterol',
+      'Membina pertahanan badan terhadap jangkitan.',
+      'Merendahkan tekanan darah dan paras kolesterol.',
     ],
     explanation:
-      'Akar ginseng menyimpan molekul aktif tumbuhan secara perlahan sepanjang pertumbuhannya bagi membantu daya tahan badan.',
+      'Akar ginseng digunakan sebagai ubat tradisional untuk menyokong daya tahan badan.',
     prepNotes: {
-      lesung: 'Akar kering ditumbuk: memecahkan gentian akar yang keras menjadi serbuk supaya sebatian aktifnya mudah keluar.',
-      rebusan: 'Akar direbus: haba air panas mengekstrak ginsenosida larut air ke dalam air rebusan untuk diminum.',
-      kapsul: 'Pil atau kapsul akar: memudahkan pengguna mengambil serbuk akar ginseng tanpa rasa pahit air rebusan.',
+      lesung: 'Akar dihancurkan menggunakan lesung sebelum disediakan.',
+      rebusan: 'Akar direbus untuk mendapatkan patinya dan diminum.',
+      kapsul: 'Dipasarkan dalam bentuk pil atau kapsul supaya mudah diambil.',
     },
     accentColor: '#92400E',
   },
@@ -347,19 +343,17 @@ export const TRADITIONAL_HERBS: TraditionalHerb[] = [
     id: 'asam_jawa',
     name: 'Asam jawa',
     scientificName: 'Tamarindus indica',
-    partUsed: 'Isi buah masak',
-    activeMolecule: 'Asid Organik Semula Jadi (Asid Tartarik)',
-    molecularMechanism: 'Keasidan lembut membantu mencairkan mukus tekak dan menanggalkan lapisan sel kulit mati di permukaan.',
+    partUsed: 'Buah',
     uses: [
-      'Jus buahnya dapat melegakan batuk',
-      'Mencerahkan kulit',
+      'Jus buahnya dapat melegakan batuk.',
+      'Mencerahkan kulit.',
     ],
     explanation:
-      'Isi buah asam jawa mengandungi asid organik lemah semula jadi yang bertindak lembut pada tekak apabila diminum dan pada permukaan kulit apabila disapu.',
+      'Buah asam jawa dimanfaatkan secara tradisional secara dalaman untuk batuk dan luaran pada kulit.',
     prepNotes: {
-      lesung: 'Isi buah dilenyek: membebaskan asid buah dan pulpa lembut untuk disapu secara luaran bagi mencerahkan kulit.',
-      rebusan: 'Jus buah direbus atau dibancuh suam: pati masam yang terlarut diminum bagi melegakan kerengsaan batuk.',
-      kapsul: 'Serbuk atau pil ekstrak buah: memudahkan bancuhan minuman dan kegunaan luar tanpa perlu memerah buah mentah.',
+      lesung: 'Isi buah dilumatkan menggunakan lesung untuk disapu secara luaran pada kulit.',
+      rebusan: 'Jus buah dibancuh atau direbus untuk mendapatkan pati minuman bagi melegakan batuk.',
+      kapsul: 'Diproses menjadi serbuk, pil atau kapsul untuk kegunaan mudah.',
     },
     accentColor: '#7C2D12',
   },
@@ -373,11 +367,10 @@ export const MODERN_DRUGS: ModernDrugItem[] = [
     categoryName: 'Analgesik',
     examples: ['Aspirin'],
     functionDesc: 'Melegakan sakit dalam keadaan sedar.',
-    usageRule: 'Perlu diambil mengikut preskripsi doktor (selepas makan).',
-    sideEffects: 'Bersifat asid; tidak sesuai bagi pesakit gastrik atau kanak-kanak kerana dapat menyebabkan ulser perut.',
-    molecularKey: 'Molekul berasid (-COOH) penyekat isyarat sakit',
-    targetLock: 'Menyekat isyarat sakit, tetapi turut menghakis mukus pelindung perut',
-    whySideEffectHappens: 'Sifat asid Aspirin dan gangguan kepada lapisan mukus menyebabkan asid perut melukakan dinding perut (ulser).',
+    usageRule: 'Perlu diambil mengikut preskripsi doktor.',
+    sideEffects:
+      'Bersifat asid; tidak sesuai bagi pesakit gastrik atau kanak-kanak kerana dapat menyebabkan ulser perut.',
+    summaryNote: 'Sifat asidnya dapat melukakan dinding perut bagi pesakit gastrik atau kanak-kanak.',
   },
   {
     id: 'parasetamol',
@@ -386,11 +379,9 @@ export const MODERN_DRUGS: ModernDrugItem[] = [
     categoryName: 'Analgesik',
     examples: ['Parasetamol'],
     functionDesc: 'Melegakan sakit dalam keadaan sedar.',
-    usageRule: 'Diambil mengikut preskripsi doktor atau sukatan had dos harian.',
-    sideEffects: 'Pengambilan melebihi dos boleh menyebabkan kerosakan hati.',
-    molecularKey: 'Molekul neutral (tidak menghakis asid perut)',
-    targetLock: 'Menenangkan pusat sakit di sistem saraf, diuraikan oleh hati',
-    whySideEffectHappens: 'Dos normal dineutralkan oleh perisai hati (glutation); dos berlebihan menghabiskan perisai itu lalu sisa toksik merosakkan sel hati.',
+    usageRule: 'Perlu diambil mengikut preskripsi doktor atau sukatan dos yang betul.',
+    sideEffects: 'Melebihi dos dapat menyebabkan kerosakan hati.',
+    summaryNote: 'Selamat pada dos biasa; dos berlebihan memudaratkan hati.',
   },
   {
     id: 'kodeina',
@@ -398,12 +389,10 @@ export const MODERN_DRUGS: ModernDrugItem[] = [
     categoryId: 'analgesik',
     categoryName: 'Analgesik',
     examples: ['Kodeina'],
-    functionDesc: 'Melegakan sakit, rawatan batuk dan cirit-birit.',
-    usageRule: 'Perlu diambil mengikut preskripsi doktor secara terkawal.',
-    sideEffects: 'Menyebabkan seseorang itu berasa mengantuk dan berisiko ketagihan jika disalah guna.',
-    molecularKey: 'Alkaloid penyekat refleks sakit & batuk di saraf pusat',
-    targetLock: 'Melekat pada reseptor opioid di otak untuk meredakan sakit dan batuk',
-    whySideEffectHappens: 'Penindasan sistem saraf pusat memperlahankan kewaspadaan (mengantuk) dan membiasakan otak bergantung kepadanya (ketagihan).',
+    functionDesc: 'Melegakan sakit, rawatan batuk dan cirit birit.',
+    usageRule: 'Perlu diambil mengikut preskripsi doktor.',
+    sideEffects: 'Menyebabkan berasa mengantuk dan risiko ketagihan jika disalah guna.',
+    summaryNote: 'Penyalahgunaan kodeina boleh menyebabkan ketagihan (Gambar foto 5.10).',
   },
   {
     id: 'antibiotik',
@@ -412,11 +401,11 @@ export const MODERN_DRUGS: ModernDrugItem[] = [
     categoryName: 'Antimikrob',
     examples: ['Penisilin', 'Streptomisin'],
     functionDesc: 'Membunuh atau merencatkan pertumbuhan bakteria.',
-    usageRule: 'Mesti dihabiskan tempoh pengambilannya; pesakit alahan penisilin diberi Kad Alahan Ubat.',
-    sideEffects: 'Jika tidak dihabiskan, bakteria menjadi imun dan penyakit berulang. Alahan serius boleh membawa maut.',
-    molecularKey: 'Cincin molekul pemecah dinding sel bakteria',
-    targetLock: 'Menyerang dinding sel peptidoglikan bakteria (sel manusia tiada dinding ini)',
-    whySideEffectHappens: 'Penghentian awal membiarkan bakteria kebal membiak; bagi pesakit alahan, sistem imun menyerang penisilin secara melampau.',
+    usageRule:
+      'Perlu dihabiskan supaya semua bakteria dibunuh; pesakit alahan penisilin diberi Kad Alahan Ubat.',
+    sideEffects:
+      'Jika tidak dihabiskan, bakteria menjadi imun dan penyakit berulang. Alahan serius boleh membawa maut.',
+    summaryNote: 'Dos penuh memastikan semua bakteria dibunuh tanpa membina rintangan antibiotik.',
   },
   {
     id: 'antiseptik',
@@ -424,12 +413,10 @@ export const MODERN_DRUGS: ModernDrugItem[] = [
     categoryId: 'antimikrob',
     categoryName: 'Antimikrob',
     examples: ['Hidrogen peroksida', 'Iodin', 'Asid borik'],
-    functionDesc: 'Membunuh kuman di bahagian luar badan.',
-    usageRule: 'Hanya disapu pada bahagian luaran badan sahaja dan tidak dimakan.',
-    sideEffects: 'Berbahaya dan beracun sekiranya dimakan atau ditelan.',
-    molecularKey: 'Agen pengoksida ringan untuk permukaan kulit hidup',
-    targetLock: 'Memusnahkan protein kuman pada luka terbuka tanpa merosakkan kulit luar',
-    whySideEffectHappens: 'Kepekatan lembutnya selamat di kulit luar tetapi mencederakan sel sensitif saluran penghadaman jika ditelan.',
+    functionDesc: 'Digunakan di bahagian luar badan.',
+    usageRule: 'Hanya disapu pada bahagian luaran sahaja dan tidak dimakan.',
+    sideEffects: 'Berbahaya sekiranya dimakan atau ditelan.',
+    summaryNote: 'Kegunaan luaran pada luka badan sahaja.',
   },
   {
     id: 'disinfektan',
@@ -437,25 +424,23 @@ export const MODERN_DRUGS: ModernDrugItem[] = [
     categoryId: 'antimikrob',
     categoryName: 'Antimikrob',
     examples: ['Alkohol', 'Formaldehid'],
-    functionDesc: 'Memusnahkan patogen pada objek bukan hidup seperti lantai dan sistem perparitan.',
-    usageRule: 'Untuk permukaan dan objek bukan hidup sahaja.',
-    sideEffects: 'Tidak boleh disapu pada luka atau anggota badan manusia kerana memusnahkan tisu hidup.',
-    molecularKey: 'Pelarut & pengikat protein berkekuatan tinggi',
-    targetLock: 'Melarutkan membran lemak dan menggumpalkan semua protein pada lantai/objek',
-    whySideEffectHappens: 'Tindak balas kimianya terlalu agresif — ia tidak dapat membezakan antara kuman dengan sel kulit manusia.',
+    functionDesc:
+      'Memusnahkan patogen pada objek bukan hidup seperti lantai dan sistem perparitan.',
+    usageRule: 'Untuk objek bukan hidup sahaja; tidak boleh digunakan pada manusia.',
+    sideEffects: 'Merbahaya jika disapu pada kulit, luka atau ditelan.',
+    summaryNote: 'Khusus untuk permukaan dan objek bukan hidup.',
   },
   {
     id: 'psikotik',
-    name: 'Ubat Psikotik',
+    name: 'Ubat psikotik',
     categoryId: 'psikotik',
-    categoryName: 'Ubat Psikotik',
+    categoryName: 'Ubat psikotik',
     examples: ['Haloperidol', 'Klorpromazin', 'Klozapin'],
-    functionDesc: 'Merawat psikosis (gejala penyakit mental seperti melihat, mendengar atau mempercayai perkara tidak nyata).',
-    usageRule: 'Diambil atas preskripsi doktor pakar.',
+    functionDesc:
+      'Merawat psikosis (gejala penyakit mental seperti melihat, mendengar atau mempercayai perkara tidak nyata).',
+    usageRule: 'Diambil atas preskripsi doktor.',
     sideEffects: 'Mengakibatkan pergerakan muka dan badan yang tidak normal, kejang dan menggeletar.',
-    molecularKey: 'Penyelaras isyarat kimia dopamina di otak',
-    targetLock: 'Mengimbangi reseptor saraf yang terlalu aktif di pusat persepsi otak',
-    whySideEffectHappens: 'Oleh sebab dopamina juga mengawal pergerakan otot halus, penyekatannya boleh menyebabkan otot menggeletar atau kejang.',
+    summaryNote: 'Rawatan terkawal di bawah pengawasan doktor.',
   },
   {
     id: 'antialergi',
@@ -463,12 +448,11 @@ export const MODERN_DRUGS: ModernDrugItem[] = [
     categoryId: 'antialergi',
     categoryName: 'Antialergi',
     examples: ['Antihistamin'],
-    functionDesc: 'Melegakan hidung berair dan kegatalan akibat alergi.',
-    usageRule: 'Hanya boleh diambil atas preskripsi doktor atau ahli farmasi.',
-    sideEffects: 'Mengantuk; dos tinggi menyebabkan mulut terasa kering (xerostomia), gangguan penglihatan dan sembelit.',
-    molecularKey: 'Penghalang tapak pengikatan histamin',
-    targetLock: 'Menduduki reseptor histamin supaya tindak balas gatal dan bengkak berhenti',
-    whySideEffectHappens: 'Sebahagian molekul masuk ke otak (mengantuk) dan turut menyekat isyarat kelenjar air liur serta usus (mulut kering & sembelit).',
+    functionDesc: 'Melegakan hidung berair dan kegatalan.',
+    usageRule: 'Hanya boleh diambil atas preskripsi doktor.',
+    sideEffects:
+      'Mengantuk; dos tinggi menyebabkan mulut terasa kering (xerostomia), gangguan penglihatan dan sembelit.',
+    summaryNote: 'Mengawal tindak balas alergi mengikut preskripsi doktor.',
   },
   {
     id: 'kortikosteroid',
@@ -476,12 +460,12 @@ export const MODERN_DRUGS: ModernDrugItem[] = [
     categoryId: 'kortikosteroid',
     categoryName: 'Kortikosteroid',
     examples: ['Betamethasone valerate', 'Prednisolone'],
-    functionDesc: 'Melegakan kawasan radang; mengurangkan bengkak, kemerahan, gatal, alergi, asma dan artritis.',
+    functionDesc:
+      'Melegakan kawasan radang; mengurangkan bengkak, kemerahan, gatal, alergi, asma dan artritis.',
     usageRule: 'Hanya boleh diambil atas preskripsi doktor.',
-    sideEffects: 'Pengambilan jangka panjang menyebabkan muka sembap (moon face), tekanan darah tinggi dan kenaikan gula darah.',
-    molecularKey: 'Molekul steroid peniru hormon penenang radang',
-    targetLock: 'Memasuki nukleus sel untuk memadamkan isyarat keradangan yang melampau',
-    whySideEffectHappens: 'Hormon steroid yang berlebihan dalam tempoh lama mengubah pengekalan air, garam dan pembebasan glukosa dalam darah.',
+    sideEffects:
+      'Pengambilan jangka panjang menyebabkan muka sembap (moon face), tekanan darah tinggi dan kenaikan gula darah.',
+    summaryNote: 'Hanya diambil atas preskripsi doktor dan elakkan penggunaan jangka panjang tanpa kawalan.',
   },
 ];
 
@@ -490,57 +474,50 @@ export const COSMETIC_INGREDIENTS: CosmeticIngredient[] = [
     id: 'air',
     name: 'Air',
     role: 'Bahan pelarut dalam penghasilan kosmetik.',
-    examples: 'Air bersih / air suling',
-    polarityType: 'berkutub',
-    molecularRole: 'Molekul berkutub (H2O) membentuk ikatan hidrogen untuk melarutkan bahan larut air.',
+    examples: 'Air',
+    simpleNote: 'Melarutkan bahan asas lain dalam penghasilan produk kosmetik.',
   },
   {
     id: 'pengemulsi',
     name: 'Pengemulsi',
     role: 'Membentuk campuran homogen antara air dan minyak.',
     examples: 'Lesitin dan asid stearik',
-    polarityType: 'dwikutub',
-    molecularRole: 'Mempunyai kepala suka air (hidrofilik) dan ekor suka minyak (hidrofobik) untuk mengikat kedua-duanya.',
+    simpleNote: 'Menyatukan fasa air dan fasa minyak supaya campuran menjadi sekata.',
   },
   {
     id: 'pemekat',
     name: 'Pemekat',
-    role: 'Memekatkan produk kosmetik supaya mudah disapu.',
+    role: 'Memekatkan produk kosmetik.',
     examples: 'Gliserin dan xanthan gum',
-    polarityType: 'berkutub',
-    molecularRole: 'Rantai molekul panjang memerangkap air supaya krim tidak cair dan titisan minyak tidak terpisah.',
+    simpleNote: 'Memberikan kelikatan yang sesuai agar kosmetik mudah disapu.',
   },
   {
     id: 'pelembap',
     name: 'Pelembap',
-    role: 'Mengekalkan kelembapan bahan kosmetik pada kulit.',
+    role: 'Mengekalkan kelembapan bahan kosmetik.',
     examples: 'Gliserin dan natrium laktat',
-    polarityType: 'berkutub',
-    molecularRole: 'Kumpulan -OH menarik dan memegang molekul air supaya kulit kekal lembut dan tidak kering.',
+    simpleNote: 'Menghalang produk kosmetik dan kulit daripada cepat kering.',
   },
   {
     id: 'pewangi',
     name: 'Pewangi',
-    role: 'Memberikan aroma yang menyenangkan kepada produk.',
+    role: 'Memberikan aroma yang menyenangkan kepada produk kosmetik.',
     examples: 'Minyak pati',
-    polarityType: 'sokongan',
-    molecularRole: 'Molekul aromatik kecil dan ringan mudah meruap ke udara untuk dikesan oleh hidung.',
+    simpleNote: 'Menghasilkan bau yang wangi pada produk kosmetik.',
   },
   {
     id: 'pengawet',
     name: 'Pengawet',
-    role: 'Mengelakkan kerosakan kosmetik akibat bakteria atau kulat.',
+    role: 'Mengelakkan kerosakan kosmetik.',
     examples: 'Paraben dan formaldehid',
-    polarityType: 'sokongan',
-    molecularRole: 'Menghalang pembiakan mikroorganisma di dalam produk yang mengandungi air.',
+    simpleNote: 'Menghalang kerosakan produk kosmetik supaya tahan lebih lama.',
   },
   {
     id: 'pewarna',
     name: 'Pewarna',
     role: 'Memberikan warna agar kosmetik lebih menarik.',
     examples: 'Ferum(III) oksida',
-    polarityType: 'sokongan',
-    molecularRole: 'Sebatian pigmen mineral tidak larut menyerap panjang gelombang cahaya tertentu untuk memberi warna.',
+    simpleNote: 'Menambahkan warna yang menarik pada kosmetik rias dan produk lain.',
   },
 ];
 
@@ -548,191 +525,175 @@ export const BANNED_CHEMICALS: BannedChemical[] = [
   {
     id: 'merkuri',
     name: 'Merkuri',
-    productFoundIn: 'Dimasukkan ke dalam krim pemutih serta kosmetik secara tidak sah',
-    immediateEffect: 'Kulit merengsa walaupun kelihatan cerah dalam masa singkat.',
+    productFoundIn: 'Dimasukkan ke dalam krim pemutih serta produk kosmetik lain secara tidak sah',
+    immediateEffect: 'Kulit merengsa.',
     severeHarm: 'Kerosakan buah pinggang dan sistem saraf jika diserap ke dalam salur darah.',
     bodyTarget: 'sistem_saraf_ginjal',
     explanation:
-      'Merkuri boleh menyebabkan kulit merengsa serta merosakkan buah pinggang dan sistem saraf apabila diserap ke dalam salur darah.',
-    molecularMechanism:
-      'Ion logam berat merkuri (Hg2+) menyekat enzim pembuat melanin (nampak putih sementara), kemudian meresap masuk ke salur darah dan mengikat kumpulan sulfur (-SH) dalam protein buah pinggang serta saraf.',
+      'Kulit merengsa serta kerosakan buah pinggang dan sistem saraf jika diserap ke dalam salur darah.',
   },
   {
     id: 'hidrokuinon',
     name: 'Hidrokuinon',
-    productFoundIn: 'Dimasukkan ke dalam krim pemutih serta kosmetik secara tidak sah',
+    productFoundIn: 'Dimasukkan ke dalam krim pemutih serta produk kosmetik lain secara tidak sah',
     immediateEffect: 'Kulit menjadi hipersensitif dan pengurangan pigmentasi.',
-    severeHarm: 'Pendedahan kulit kepada sinar UV yang berbahaya akibat kehilangan melanin.',
+    severeHarm: 'Pendedahan kulit kepada sinar UV yang merbahaya.',
     bodyTarget: 'melanosit_uv',
     explanation:
-      'Hidrokuinon menyebabkan kulit menjadi hipersensitif dan mengurangkan pigmentasi sehingga kulit terdedah kepada sinar UV yang berbahaya.',
-    molecularMechanism:
-      'Molekul hidrokuinon merencatkan enzim tirosinase yang menghasilkan melanin. Tanpa pigmen melanin sebagai pelindung cahaya, sinaran UV terus mencederakan sel kulit.',
+      'Kulit menjadi hipersensitif dan pengurangan pigmentasi yang mengakibatkan pendedahan kulit kepada sinar UV yang merbahaya.',
   },
   {
     id: 'betamethasone',
     name: 'Betamethasone valerate',
-    productFoundIn: 'Dimasukkan ke dalam krim pemutih serta kosmetik secara tidak sah',
-    immediateEffect: 'Kulit merengsa, menipis dan berlaku perubahan pigmentasi kulit.',
-    severeHarm: 'Kerosakan lapisan pelindung kulit akibat steroid kuat tanpa pengawasan doktor.',
+    productFoundIn: 'Dimasukkan ke dalam krim pemutih serta produk kosmetik lain secara tidak sah',
+    immediateEffect: 'Kulit merengsa.',
+    severeHarm: 'Perubahan pigmentasi kulit.',
     bodyTarget: 'pigmentasi_epidermis',
     explanation:
-      'Betamethasone valerate ialah ubat kortikosteroid yang menyebabkan kulit merengsa dan perubahan pigmentasi kulit apabila disalah guna.',
-    molecularMechanism:
-      'Steroid mengecutkan salur darah permukaan kulit (memberi ilusi kulit cerah sementara) sambil menipiskan epidermis dan mengganggu kawalan pigmentasi semula jadi.',
+      'Kulit merengsa dan perubahan pigmentasi kulit apabila dimasukkan ke dalam kosmetik secara tidak sah.',
   },
   {
     id: 'tretinoin',
     name: 'Tretinoin',
-    productFoundIn: 'Krim jerawat (tanpa pengawasan doktor)',
-    immediateEffect: 'Kulit kemerahan, pedih dan mengelupas.',
-    severeHarm: 'Keradangan dan pengelupasan melampau kerana lapisan kulit luar tertanggal terlalu pantas.',
+    productFoundIn: 'Krim jerawat',
+    immediateEffect: 'Kulit kemerahan.',
+    severeHarm: 'Kulit kemerahan dan mengelupas.',
     bodyTarget: 'lapisan_luar',
-    explanation:
-      'Tretinoin menyebabkan kulit kemerahan dan mengelupas apabila digunakan dalam krim jerawat tanpa kawalan doktor.',
-    molecularMechanism:
-      'Memaksa sel kulit membahagi dan menanggalkan sel lama terlalu cepat berbanding keupayaan lapisan pelindung luar kulit pulih semula.',
+    explanation: 'Menyebabkan kulit kemerahan dan mengelupas jika digunakan tanpa pengawasan.',
   },
 ];
 
 export const DAILY_MYSTERIES: DailyMystery[] = [
   {
-    id: 'm1',
-    title: 'Situasi 1: Mengapa Perut Sakit Selepas Aspirin, Tetapi Hati Rosak Jika Terlebih Parasetamol?',
+    id: 'u1',
+    title: 'Uji Diri 5.4 (Soalan 1): Contoh Ubat Tradisional & Kegunaannya',
     dailySituation:
-      'Ali demam dan mempunyai sejarah sakit gastrik. Jika dia mengambil Aspirin, perutnya berisiko luka. Jika dia menukar kepada Parasetamol secara berlebihan (15 biji sehari), hatinya pula terancam.',
-    questionWhy: 'Bagaimanakah perbezaan sifat molekul kedua-dua ubat ini menerangkan kesan yang berlainan pada organ berbeza?',
+      'Berikan tiga contoh ubat tradisional dan kegunaannya dalam kehidupan harian di Malaysia.',
+    questionWhy: 'Manakah padanan tumbuhan herba dan kegunaan yang tepat mengikut Rajah 5.13?',
     hypotheses: [
       {
         id: 'h1',
-        label: 'Parasetamol lebih lemah daripada Aspirin sehingga perlu dimakan banyak biji untuk berkesan.',
-        discussionNote: 'Anggapan biasa, tetapi tidak tepat — Parasetamol berkesan pada dos normal; bahaya berlaku apabila kapasiti penyahtoksin hati dilampaui.',
+        label: 'Halia merawat penyakit mental; Ginseng memusnahkan patogen di lantai.',
+        discussionNote: 'Kurang tepat — ubat psikotik dan disinfektan ialah kategori ubat moden, bukan herba tradisional.',
       },
       {
         id: 'h2',
-        label: 'Aspirin bersifat asid dan menghakis dinding perut, manakala Parasetamol neutral tetapi membebankan hati pada dos tinggi.',
-        discussionNote: 'Tepat sekali! Mari lihat mekanisme molekulnya pada perut berbanding hati.',
+        label: 'Halia menyingkirkan angin; Lidah buaya melegakan luka melecur; Ginseng membina pertahanan badan.',
+        discussionNote: 'Tepat sekali! Ketiga-tiga contoh dan kegunaan ini menepati Rajah 5.13 (m.s. 181).',
       },
       {
         id: 'h3',
-        label: 'Kedua-duanya sebenarnya merosakkan perut dan hati dengan cara kimia yang sama.',
-        discussionNote: 'Tidak tepat — struktur kimia yang berbeza menghasilkan tindak balas yang berbeza pada tisu perut dan enzim hati.',
+        label: 'Asam jawa hanya untuk melegakan sakit kepala dalam keadaan sedar.',
+        discussionNote: 'Tidak tepat — jus buah asam jawa melegakan batuk dan mencerahkan kulit.',
       },
     ],
     causalChain: {
-      step1Molecule: 'Aspirin mempunyai kumpulan asid (-COOH) yang membebaskan ion H+ dan melemahkan lapisan mukus perut; Parasetamol pula neutral.',
-      step2Body: 'Pada dos selamat, hati menggunakan perisai antioksidan (glutation) untuk meneutralkan Parasetamol. Melebihi 4000 mg/hari, perisai habis dan sisa toksik menyerang sel hati.',
-      step3Principle: 'Struktur kimia menentukan lokasi kesan sampingan, manakala dos menentukan had keselamatan organ.',
+      step1Fact: 'Halia: menyingkirkan angin dalam badan, mencegah selesema dan memanaskan badan.',
+      step2Reason: 'Lidah buaya: merawat penyakit kulit dan melegakan luka melecur. Ginseng: membina pertahanan badan dan menurunkan tekanan darah/kolesterol.',
+      step3Principle: 'Ubat tradisional diperoleh daripada tumbuhan herba atau haiwan tanpa pemprosesan kimia.',
     },
-    deepChemNote: 'Keasidan kumpulan karboksilik (-COOH) berbanding had kadar penyahtoksikan glutation/NAPQI di hati.',
-    kssmRef: 'Jadual 5.7 Analgesik (m.s. 182)',
+    kssmRef: 'Uji Diri 5.4 No. 1 · Rajah 5.13 (m.s. 181, 186)',
   },
   {
-    id: 'm2',
-    title: 'Situasi 2: Siti Sudah Sihat Hari ke-3 — Mengapa Doktor Tetap Arah Habiskan Antibiotik?',
-    dailySituation:
-      'Selepas 3 hari mengambil penisilin daripada tempoh 7 hari, demam Siti reda dan tekaknya tidak lagi sakit. Dia bercadang menyimpan baki ubat untuk kegunaan masa depan.',
-    questionWhy: 'Mengapakah berhenti awal menyebabkan jangkitan berulang yang lebih sukar dirawat? Siapakah yang sebenarnya menjadi imun?',
+    id: 'u2',
+    title: 'Uji Diri 5.4 (Soalan 2): Lima Jenis Ubat Moden',
+    dailySituation: 'Nyatakan lima jenis ubat moden seperti yang dikelaskan dalam Rajah 5.14.',
+    questionWhy: 'Apakah lima kumpulan utama ubat moden dalam sukatan Kimia Tingkatan 5?',
     hypotheses: [
       {
         id: 'h1',
-        label: 'Badan Siti akan menjadi kebal dan tidak dapat menyerap ubat lagi pada masa depan.',
-        discussionNote: 'Salah tanggapan paling kerap! Bukan badan manusia yang menjadi imun, sebaliknya populasi bakteria yang berubah.',
+        label: 'Aspirin, Parasetamol, Kodeina, Penisilin dan Streptomisin.',
+        discussionNote: 'Itu ialah nama contoh ubat bagi Analgesik dan Antibiotik, bukan lima jenis utama ubat moden.',
       },
       {
         id: 'h2',
-        label: 'Baki bakteria yang lebih kebal terselamat pada Hari ke-3 lalu membiak menggantikan bakteria yang lemah.',
-        discussionNote: 'Ramalan tepat! Inilah pemilihan semula jadi apabila kepekatan antibiotik dihentikan terlalu awal.',
+        label: 'Analgesik, Antimikrob, Ubat psikotik, Antialergi dan Kortikosteroid.',
+        discussionNote: 'Tepat sekali! Inilah lima jenis ubat moden dalam Rajah 5.14 (m.s. 182).',
       },
       {
         id: 'h3',
-        label: 'Penisilin yang tidak habis akan bertukar menjadi plasebo jika dibiarkan lama.',
-        discussionNote: 'Plasebo ialah bahan tanpa bahan ubat sejak awal; masalah di sini berlaku di dalam populasi bakteria tubuh.',
+        label: 'Kosmetik rias, Kosmetik perawatan, Pewangi, Pengemulsi dan Pengawet.',
+        discussionNote: 'Tidak tepat — itu ialah pengelasan dan bahan asas kosmetik.',
       },
     ],
     causalChain: {
-      step1Molecule: 'Antibiotik menyerang dinding sel peptidoglikan bakteria. Pada Hari ke-3, ~80% bakteria lemah sudah mati maka simptom hilang.',
-      step2Body: 'Baki ~20% bakteria yang lebih tahan masih hidup. Tanpa antibiotik pada Hari 4–7, bakteria tahan ini membiak semula dan menguasai badan.',
-      step3Principle: 'Tempoh dos penuh mengekalkan kepekatan ubat cukup tinggi supaya tiada bakteria kebal tertinggal untuk membina rintangan.',
+      step1Fact: 'Analgesik (contoh: aspirin, parasetamol, kodeina) dan Antimikrob (antibiotik, antiseptik, disinfektan).',
+      step2Reason: 'Ubat psikotik (contoh: haloperidol), Antialergi (antihistamin) dan Kortikosteroid (contoh: prednisolone).',
+      step3Principle: 'Ubat moden dihasilkan melalui teknologi baharu dan digunakan mengikut preskripsi.',
     },
-    deepChemNote: 'Pemilihan evolusi mikrob: kejatuhan kepekatan antibiotik di bawah paras perencatan memihak kepada bakteria mutan rintang.',
-    kssmRef: 'Jadual 5.7 Antimikrob & Gambar foto 5.10 (m.s. 182–183)',
+    kssmRef: 'Uji Diri 5.4 No. 2 · Rajah 5.14 (m.s. 182, 186)',
   },
   {
-    id: 'm3',
-    title: 'Situasi 3: Mengapa Minyak & Air dalam Losen Buatan Sendiri Terpisah Semula Selepas 5 Minit?',
-    dailySituation:
-      'Murid mengacau minyak zaitun, air mawar dan pewarna semula jadi dengan laju untuk membuat losen kulit, tetapi campuran itu segera terpisah menjadi dua lapisan.',
-    questionWhy: 'Apakah daya antara molekul yang menolak minyak keluar daripada air, dan molekul jenis apakah yang boleh mendamaikannya?',
+    id: 'u3',
+    title: 'Uji Diri 5.4 (Soalan 3): Ubat Sesuai untuk Sakit Kepala Aida',
+    dailySituation: 'Aida berasa sakit kepala.',
+    questionWhy: 'Apakah jenis ubat yang sesuai untuk meredakan kesakitannya?',
     hypotheses: [
       {
         id: 'h1',
-        label: 'Minyak lebih ringan sahaja; jika dikacau lebih lama dengan pemekat, ia akan larut dengan sendiri.',
-        discussionNote: 'Ketumpatan menentukan lapisan mana di atas, tetapi sebab utama ia tidak bercampur ialah perbezaan kekutuban molekul.',
+        label: 'Antibiotik seperti penisilin untuk membunuh bakteria di kepala.',
+        discussionNote: 'Tidak sesuai — antibiotik membunuh atau merencatkan bakteria, bukan meredakan sakit kepala.',
       },
       {
         id: 'h2',
-        label: 'Air berkutub manakala minyak tak berkutub; molekul dwisifat (Pengemulsi) diperlukan untuk menyatukannya.',
-        discussionNote: 'Tepat sekali! Molekul pengemulsi bertindak sebagai jambatan antara air dengan minyak.',
+        label: 'Analgesik seperti parasetamol atau aspirin untuk melegakan sakit dalam keadaan sedar.',
+        discussionNote: 'Tepat! Analgesik melegakan sakit dalam keadaan sedar; jika Aida ada gastrik, elakkan aspirin.',
       },
       {
         id: 'h3',
-        label: 'Pengawet diperlukan supaya minyak tidak timbul di atas air.',
-        discussionNote: 'Pengawet menghalang pembiakan kulat dan bakteria dalam produk berair, bukan menyatukan minyak dengan air.',
+        label: 'Antiseptik seperti iodin disapu pada dahi.',
+        discussionNote: 'Tidak sesuai — antiseptik hanya untuk membunuh kuman pada luka luaran badan.',
       },
     ],
     causalChain: {
-      step1Molecule: 'Molekul air bercas separa (berkutub) dan saling menarik melalui ikatan hidrogen, menolak molekul minyak yang tidak berkutub keluar.',
-      step2Body: 'Pengemulsi seperti lesitin memiliki kepala suka air (hidrofilik) dan ekor suka minyak (hidrofobik) yang membalut titisan minyak membentuk campuran homogen.',
-      step3Principle: 'Perbezaan kekutuban diatasi oleh molekul pengemulsi yang menyatukan fasa air dan fasa minyak.',
+      step1Fact: 'Analgesik berfungsi melegakan sakit dalam keadaan sedar (contoh: parasetamol atau aspirin).',
+      step2Reason: 'Parasetamol perlu diambil mengikut sukatan dos yang betul; aspirin dielakkan bagi pesakit gastrik atau kanak-kanak.',
+      step3Principle: 'Pemilihan ubat mesti menepati fungsi, dos dan keadaan pesakit (5.4.2).',
     },
-    deepChemNote: 'Kepolaran ikatan kimia & pembentukan misel koloid yang menstabilkan emulsi kosmetik.',
-    kssmRef: 'Rajah 5.15 Bahan-bahan Asas Kosmetik (m.s. 185)',
+    kssmRef: 'Uji Diri 5.4 No. 3 · Jadual 5.7 (m.s. 182, 186)',
   },
   {
-    id: 'm4',
-    title: 'Situasi 4: Kulit Putih dalam 3 Hari — Apa Sebenarnya yang Terjadi di Bawah Lapisan Kulit?',
-    dailySituation:
-      'Satu krim malam tanpa nombor NOT menjanjikan kulit putih seawal 3 hari. Selepas beberapa minggu, kulit menjadi pedih di bawah matahari dan ujian kesihatan mengesan gangguan buah pinggang.',
-    questionWhy: 'Bagaimana bahan terlarang dalam krim itu menghasilkan kesan cerah sementara sebelum merosakkan kulit dan organ dalaman?',
+    id: 'u4',
+    title: 'Uji Diri 5.4 (Soalan 4): Tiga Jenis Kosmetik',
+    dailySituation: 'Berikan tiga jenis kosmetik beserta contoh dan cara memilih produk yang selamat.',
+    questionWhy: 'Apakah tiga pengelasan utama bahan kosmetik mengikut Rajah 5.16?',
     hypotheses: [
       {
         id: 'h1',
-        label: 'Krim itu membersihkan daki kulit sahaja dan tiada kaitan dengan buah pinggang.',
-        discussionNote: 'Logam berat seperti merkuri bersaiz amat kecil dan mampu meresap menembusi kulit ke dalam salur darah.',
+        label: 'Air, Pengemulsi dan Pengawet.',
+        discussionNote: 'Kurang tepat — air, pengemulsi dan pengawet ialah bahan asas kosmetik (Rajah 5.15), bukan jenis kosmetik.',
       },
       {
         id: 'h2',
-        label: 'Bahan terlarang menyekat pigmen pelindung melanin (maka UV menyerang kulit) dan menyerap ke darah merosakkan ginjal.',
-        discussionNote: 'Ramalan tepat! Mari susun rantaian kejadian bagi Merkuri, Hidrokuinon dan Steroid.',
+        label: 'Kosmetik rias, Kosmetik perawatan dan Pewangi.',
+        discussionNote: 'Tepat sekali! Pastikan juga produk berdaftar dengan NPRA dan bebas merkuri serta hidrokuinon.',
       },
       {
         id: 'h3',
-        label: 'Krim itu mengandungi pewarna putih seperti ferum(III) oksida yang menyaluti permukaan kulit.',
-        discussionNote: 'Pewarna sah kekal di permukaan dan tidak mengakibatkan hipersensitiviti UV atau kerosakan ginjal.',
+        label: 'Merkuri, Hidrokuinon dan Tretinoin.',
+        discussionNote: 'Tidak tepat — ketiga-tiganya ialah bahan kimia terlarang dalam kosmetik (Jadual 5.8).',
       },
     ],
     causalChain: {
-      step1Molecule: 'Hidrokuinon dan merkuri menyekat enzim pembuat melanin, manakala steroid (Betamethasone) mengecutkan salur darah supaya kulit tampak pucat segera.',
-      step2Body: 'Tanpa perisai melanin, sinaran UV merosakkan sel kulit hipersensitif; merkuri pula masuk ke salur darah lalu mengikat protein buah pinggang dan sistem saraf.',
-      step3Principle: 'Krim kosmetik yang sah (berdaftar NOT) kekal di luar kulit; bahan kimia terlarang menembusi ke organ dalaman.',
+      step1Fact: 'Kosmetik rias (bedak, gincu, celak, maskara), Kosmetik perawatan (krim, pelembap kulit, masker muka) dan Pewangi (deodoran, minyak wangi).',
+      step2Reason: 'Kosmetik digunakan secara luaran sahaja; elakkan bahan terlarang seperti merkuri, hidrokuinon, betamethasone valerate dan tretinoin.',
+      step3Principle: 'Pastikan kosmetik berdaftar dengan Bahagian Regulatori Farmasi Negara (NPRA).',
     },
-    deepChemNote: 'Perencatan enzim tirosinase (kehilangan perlindungan UV) dan ketoksikan logam berat Hg2+ terhadap kumpulan -SH protein nefron.',
-    kssmRef: 'Jadual 5.8 Bahan Kimia Terlarang (m.s. 186)',
+    kssmRef: 'Uji Diri 5.4 No. 4 · Rajah 5.16 & Jadual 5.8 (m.s. 185–186)',
   },
 ];
 
 export const QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: 'q1',
-    scenario: DAILY_MYSTERIES[0].dailySituation,
-    question: DAILY_MYSTERIES[0].questionWhy,
-    options: DAILY_MYSTERIES[0].hypotheses.map((h) => ({
+    scenario: DAILY_MYSTERIES[2].dailySituation,
+    question: DAILY_MYSTERIES[2].questionWhy,
+    options: DAILY_MYSTERIES[2].hypotheses.map((h) => ({
       id: h.id,
       label: h.label,
       explanation: h.discussionNote,
     })),
     correctOptionId: 'h2',
-    kssmRef: DAILY_MYSTERIES[0].kssmRef,
+    kssmRef: DAILY_MYSTERIES[2].kssmRef,
   },
 ];

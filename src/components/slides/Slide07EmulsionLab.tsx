@@ -58,10 +58,10 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
       <div className="shrink-0 flex items-end justify-between gap-3 border-b border-stone-200 dark:border-stone-800 pb-2.5">
         <div>
           <div className="text-[15px] font-bold text-blue-900 dark:text-blue-400">
-            5.4.4 · Bahan-bahan Asas Kosmetik (Rajah 5.15)
+            5.4.3 · Bahan-bahan Asas Kosmetik (Rajah 5.15 · m.s. 184–185)
           </div>
           <h2 className="font-display text-[28px] font-bold text-stone-900 dark:text-stone-50 mt-0.5 leading-tight">
-            Mengapa Minyak &amp; Air Terpisah — Dan Bagaimana Pengemulsi Menyatukannya
+            Tujuh Bahan Asas Kosmetik &amp; Peranan Pengemulsi
           </h2>
         </div>
 
@@ -72,7 +72,7 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-[14px] font-bold text-stone-800 dark:text-stone-200 hover:bg-stone-50 cursor-pointer"
           >
             <RotateCcw className="w-4 h-4" />
-            <span>Fasa Terpisah</span>
+            <span>Tanpa Pengemulsi</span>
           </button>
           <button
             type="button"
@@ -80,7 +80,7 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-stone-900 dark:bg-stone-100 text-[14px] font-bold text-white dark:text-stone-900 hover:bg-stone-800 cursor-pointer"
           >
             <Beaker className="w-4 h-4" />
-            <span>Campur Semua 7</span>
+            <span>Campur Semua</span>
           </button>
           <button
             type="button"
@@ -92,7 +92,7 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
             }`}
           >
             <Atom className="w-4 h-4" />
-            <span>Perincian</span>
+            <span>Huraian</span>
           </button>
         </div>
       </div>
@@ -128,17 +128,17 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
                   </span>
                 </div>
                 <p className="text-[14px] text-stone-800 dark:text-stone-200 mt-1 leading-snug">
-                  {interactions.molecularLens ? ing.molecularRole : ing.role}
+                  {interactions.molecularLens ? ing.simpleNote : ing.role}
                 </p>
-                <div className="text-[13px] font-semibold text-stone-500 mt-0.5">{ing.examples}</div>
+                <div className="text-[13px] font-semibold text-stone-500 mt-0.5">Contoh: {ing.examples}</div>
               </button>
             );
           })}
 
           <div className="rounded-2xl border border-amber-300 bg-amber-50/80 dark:bg-amber-950/30 px-3.5 py-2.5 flex flex-col justify-center">
-            <div className="text-[14px] font-bold text-amber-900 dark:text-amber-300">Prinsip Kekutuban</div>
+            <div className="text-[14px] font-bold text-amber-900 dark:text-amber-300">Fungsi Pengemulsi</div>
             <p className="text-[14px] text-stone-800 dark:text-stone-200 mt-0.5 leading-snug">
-              <strong>Air</strong> berkutub, <strong>Minyak</strong> tak berkutub — <strong>Pengemulsi</strong> menjadi jambatan mengikat kedua-duanya!
+              Membentuk <strong>campuran homogen</strong> antara <strong>air</strong> dan <strong>minyak</strong> supaya kosmetik tidak terpisah.
             </p>
           </div>
         </div>
@@ -148,7 +148,7 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
           className="col-span-6 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-4 flex flex-col justify-between gap-2.5"
         >
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[15px] font-bold text-stone-700 dark:text-stone-300">Pemerhatian Bikar &amp; Molekul</span>
+            <span className="text-[15px] font-bold text-stone-700 dark:text-stone-300">Pemerhatian Campuran Kosmetik</span>
             <span
               className={`text-[15px] font-bold ${
                 evalResult.isHomogeneous && em.pengawet ? 'text-emerald-700' : 'text-amber-700'
@@ -225,7 +225,7 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
                     <>
                       <rect x="42" y="94" width="100" height="56" fill={oilLayerFill} opacity="0.9" />
                       <text x="92" y="126" textAnchor="middle" fontSize="11.5" fill="#78350F" fontWeight="800">
-                        Minyak Sahaja
+                        Tiada Air
                       </text>
                     </>
                   )}
@@ -235,7 +235,7 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
                       <circle cx="58" cy="140" r="4.5" />
                       <circle cx="126" cy="138" r="5" />
                       <text x="92" y="144" textAnchor="middle" fontSize="10.5" fill="#3F6212" fontWeight="800">
-                        Kulat Tumbuh
+                        Mudah Rosak
                       </text>
                     </g>
                   )}
@@ -254,53 +254,43 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
 
             <div className="col-span-7 bg-[#FBF9F5] dark:bg-stone-950 rounded-2xl p-3">
               <div className="text-[13px] font-bold text-indigo-900 dark:text-indigo-300 mb-1">
-                Susunan Molekul: Bagaimana Pengemulsi Bekerja?
+                Kesan Penambahan Pengemulsi (Rajah 5.15)
               </div>
-              <svg viewBox="0 0 270 132" className="w-full h-32" aria-label="Gambar rajah molekul pengemulsi menyatukan air dan minyak">
+              <svg viewBox="0 0 270 132" className="w-full h-32" aria-label="Gambar rajah pengemulsi menyatukan air dan minyak">
                 {!em.pengemulsi ? (
                   <g>
                     <rect x="8" y="8" width="254" height="46" rx="10" fill="#FEF3C7" stroke="#D97706" strokeWidth="1.8" />
                     <text x="135" y="29" textAnchor="middle" fontSize="12.5" fontWeight="800" fill="#78350F">
-                      Minyak (Tak Berkutub / Tolak Air)
+                      Lapisan Minyak
                     </text>
                     <text x="135" y="46" textAnchor="middle" fontSize="11.5" fontWeight="600" fill="#92400E">
-                      Terapung di atas kerana enggan bercampur
+                      Terapung di atas dan tidak bercampur
                     </text>
 
                     <line x1="12" y1="66" x2="258" y2="66" stroke="#B91C1C" strokeWidth="2.5" strokeDasharray="5 4" />
 
                     <rect x="8" y="76" width="254" height="48" rx="10" fill="#DBEAFE" stroke="#1D4ED8" strokeWidth="1.8" />
                     <text x="135" y="98" textAnchor="middle" fontSize="12.5" fontWeight="800" fill="#1E3A8A">
-                      Air H2O (Berkutub / Tarik Sesama Air)
+                      Lapisan Air (Pelarut)
                     </text>
                     <text x="135" y="115" textAnchor="middle" fontSize="11.5" fontWeight="600" fill="#1E40AF">
-                      Tiada jambatan untuk memegang minyak
+                      Tiada pengemulsi untuk menyatukan campuran
                     </text>
                   </g>
                 ) : (
                   <g>
                     <rect x="8" y="8" width="254" height="116" rx="12" fill="#EFF6FF" stroke="#1D4ED8" strokeWidth="1.8" />
-                    <circle cx="135" cy="64" r="24" fill="#FCD34D" stroke="#B45309" strokeWidth="2" />
-                    <text x="135" y="68" textAnchor="middle" fontSize="12" fontWeight="800" fill="#78350F">
-                      Minyak
+                    <circle cx="88" cy="56" r="18" fill="#FCD34D" stroke="#B45309" strokeWidth="2" />
+                    <circle cx="135" cy="50" r="22" fill="#FCD34D" stroke="#B45309" strokeWidth="2" />
+                    <circle cx="182" cy="58" r="17" fill="#FCD34D" stroke="#B45309" strokeWidth="2" />
+                    <text x="135" y="54" textAnchor="middle" fontSize="11.5" fontWeight="800" fill="#78350F">
+                      Homogen
                     </text>
-
-                    {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => {
-                      const rad = (deg * Math.PI) / 180;
-                      const x1 = 135 + Math.cos(rad) * 23;
-                      const y1 = 64 + Math.sin(rad) * 23;
-                      const x2 = 135 + Math.cos(rad) * 38;
-                      const y2 = 64 + Math.sin(rad) * 38;
-                      return (
-                        <g key={deg}>
-                          <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#B45309" strokeWidth="3" strokeLinecap="round" />
-                          <circle cx={x2} cy={y2} r="5.5" fill="#1D4ED8" stroke="#FFFFFF" strokeWidth="1.5" />
-                        </g>
-                      );
-                    })}
-
-                    <text x="135" y="114" textAnchor="middle" fontSize="11.5" fontWeight="800" fill="#1E3A8A">
-                      Kepala Biru pegang Air · Ekor pegang Minyak!
+                    <text x="135" y="95" textAnchor="middle" fontSize="12" fontWeight="800" fill="#1E3A8A">
+                      Pengemulsi (Lesitin / Asid stearik)
+                    </text>
+                    <text x="135" y="113" textAnchor="middle" fontSize="11.5" fontWeight="600" fill="#1E40AF">
+                      Membentuk campuran homogen antara air dan minyak
                     </text>
                   </g>
                 )}
@@ -308,18 +298,24 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 text-center tabular-nums-clean">
+          <div className="grid grid-cols-3 gap-2 text-center">
             <div className="bg-[#FBF9F5] dark:bg-stone-950 rounded-xl py-2 px-1">
-              <div className="text-[13px] font-semibold text-stone-500">Kelikatan</div>
-              <div className="text-[18px] font-bold text-stone-900 dark:text-stone-100">{evalResult.viscosityScore}%</div>
+              <div className="text-[13px] font-semibold text-stone-500">Pemekat</div>
+              <div className={`text-[16px] font-bold ${evalResult.hasThickener ? 'text-emerald-700' : 'text-stone-700 dark:text-stone-300'}`}>
+                {evalResult.hasThickener ? 'Pekat' : 'Cair'}
+              </div>
             </div>
             <div className="bg-[#FBF9F5] dark:bg-stone-950 rounded-xl py-2 px-1">
-              <div className="text-[13px] font-semibold text-stone-500">Kelembapan</div>
-              <div className="text-[18px] font-bold text-stone-900 dark:text-stone-100">{evalResult.hydrationScore}%</div>
+              <div className="text-[13px] font-semibold text-stone-500">Pelembap</div>
+              <div className={`text-[16px] font-bold ${evalResult.hasMoisturizer ? 'text-emerald-700' : 'text-amber-700'}`}>
+                {evalResult.hasMoisturizer ? 'Lembap' : 'Cepat Kering'}
+              </div>
             </div>
             <div className="bg-[#FBF9F5] dark:bg-stone-950 rounded-xl py-2 px-1">
-              <div className="text-[13px] font-semibold text-stone-500">Tempoh Tahan</div>
-              <div className="text-[18px] font-bold text-stone-900 dark:text-stone-100">{evalResult.shelfLifeDays} hari</div>
+              <div className="text-[13px] font-semibold text-stone-500">Pengawet</div>
+              <div className={`text-[16px] font-bold ${evalResult.hasPreservative ? 'text-emerald-700' : 'text-red-700'}`}>
+                {evalResult.hasPreservative ? 'Terlindung' : 'Mudah Rosak'}
+              </div>
             </div>
           </div>
 
@@ -327,7 +323,7 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
             <div>{evalResult.diagnosis}</div>
             {interactions.molecularLens && (
               <div className="text-[14px] font-bold text-indigo-900 dark:text-indigo-300 mt-1">
-                Tahap Molekul: {evalResult.molecularNote}
+                Nota Rajah 5.15: {evalResult.molecularNote}
               </div>
             )}
           </div>

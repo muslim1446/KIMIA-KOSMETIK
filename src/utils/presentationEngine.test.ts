@@ -28,26 +28,27 @@ test('simulateAntibioticCourse differentiates full 7-day cure from stopping at d
   assert.equal(fullCourse.outcome, 'sembuh_sepenuhnya');
   assert.equal(fullCourse.points.length, 8);
   assert.ok(fullCourse.finalTotal <= 5);
-  assert.match(fullCourse.mechanismDetail, /peptidoglikan/i);
+  assert.match(fullCourse.mechanismDetail, /semua bakteria dibunuh/i);
 
   const stoppedEarly = simulateAntibioticCourse(3);
   assert.equal(stoppedEarly.outcome, 'rintangan_berulang');
   assert.ok(stoppedEarly.finalTotal > 40);
   assert.ok(stoppedEarly.resistanceRatio >= 70);
+  assert.match(stoppedEarly.mechanismDetail, /imun kepada antibiotik/i);
 });
 
-test('evaluateParacetamolDose flags hepatotoxicity risk and glutathione depletion above 4000 mg/day', () => {
+test('evaluateParacetamolDose flags liver damage risk above therapeutic dose', () => {
   const safe = evaluateParacetamolDose(2000);
   assert.equal(safe.status, 'terapeutik');
-  assert.ok(safe.glutathioneShieldPercent > 60);
+  assert.ok(safe.liverSafePercent > 60);
 
   const overdose = evaluateParacetamolDose(6000);
   assert.equal(overdose.status, 'amaran_hati');
   assert.ok(overdose.liverLoadPercent > 80);
-  assert.ok(overdose.glutathioneShieldPercent < 25);
+  assert.ok(overdose.liverSafePercent < 25);
 });
 
-test('evaluateCosmeticEmulsion detects phase separation without pengemulsi and mold risk without pengawet', () => {
+test('evaluateCosmeticEmulsion detects separation without pengemulsi and complete Rajah 5.15 mix', () => {
   const separated = evaluateCosmeticEmulsion({
     air: true,
     pengemulsi: false,
@@ -58,8 +59,8 @@ test('evaluateCosmeticEmulsion detects phase separation without pengemulsi and m
     pewarna: false,
   });
   assert.equal(separated.isHomogeneous, false);
-  assert.match(separated.statusLabel, /Pemisahan Dua Fasa/);
-  assert.match(separated.molecularNote, /ikatan hidrogen/i);
+  assert.match(separated.statusLabel, /Terpisah/);
+  assert.match(separated.molecularNote, /lesitin/i);
 
   const fullStable = evaluateCosmeticEmulsion({
     air: true,
@@ -71,8 +72,10 @@ test('evaluateCosmeticEmulsion detects phase separation without pengemulsi and m
     pewarna: true,
   });
   assert.equal(fullStable.isHomogeneous, true);
-  assert.equal(fullStable.shelfLifeDays, 365);
-  assert.match(fullStable.statusLabel, /Stabil/);
+  assert.equal(fullStable.hasThickener, true);
+  assert.equal(fullStable.hasMoisturizer, true);
+  assert.equal(fullStable.hasPreservative, true);
+  assert.match(fullStable.statusLabel, /Homogen & Lengkap/);
 });
 
 test('assessDrugForPatient enforces KSSM Table 5.7 safety rules', () => {
@@ -96,7 +99,7 @@ test('assessDrugForPatient enforces KSSM Table 5.7 safety rules', () => {
 
   const allergyAdult = assessDrugForPatient('antialergi', 'dewasa_sihat');
   assert.equal(allergyAdult.suitable, true);
-  assert.match(allergyAdult.mechanismReason, /Antihistamin/);
+  assert.match(allergyAdult.mechanismReason, /xerostomia/i);
 
   const psychoticWound = assessDrugForPatient('psikotik', 'luka_luaran');
   assert.equal(psychoticWound.suitable, false);

@@ -26,9 +26,9 @@ export interface EmulsionState {
 
 export interface EmulsionEvaluation {
   isHomogeneous: boolean;
-  viscosityScore: number;
-  hydrationScore: number;
-  shelfLifeDays: number;
+  hasThickener: boolean;
+  hasMoisturizer: boolean;
+  hasPreservative: boolean;
   hasFragrance: boolean;
   hasColorTint: boolean;
   statusLabel: string;
@@ -40,7 +40,7 @@ export interface ParacetamolDoseResult {
   status: 'rendah' | 'terapeutik' | 'amaran_hati';
   label: string;
   liverLoadPercent: number;
-  glutathioneShieldPercent: number;
+  liverSafePercent: number;
   toxicRiskNote: string;
 }
 
@@ -56,7 +56,7 @@ export interface DrugSafetyAssessment {
   riskLevel: 'selamat' | 'berjaga' | 'bahaya';
   headline: string;
   mechanismReason: string;
-  molecularDeepDive: string;
+  textbookNote: string;
 }
 
 export interface NpraCheckResult {
@@ -106,7 +106,8 @@ export function simulateAntibioticCourse(stopAtDay: number | null): AntibioticSi
 
   const last = points[points.length - 1];
   const finalTotal = last.totalBacteria;
-  const resistanceRatio = finalTotal > 0 ? Math.round((last.resistantBacteria / finalTotal) * 100) : 0;
+  const resistanceRatio =
+    finalTotal > 0 ? Math.round((last.resistantBacteria / finalTotal) * 100) : 0;
 
   if (stopAtDay !== null && stopAtDay < 7) {
     return {
@@ -114,9 +115,9 @@ export function simulateAntibioticCourse(stopAtDay: number | null): AntibioticSi
       finalTotal,
       resistanceRatio,
       outcome: 'rintangan_berulang',
-      summary: `Berhenti pada hari ke-${stopAtDay} membiarkan baki bakteria yang lebih kebal terus hidup dan membiak semula.`,
+      summary: `Berhenti pada hari ke-${stopAtDay}: baki bakteria terus hidup lalu menjadi imun kepada antibiotik dan penyakit berulang semula.`,
       mechanismDetail:
-        'Bukan badan kita yang menjadi kebal. Apabila kepekatan antibiotik jatuh pada Hari ke-3, bakteria berperisai dinding sel lebih tebal terselamat lalu membiak dan mewariskan rintangan.',
+        'Antibiotik tidak dihabiskan: bakteria yang terselamat menjadi imun kepada antibiotik (Jadual 5.7, m.s. 182).',
     };
   }
 
@@ -125,9 +126,9 @@ export function simulateAntibioticCourse(stopAtDay: number | null): AntibioticSi
     finalTotal,
     resistanceRatio,
     outcome: 'sembuh_sepenuhnya',
-    summary: 'Tempoh 7 hari dihabiskan: kepekatan antibiotik kekal cukup tinggi untuk membunuh semua bakteria.',
+    summary: 'Antibiotik dihabiskan: semua bakteria berjaya dibunuh atau direncatkan pertumbuhannya.',
     mechanismDetail:
-      'Antibiotik seperti Penisilin mengganggu pembentukan dinding sel peptidoglikan bakteria sehingga bakteria lemah dan kebal turut pecah sebelum sempat membiak.',
+      'Antibiotik perlu dihabiskan supaya semua bakteria dibunuh dan penyakit tidak berulang semula (Jadual 5.7, m.s. 182).',
   };
 }
 
@@ -136,69 +137,64 @@ export function evaluateParacetamolDose(dailyMg: number): ParacetamolDoseResult 
   if (mg < 1000) {
     return {
       status: 'rendah',
-      label: 'Dos rendah — molekul ubat terlalu sedikit untuk melegakan sakit',
-      liverLoadPercent: Math.round((mg / 4000) * 30),
-      glutathioneShieldPercent: 92,
-      toxicRiskNote: 'Hati menguraikan bahan ubat dengan sangat mudah tanpa kehabisan perisai.',
+      label: 'Dos rendah — ikut sukatan dan preskripsi doktor',
+      liverLoadPercent: 20,
+      liverSafePercent: 90,
+      toxicRiskNote: 'Parasetamol melegakan sakit dalam keadaan sedar apabila diambil mengikut dos.',
     };
   }
   if (mg <= 4000) {
-    const shield = Math.round(90 - ((mg - 1000) / 3000) * 35);
     return {
       status: 'terapeutik',
-      label: 'Dos selamat — perisai hati masih cukup menyahtoksin baki ubat',
-      liverLoadPercent: Math.round(25 + ((mg - 1000) / 3000) * 35),
-      glutathioneShieldPercent: shield,
-      toxicRiskNote: 'Molekul sisa dineutralkan oleh perisai antioksidan hati (glutation) sebelum keluar melalui air kencing.',
+      label: 'Dos betul — selamat untuk hati dan melegakan sakit',
+      liverLoadPercent: 40,
+      liverSafePercent: 80,
+      toxicRiskNote: 'Ubat adalah selamat jika diambil dengan betul mengikut preskripsi doktor.',
     };
   }
-  const excessRatio = (mg - 4000) / 4000;
   return {
     status: 'amaran_hati',
-    label: 'Melebihi had 4000 mg — perisai hati habis dan sel hati rosak!',
-    liverLoadPercent: Math.min(100, Math.round(70 + excessRatio * 30)),
-    glutathioneShieldPercent: Math.max(0, Math.round(30 - excessRatio * 30)),
-    toxicRiskNote: 'Apabila glutation habis, metabolit reaktif (NAPQI) mengikat terus protein sel hati dan menyebabkan kerosakan hati.',
+    label: 'Melebihi dos — boleh menyebabkan kerosakan hati!',
+    liverLoadPercent: 95,
+    liverSafePercent: 15,
+    toxicRiskNote: 'Parasetamol melebihi dos dapat menyebabkan kerosakan hati (Jadual 5.7, m.s. 182).',
   };
 }
 
 export function evaluateCosmeticEmulsion(state: EmulsionState): EmulsionEvaluation {
   const isHomogeneous = state.air && state.pengemulsi;
-  const viscosityScore = (state.pemekat ? 55 : 15) + (state.pengemulsi ? 25 : 0) + (state.pelembap ? 15 : 0);
-  const hydrationScore = (state.air ? 35 : 0) + (state.pelembap ? 55 : 0) + (state.pengemulsi ? 10 : 0);
-  const shelfLifeDays = state.pengawet ? 365 : state.air ? 5 : 30;
 
   let statusLabel = 'Campuran Tidak Lengkap';
-  let diagnosis = 'Tambahkan Air sebagai pelarut dan Pengemulsi untuk menyatukan fasa minyak dan air.';
-  let molecularNote = 'Air ialah molekul berkutub; minyak ialah rantai tak berkutub — kedua-duanya menolak satu sama lain.';
+  let diagnosis = 'Tambahkan Air sebagai bahan pelarut dan Pengemulsi untuk membentuk campuran homogen.';
+  let molecularNote = 'Pengemulsi menyatukan air dan minyak supaya bercampur sekata (Rajah 5.15, m.s. 185).';
 
   if (!state.air) {
-    statusLabel = 'Tiada Pelarut (Air)';
-    diagnosis = 'Hanya terdapat fasa minyak tanpa Air sebagai pelarut utama kosmetik.';
-    molecularNote = 'Tanpa molekul air berkutub, bahan larut air seperti pelembap natrium laktat tidak dapat larut sekata.';
+    statusLabel = 'Tiada Bahan Pelarut (Air)';
+    diagnosis = 'Tambahkan Air sebagai bahan pelarut utama dalam penghasilan kosmetik.';
+    molecularNote = 'Air ialah bahan pelarut asas dalam penghasilan kosmetik.';
   } else if (!state.pengemulsi) {
-    statusLabel = 'Pemisahan Dua Fasa';
-    diagnosis = 'Minyak terapung di atas air! Tambahkan Pengemulsi untuk membentuk campuran homogen.';
-    molecularNote = 'Molekul air menarik sesama air melalui ikatan hidrogen lalu menolak molekul minyak yang tidak berkutub ke permukaan.';
+    statusLabel = 'Air dan Minyak Terpisah';
+    diagnosis = 'Campuran tidak sekata! Tambahkan Pengemulsi untuk membentuk campuran homogen antara air dan minyak.';
+    molecularNote = 'Contoh pengemulsi: lesitin dan asid stearik.';
   } else if (!state.pengawet) {
-    statusLabel = 'Campuran Homogen (Mudah Rosak)';
-    diagnosis = 'Campuran sudah sekata, tetapi tanpa Pengawet produk mudah ditumbuhi bakteria dan kulat dalam 5 hari.';
-    molecularNote = 'Pengemulsi berjaya membentuk misel minyak dalam air, tetapi air bebas menjadi habitat sesuai bagi mikrob tanpa pengawet.';
+    statusLabel = 'Homogen (Tanpa Pengawet)';
+    diagnosis = 'Campuran sudah sekata, tetapi tanpa Pengawet produk mudah rosak.';
+    molecularNote = 'Pengawet seperti paraben dan formaldehid mengelakkan kerosakan kosmetik.';
   } else if (!state.pemekat || !state.pelembap) {
-    statusLabel = 'Campuran Stabil Asas';
-    diagnosis = 'Campuran sekata dan diawet. Tambahkan Pemekat dan Pelembap untuk mengunci air pada kulit.';
-    molecularNote = 'Pemekat membentuk jaringan rantai panjang yang memperlahankan pergerakan titisan; pelembap mengikat molekul air supaya tidak cepat kering.';
+    statusLabel = 'Homogen Asas';
+    diagnosis = 'Tambahkan Pemekat untuk memekatkan produk dan Pelembap untuk mengekalkan kelembapan.';
+    molecularNote = 'Contoh pemekat: gliserin dan xanthan gum; pelembap: gliserin dan natrium laktat.';
   } else {
-    statusLabel = 'Campuran Kosmetik Stabil & Sekata';
-    diagnosis = 'Semua 7 bahan asas lengkap: pelarut air, jambatan pengemulsi, pemekat, pelembap, pewangi, pengawet dan pewarna.';
-    molecularNote = 'Molekul pengemulsi (kepala hidrofilik + ekor hidrofobik) membalut setiap titisan minyak menjadi misel stabil dalam pelarut air.';
+    statusLabel = 'Campuran Homogen & Lengkap';
+    diagnosis = 'Kesemua tujuh bahan asas lengkap mengikut Rajah 5.15.';
+    molecularNote = 'Air, pengemulsi, pemekat, pelembap, pewangi, pengawet dan pewarna saling melengkapi.';
   }
 
   return {
     isHomogeneous,
-    viscosityScore: Math.min(100, viscosityScore),
-    hydrationScore: Math.min(100, hydrationScore),
-    shelfLifeDays,
+    hasThickener: state.pemekat,
+    hasMoisturizer: state.pelembap,
+    hasPreservative: state.pengawet,
     hasFragrance: state.pewangi,
     hasColorTint: state.pewarna,
     statusLabel,
@@ -213,28 +209,27 @@ export function assessDrugForPatient(drugId: string, patient: PatientProfileId):
       return {
         suitable: false,
         riskLevel: 'bahaya',
-        headline: 'DILARANG — Risiko Ulser Perut & Komplikasi',
+        headline: 'TIDAK SESUAI — Risiko Ulser Perut',
         mechanismReason:
-          'Aspirin bersifat asid dan tidak sesuai bagi pesakit gastrik atau kanak-kanak kerana boleh menghakis dinding perut hingga menyebabkan ulser perut.',
-        molecularDeepDive:
-          'Kumpulan asid karboksilik (-COOH) membebaskan ion H+ dan merencatkan penghasilan lapisan mukus pelindung dinding perut.',
+          'Aspirin bersifat asid dan tidak sesuai bagi pesakit gastrik atau diberi kepada kanak-kanak kerana dapat menyebabkan ulser perut.',
+        textbookNote: 'Rujuk Jadual 5.7 (m.s. 182): Perlu diambil mengikut preskripsi doktor.',
       };
     }
     if (patient === 'luka_luaran') {
       return {
         suitable: false,
         riskLevel: 'berjaga',
-        headline: 'Tidak Sesuai untuk Sapuan Luka',
-        mechanismReason: 'Aspirin ialah analgesik dalaman untuk melegakan sakit, bukan antiseptik untuk membunuh kuman pada luka.',
-        molecularDeepDive: 'Molekul Aspirin menyekat isyarat sakit melalui aliran darah, bukan membunuh mikrob di permukaan kulit.',
+        headline: 'Bukan untuk Luka Luaran',
+        mechanismReason: 'Aspirin ialah analgesik untuk melegakan sakit dalam keadaan sedar, bukan antiseptik luka.',
+        textbookNote: 'Gunakan antiseptik untuk bahagian luar badan.',
       };
     }
     return {
       suitable: true,
       riskLevel: 'selamat',
-      headline: 'Sesuai (Diambil Selepas Makan dengan Preskripsi)',
-      mechanismReason: 'Melegakan sakit dalam keadaan sedar bagi orang dewasa tanpa sejarah sakit gastrik.',
-      molecularDeepDive: 'Makanan bertindak sebagai penampan fizikal mengurangkan sentuhan terus sifat asid Aspirin pada dinding perut.',
+      headline: 'Sesuai Mengikut Preskripsi Doktor',
+      mechanismReason: 'Melegakan sakit dalam keadaan sedar bagi dewasa tanpa masalah gastrik.',
+      textbookNote: 'Perlu diambil mengikut preskripsi doktor.',
     };
   }
 
@@ -243,18 +238,17 @@ export function assessDrugForPatient(drugId: string, patient: PatientProfileId):
       return {
         suitable: false,
         riskLevel: 'berjaga',
-        headline: 'Tidak Merawat Jangkitan Luka Luaran',
-        mechanismReason: 'Parasetamol melegakan sakit secara dalaman; luka terbuka memerlukan antiseptik di permukaan kulit.',
-        molecularDeepDive: 'Parasetamol menenangkan isyarat sakit di sistem saraf pusat dan tidak memusnahkan bakteria pada luka.',
+        headline: 'Bukan untuk Luka Luaran',
+        mechanismReason: 'Parasetamol melegakan sakit dalam keadaan sedar; luka luaran memerlukan antiseptik.',
+        textbookNote: 'Parasetamol melebihi dos dapat menyebabkan kerosakan hati.',
       };
     }
     return {
       suitable: true,
       riskLevel: 'selamat',
-      headline: 'Sesuai Mengikut Sukatan Dos Tepat',
-      mechanismReason:
-        'Tidak bersifat asid seperti Aspirin maka lebih lembut pada perut, tetapi dos berlebihan boleh menyebabkan kerosakan hati.',
-      molecularDeepDive: 'Molekul neutral ini mengelakkan hakisan asid perut; hati meneutralkannya dalam dos harian selamat (<= 4000 mg).',
+      headline: 'Sesuai Mengikut Dos Betul',
+      mechanismReason: 'Melegakan sakit dalam keadaan sedar, namun melebihi dos dapat menyebabkan kerosakan hati.',
+      textbookNote: 'Perlu diambil mengikut preskripsi doktor dan tidak melebihi dos.',
     };
   }
 
@@ -263,27 +257,28 @@ export function assessDrugForPatient(drugId: string, patient: PatientProfileId):
       return {
         suitable: false,
         riskLevel: 'bahaya',
-        headline: 'AMARAN MAUT — Rujuk Kad Alahan Ubat!',
+        headline: 'BAHAYA — Alahan Boleh Membawa Maut',
         mechanismReason:
-          'Pesakit mempunyai alahan kepada Penisilin. Pengambilannya mencetuskan tindak balas alahan serius yang boleh membawa maut.',
-        molecularDeepDive: 'Sistem imun tersalah anggap struktur molekul cincin beta-laktam Penisilin sebagai ancaman lalu membebaskan histamin melampau.',
+          'Alahan dapat membawa maut. Pesakit dengan alahan penisilin akan diberikan Kad Alahan Ubat.',
+        textbookNote: 'Maklumkan doktor sebelum menerima antibiotik.',
       };
     }
     if (patient === 'luka_luaran') {
       return {
         suitable: false,
         riskLevel: 'berjaga',
-        headline: 'Bukan Pilihan Pertama Luka Kecil',
-        mechanismReason: 'Luka luaran kecil disapu antiseptik; antibiotik hanya diambil atas preskripsi doktor bagi jangkitan bakteria.',
-        molecularDeepDive: 'Penggunaan antibiotik sewenang-wenangnya tanpa jangkitan bakteria nyata mempercepatkan rintangan antibiotik.',
+        headline: 'Perlu Preskripsi Doktor',
+        mechanismReason: 'Luka luaran kecil disapu antiseptik; antibiotik diambil atas arahan doktor untuk jangkitan bakteria.',
+        textbookNote: 'Antibiotik perlu dihabiskan supaya semua bakteria dibunuh.',
       };
     }
     return {
       suitable: true,
       riskLevel: 'selamat',
-      headline: 'Sesuai (Wajib Dihabiskan Sepenuhnya)',
-      mechanismReason: 'Membunuh atau merencatkan pertumbuhan bakteria; perlu dihabiskan supaya bakteria tidak menjadi imun.',
-      molecularDeepDive: 'Antibiotik menyasarkan struktur khas bakteria (seperti dinding peptidoglikan) tanpa merosakkan sel manusia.',
+      headline: 'Sesuai (Perlu Dihabiskan)',
+      mechanismReason:
+        'Membunuh atau merencatkan pertumbuhan bakteria. Perlu dihabiskan supaya bakteria tidak menjadi imun.',
+      textbookNote: 'Jika tidak dihabiskan, penyakit akan berulang semula.',
     };
   }
 
@@ -292,17 +287,17 @@ export function assessDrugForPatient(drugId: string, patient: PatientProfileId):
       return {
         suitable: true,
         riskLevel: 'selamat',
-        headline: 'Tepat — Antiseptik untuk Bahagian Luar Badan',
-        mechanismReason: 'Hidrogen peroksida, iodin dan asid borik membunuh kuman pada luka luaran dan tidak boleh dimakan.',
-        molecularDeepDive: 'Bertindak mengoksidakan dan menyahaktifkan protein mikrob di permukaan luka dalam kepekatan lembut untuk tisu kulit.',
+        headline: 'Sesuai untuk Bahagian Luar Badan',
+        mechanismReason: 'Hidrogen peroksida, iodin dan asid borik digunakan di bahagian luar badan dan tidak dimakan.',
+        textbookNote: 'Hanya disapu pada bahagian luaran sahaja.',
       };
     }
     return {
       suitable: false,
       riskLevel: 'bahaya',
-      headline: 'TIDAK BOLEH DIMAKAN — Bahagian Luaran Sahaja',
-      mechanismReason: 'Antiseptik hanya disapu pada bahagian luaran badan dan berbahaya jika ditelan ke dalam sistem penghadaman.',
-      molecularDeepDive: 'Bahan pengoksida seperti hidrogen peroksida atau iodin boleh mencederakan sel mukosa usus jika dimakan.',
+      headline: 'TIDAK DIMAKAN — Kegunaan Luaran Sahaja',
+      mechanismReason: 'Antiseptik hanya disapu pada bahagian luaran sahaja dan berbahaya jika dimakan.',
+      textbookNote: 'Rujuk Jadual 5.7 (m.s. 182).',
     };
   }
 
@@ -312,8 +307,8 @@ export function assessDrugForPatient(drugId: string, patient: PatientProfileId):
       riskLevel: 'bahaya',
       headline: 'BUKAN UNTUK MANUSIA — Objek Bukan Hidup Sahaja',
       mechanismReason:
-        'Disinfektan seperti alkohol dan formaldehid memusnahkan patogen pada lantai dan sistem perparitan, bukan pada luka atau tubuh.',
-      molecularDeepDive: 'Menyahaslian protein dan membran sel secara agresif tanpa memilih — membunuh kedua-dua patogen dan tisu manusia yang hidup.',
+        'Disinfektan (alkohol dan formaldehid) memusnahkan patogen pada objek bukan hidup seperti lantai dan sistem perparitan.',
+      textbookNote: 'Tidak boleh digunakan pada tubuh manusia.',
     };
   }
 
@@ -322,17 +317,17 @@ export function assessDrugForPatient(drugId: string, patient: PatientProfileId):
       return {
         suitable: false,
         riskLevel: 'bahaya',
-        headline: 'DILARANG Tanpa Arahan Pakar',
-        mechanismReason: 'Kodeina menyebabkan rasa mengantuk kuat dan berisiko ketagihan serta gangguan pernafasan pada kanak-kanak.',
-        molecularDeepDive: 'Molekul Kodeina mengikat reseptor opioid di sistem saraf pusat dan memperlahankan isyarat kawalan saraf.',
+        headline: 'Perlu Kawalan Ketat Doktor',
+        mechanismReason: 'Kodeina menyebabkan mengantuk dan berisiko ketagihan jika disalah guna.',
+        textbookNote: 'Diambil mengikut preskripsi doktor sahaja.',
       };
     }
     return {
       suitable: true,
       riskLevel: 'berjaga',
-      headline: 'Preskripsi Terkawal — Kesan Mengantuk & Risiko Ketagihan',
-      mechanismReason: 'Melegakan sakit, batuk dan cirit-birit, namun menyebabkan mengantuk dan risiko ketagihan jika disalah guna.',
-      molecularDeepDive: 'Sebahagian Kodeina ditukar dalam badan untuk menyekat isyarat sakit dan refleks batuk di otak.',
+      headline: 'Preskripsi Doktor — Kesan Mengantuk',
+      mechanismReason: 'Melegakan sakit, rawatan batuk dan cirit birit; menyebabkan berasa mengantuk.',
+      textbookNote: 'Penyalahgunaan kodeina menyebabkan ketagihan (Gambar foto 5.10).',
     };
   }
 
@@ -341,19 +336,18 @@ export function assessDrugForPatient(drugId: string, patient: PatientProfileId):
       return {
         suitable: false,
         riskLevel: 'bahaya',
-        headline: 'Tidak Berkaitan — Rawatan Mental Sahaja',
-        mechanismReason:
-          'Ubat psikotik (Haloperidol, Klorpromazin, Klozapin) merawat gejala psikosis dalam sistem saraf, bukan luka kulit.',
-        molecularDeepDive: 'Berfungsi melaraskan isyarat neurotransmiter (seperti dopamina) di otak, bukan membasmi mikrob.',
+        headline: 'Tidak Berkaitan dengan Luka',
+        mechanismReason: 'Ubat psikotik (haloperidol, klorpromazin, klozapin) merawat psikosis, bukan luka kulit.',
+        textbookNote: 'Diambil atas preskripsi doktor.',
       };
     }
     return {
       suitable: patient === 'dewasa_sihat',
       riskLevel: 'berjaga',
-      headline: 'Preskripsi Pakar & Pemantauan Ketat',
+      headline: 'Diambil atas Preskripsi Doktor',
       mechanismReason:
-        'Diambil atas preskripsi doktor bagi merawat psikosis; berisiko menyebabkan pergerakan muka dan badan tidak normal, kejang dan menggeletar.',
-      molecularDeepDive: 'Penyekatan reseptor dopamina secara meluas turut menjejaskan laluan saraf pengawal pergerakan otot.',
+        'Merawat psikosis; boleh mengakibatkan pergerakan muka dan badan tidak normal, kejang dan menggeletar.',
+      textbookNote: 'Hanya digunakan atas arahan doktor.',
     };
   }
 
@@ -362,19 +356,18 @@ export function assessDrugForPatient(drugId: string, patient: PatientProfileId):
       return {
         suitable: false,
         riskLevel: 'berjaga',
-        headline: 'Bukan Antiseptik Luka',
-        mechanismReason:
-          'Antihistamin melegakan hidung berair dan kegatalan, bukan membunuh bakteria pada luka terbuka.',
-        molecularDeepDive: 'Menyekat reseptor histamin bagi mengurangkan tindak balas alergi, tanpa kesan antibakteria.',
+        headline: 'Bukan untuk Luka Luaran',
+        mechanismReason: 'Antihistamin melegakan hidung berair dan kegatalan, bukan merawat luka luaran.',
+        textbookNote: 'Hanya boleh diambil atas preskripsi doktor.',
       };
     }
     return {
       suitable: true,
       riskLevel: 'berjaga',
-      headline: 'Melegakan Alahan (Awas Kesan Mengantuk)',
+      headline: 'Preskripsi Doktor Sahaja',
       mechanismReason:
-        'Antihistamin melegakan hidung berair dan kegatalan, namun mengakibatkan mengantuk; dos tinggi menyebabkan mulut terasa kering (xerostomia), gangguan penglihatan dan sembelit.',
-      molecularDeepDive: 'Antihistamin bersaing menduduki tapak pengikatan histamin supaya pembuluh darah tidak membengkak atau berair.',
+        'Melegakan hidung berair dan kegatalan; mengantuk dan dos tinggi menyebabkan mulut kering (xerostomia), gangguan penglihatan dan sembelit.',
+      textbookNote: 'Hanya boleh diambil atas preskripsi doktor (Jadual 5.7, m.s. 183).',
     };
   }
 
@@ -383,19 +376,19 @@ export function assessDrugForPatient(drugId: string, patient: PatientProfileId):
       return {
         suitable: false,
         riskLevel: 'bahaya',
-        headline: 'Elakkan pada Luka Terbuka Tanpa Arahan Doktor',
+        headline: 'Guna atas Preskripsi Doktor Sahaja',
         mechanismReason:
-          'Kortikosteroid (Betamethasone valerate, Prednisolone) meredakan radang, bukan membunuh kuman.',
-        molecularDeepDive: 'Penindasan tindak balas imun setempat boleh melambatkan pertahanan semula jadi kulit terhadap kuman luka.',
+          'Kortikosteroid (betamethasone valerate atau prednisolone) melegakan radang, bukan membunuh kuman.',
+        textbookNote: 'Hanya boleh diambil atas preskripsi doktor.',
       };
     }
     return {
       suitable: patient === 'dewasa_sihat',
       riskLevel: 'berjaga',
-      headline: 'Preskripsi Doktor — Elakkan Guna Jangka Panjang',
+      headline: 'Preskripsi Doktor — Elakkan Jangka Panjang',
       mechanismReason:
-        'Meredakan bengkak, alergi, asma dan artritis; pengambilan jangka panjang menyebabkan muka sembap (moon face), tekanan darah tinggi dan kenaikan gula darah.',
-      molecularDeepDive: 'Hormon steroid sintetik meniru kortisol untuk meredakan keradangan, tetapi dos berpanjangan mengganggu metabolisme garam dan glukosa.',
+        'Melegakan bengkak, kemerahan, gatal, alergi, asma dan artritis; jangka panjang menyebabkan muka sembap (moon face), tekanan darah tinggi dan kenaikan gula darah.',
+      textbookNote: 'Hanya boleh diambil atas preskripsi doktor (Jadual 5.7, m.s. 183).',
     };
   }
 
@@ -403,8 +396,8 @@ export function assessDrugForPatient(drugId: string, patient: PatientProfileId):
     suitable: patient === 'dewasa_sihat',
     riskLevel: patient === 'dewasa_sihat' ? 'berjaga' : 'bahaya',
     headline: 'Memerlukan Preskripsi Doktor',
-    mechanismReason: 'Sentiasa rujuk doktor atau ahli farmasi sebelum mengambil ubat moden mengikut keadaan pesakit.',
-    molecularDeepDive: 'Keberkesanan dan keselamatan molekul bergantung pada dos dan kondisi biologi pesakit.',
+    mechanismReason: 'Ambil ubat mengikut preskripsi doktor supaya selamat dan berkesan.',
+    textbookNote: 'Ubat selamat jika diambil dengan betul (m.s. 181).',
   };
 }
 
@@ -414,25 +407,25 @@ export function validateNpraCode(rawCode: string): NpraCheckResult {
     return {
       validFormat: true,
       category: 'ubat_berdaftar',
-      label: 'Format Nombor Pendaftaran Ubat NPRA (MAL) Sah',
-      guidance: 'Menunjukkan produk ubat/tradisional melalui semakan ketulenan bahan aktif dan had bahan cemar oleh NPRA.',
-      chemicalCheckSummary: 'Ubat Berdaftar: sukatan dos, kestabilan dan ketiadaan logam berat atau steroid tersembunyi disemak.',
+      label: 'Nombor Pendaftaran Ubat NPRA (MAL)',
+      guidance: 'Diselia oleh Bahagian Regulatori Farmasi Negara (NPRA) untuk kualiti dan keselamatan ubat.',
+      chemicalCheckSummary: 'Ubat berdaftar (tradisional atau moden) yang memenuhi piawaian keselamatan KKM.',
     };
   }
   if (/^NOT\d{9}[A-Z]$/.test(code)) {
     return {
       validFormat: true,
       category: 'kosmetik_bernotifikasi',
-      label: 'Format Nombor Notifikasi Kosmetik (NOT) Dikenali',
-      guidance: 'Menunjukkan produk kosmetik kegunaan luaran berdaftar notifikasi dan disaring bebas bahan kimia terlarang.',
-      chemicalCheckSummary: 'Kosmetik Bernotifikasi: disahkan untuk kegunaan luaran serta bebas merkuri, hidrokuinon dan tretinoin.',
+      label: 'Nombor Notifikasi Kosmetik NPRA (NOT)',
+      guidance: 'Kosmetik kegunaan luaran yang berdaftar dengan Bahagian Regulatori Farmasi Negara (NPRA).',
+      chemicalCheckSummary: 'Kosmetik bernotifikasi di bawah Peraturan Kawalan Dadah dan Kosmetik 1984.',
     };
   }
   return {
     validFormat: false,
     category: 'tidak_sah',
-    label: 'Nombor Tidak Menepati Format Rasmi NPRA',
-    guidance: 'Berhati-hati dengan produk tanpa nombor MAL atau NOT kerana tiada pengesahan dos dan berisiko dicampur racun berjadual.',
-    chemicalCheckSummary: 'Amaran Kimia: kandungan bahan aktif tidak diketahui dan berisiko mengandungi merkuri, steroid atau logam berat.',
+    label: 'Bukan Format Rasmi MAL atau NOT',
+    guidance: 'Elakkan produk tanpa pendaftaran NPRA kerana berisiko mengandungi bahan berbahaya.',
+    chemicalCheckSummary: 'Tiada jaminan keselamatan atau pengesahan dos daripada pihak berkuasa.',
   };
 }

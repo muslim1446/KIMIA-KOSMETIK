@@ -13,7 +13,7 @@ interface CosmeticProductItem {
   category: 'rias' | 'perawatan' | 'pewangi';
   categoryLabel: string;
   purpose: string;
-  chemicalNote: string;
+  textbookNote: string;
   actionZone: 'atas_kulit' | 'lapisan_epidermis' | 'udara';
 }
 
@@ -22,54 +22,54 @@ const COSMETIC_ITEMS: CosmeticProductItem[] = [
     id: 'bedak',
     name: 'Bedak',
     category: 'rias',
-    categoryLabel: 'Kosmetik Rias',
-    purpose: 'Menyerap minyak berlebihan dan menyekatakan warna permukaan wajah.',
-    chemicalNote: 'Serbuk mineral halus + pigmen pepejal tidak larut duduk di atas permukaan kulit.',
+    categoryLabel: 'Kosmetik rias',
+    purpose: 'Digunakan untuk mencantikkan wajah.',
+    textbookNote: 'Disapu secara luaran pada permukaan wajah.',
     actionZone: 'atas_kulit',
   },
   {
     id: 'gincu',
     name: 'Gincu',
     category: 'rias',
-    categoryLabel: 'Kosmetik Rias',
-    purpose: 'Memberikan warna pada bibir dan melindunginya daripada kekeringan.',
-    chemicalNote: 'Lilin + minyak + pigmen warna (Ferum(III) oksida) menyaluti permukaan bibir.',
+    categoryLabel: 'Kosmetik rias',
+    purpose: 'Digunakan untuk mencantikkan wajah dengan memberi warna pada bibir.',
+    textbookNote: 'Contoh kosmetik rias untuk kegunaan luaran bibir.',
     actionZone: 'atas_kulit',
   },
   {
     id: 'maskara',
-    name: 'Pensel Alis, Celak & Maskara',
+    name: 'Pensel alis, celak & maskara',
     category: 'rias',
-    categoryLabel: 'Kosmetik Rias',
-    purpose: 'Membentuk alis, menebalkan bulu mata dan menyerlahkan garisan mata.',
-    chemicalNote: 'Pemekat dan pigmen warna melekat di luar bulu mata dan garisan kulit.',
+    categoryLabel: 'Kosmetik rias',
+    purpose: 'Digunakan untuk mencantikkan wajah di bahagian mata dan kening.',
+    textbookNote: 'Tersenarai sebagai contoh kosmetik rias dalam Rajah 5.16.',
     actionZone: 'atas_kulit',
   },
   {
     id: 'pemerah_pipi',
-    name: 'Pemerah Pipi & Pembayang Mata',
+    name: 'Pemerah pipi & pembayang mata',
     category: 'rias',
-    categoryLabel: 'Kosmetik Rias',
-    purpose: 'Menambahkan warna untuk mencantikkan wajah secara luaran.',
-    chemicalNote: 'Zarahan pigmen mineral memantulkan warna tertentu di lapisan atas kulit.',
+    categoryLabel: 'Kosmetik rias',
+    purpose: 'Digunakan untuk mencantikkan wajah.',
+    textbookNote: 'Memberikan warna pada pipi dan kelopak mata secara luaran.',
     actionZone: 'atas_kulit',
   },
   {
     id: 'krim_pelembap',
-    name: 'Krim & Pelembap Kulit',
+    name: 'Krim & pelembap kulit',
     category: 'perawatan',
-    categoryLabel: 'Kosmetik Perawatan',
-    purpose: 'Merawat kekeringan kulit dengan mengekalkan kelembapan.',
-    chemicalNote: 'Emulsi minyak + air bersama pelembap (gliserin) mengikat air di lapisan luar kulit.',
+    categoryLabel: 'Kosmetik perawatan',
+    purpose: 'Rawatan pada tubuh untuk menjaga kesihatan dan kelembapan kulit.',
+    textbookNote: 'Contoh kosmetik perawatan bagi kegunaan luaran tubuh.',
     actionZone: 'lapisan_epidermis',
   },
   {
     id: 'masker',
-    name: 'Masker Muka',
+    name: 'Masker muka',
     category: 'perawatan',
-    categoryLabel: 'Kosmetik Perawatan',
-    purpose: 'Membersih dan menyegarkan permukaan kulit wajah.',
-    chemicalNote: 'Pelarut air, pemekat dan pelembap melembutkan lapisan luar kulit.',
+    categoryLabel: 'Kosmetik perawatan',
+    purpose: 'Rawatan pada tubuh untuk membersih dan menyegarkan kulit wajah.',
+    textbookNote: 'Contoh kosmetik perawatan dalam Rajah 5.16.',
     actionZone: 'lapisan_epidermis',
   },
   {
@@ -77,17 +77,17 @@ const COSMETIC_ITEMS: CosmeticProductItem[] = [
     name: 'Deodoran',
     category: 'pewangi',
     categoryLabel: 'Pewangi',
-    purpose: 'Mengurangkan bau badan dan memberikan kesegaran luaran.',
-    chemicalNote: 'Mengandungi pewangi (minyak pati mudah meruap) untuk mengatasi bau.',
+    purpose: 'Memberikan haruman dan membantu mengekalkan kesegaran badan.',
+    textbookNote: 'Contoh pewangi untuk kegunaan luaran dalam Rajah 5.16.',
     actionZone: 'udara',
   },
   {
     id: 'minyak_wangi',
-    name: 'Minyak Wangi',
+    name: 'Minyak wangi',
     category: 'pewangi',
     categoryLabel: 'Pewangi',
     purpose: 'Memberikan haruman yang menyenangkan.',
-    chemicalNote: 'Molekul aromatik kecil mudah meruap menjadi gas di udara lalu dikesan oleh hidung.',
+    textbookNote: 'Mengandungi bahan pewangi bagi menghasilkan aroma menyenangkan.',
     actionZone: 'udara',
   },
 ];
@@ -102,26 +102,31 @@ export const Slide06CosmeticTypes: React.FC<Slide06Props> = ({ interactions, onP
     COSMETIC_ITEMS.find((i) => i.id === interactions.selectedCosmeticItemId) ?? COSMETIC_ITEMS[1];
 
   return (
-    <div className="h-full w-full flex flex-col gap-4 px-10 py-6 select-none">
-      <div className="shrink-0 flex items-end justify-between gap-4 border-b border-stone-200 dark:border-stone-800 pb-3">
+    <div className="h-full w-full flex flex-col gap-3.5 px-10 py-6 select-none">
+      <div className="shrink-0 flex items-end justify-between gap-4 border-b border-stone-200 dark:border-stone-800 pb-2.5">
         <div>
           <div className="text-[15px] font-bold text-emerald-800 dark:text-emerald-400">
-            5.4.4 · Pengelasan Bahan Kosmetik (Rajah 5.16)
+            5.4.3 · Bahan Kosmetik &amp; Jenis-jenis Kosmetik (Rajah 5.16 · m.s. 184–185)
           </div>
           <h2 className="font-display text-[28px] font-bold text-stone-900 dark:text-stone-50 mt-0.5 leading-tight">
-            Kosmetik Kegunaan Luaran: Pigmen Padat, Emulsi Lembap atau Molekul Meruap
+            Kosmetik: Kegunaan Luaran untuk Membersih, Melindungi atau Mencantikkan
           </h2>
         </div>
+      </div>
+
+      <div className="shrink-0 rounded-2xl border border-amber-300 bg-amber-50/80 dark:bg-amber-950/30 px-4 py-2.5 text-[15px] text-stone-900 dark:text-stone-100 leading-snug">
+        <strong>Definisi (m.s. 184):</strong> Kosmetik ialah bahan atau produk yang digunakan secara luaran untuk{' '}
+        <strong>membersih, melindungi atau mencantikkan</strong> penampilan seseorang.
       </div>
 
       <div className="flex-1 min-h-0 grid grid-cols-12 gap-4 content-start">
         <div className="col-span-12 grid grid-cols-4 gap-3">
           {(
             [
-              { id: 'all', title: 'Semua Contoh', desc: '8 produk harian KSSM', Icon: Sparkles },
-              { id: 'rias', title: 'Kosmetik Rias', desc: 'Pigmen atas kulit (warna)', Icon: Palette },
-              { id: 'perawatan', title: 'Kosmetik Perawatan', desc: 'Emulsi kunci air kulit', Icon: Droplets },
-              { id: 'pewangi', title: 'Pewangi', desc: 'Molekul kecil meruap ke udara', Icon: Wind },
+              { id: 'all', title: 'Semua Contoh', desc: 'Rajah 5.16 (m.s. 185)', Icon: Sparkles },
+              { id: 'rias', title: 'Kosmetik rias', desc: 'Mencantikkan wajah', Icon: Palette },
+              { id: 'perawatan', title: 'Kosmetik perawatan', desc: 'Rawatan pada tubuh', Icon: Droplets },
+              { id: 'pewangi', title: 'Pewangi', desc: 'Memberikan haruman', Icon: Wind },
             ] as const
           ).map(({ id, title, desc, Icon }) => {
             const active = interactions.cosmeticSortCategory === id;
@@ -159,7 +164,7 @@ export const Slide06CosmeticTypes: React.FC<Slide06Props> = ({ interactions, onP
                 key={item.id}
                 type="button"
                 onClick={() => onPatch({ selectedCosmeticItemId: item.id })}
-                className={`text-left rounded-2xl border px-4 py-3.5 transition-colors cursor-pointer ${
+                className={`text-left rounded-2xl border px-4 py-3 transition-colors cursor-pointer ${
                   selected
                     ? 'border-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 dark:border-emerald-500'
                     : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:bg-stone-50'
@@ -181,13 +186,13 @@ export const Slide06CosmeticTypes: React.FC<Slide06Props> = ({ interactions, onP
           <div className="space-y-3">
             <div>
               <div className="text-[14px] font-bold text-emerald-800 dark:text-emerald-400">{selectedItem.categoryLabel}</div>
-              <h3 className="font-display text-[26px] font-bold text-stone-900 dark:text-stone-100 mt-0.5 leading-tight">
+              <h3 className="font-display text-[25px] font-bold text-stone-900 dark:text-stone-100 mt-0.5 leading-tight">
                 {selectedItem.name}
               </h3>
             </div>
 
             <div className="bg-[#FBF9F5] dark:bg-stone-950 rounded-2xl p-3">
-              <svg viewBox="0 0 280 95" className="w-full h-24" aria-label="Lokasi tindakan kosmetik pada kulit dan udara">
+              <svg viewBox="0 0 280 95" className="w-full h-22" aria-label="Kumpulan kosmetik dan kegunaan luaran">
                 <rect
                   x="10"
                   y="6"
@@ -199,7 +204,7 @@ export const Slide06CosmeticTypes: React.FC<Slide06Props> = ({ interactions, onP
                   strokeWidth="1.8"
                 />
                 <text x="140" y="23" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="#1C1917">
-                  Udara Sekitar (Molekul Meruap)
+                  Pewangi (Memberikan Haruman)
                 </text>
 
                 <rect
@@ -213,7 +218,7 @@ export const Slide06CosmeticTypes: React.FC<Slide06Props> = ({ interactions, onP
                   strokeWidth="1.8"
                 />
                 <text x="140" y="53" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="#78350F">
-                  Atas Permukaan Kulit (Pigmen &amp; Lilin)
+                  Kosmetik Rias (Mencantikkan Wajah)
                 </text>
 
                 <rect
@@ -227,24 +232,24 @@ export const Slide06CosmeticTypes: React.FC<Slide06Props> = ({ interactions, onP
                   strokeWidth="1.8"
                 />
                 <text x="140" y="82" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="#1E3A8A">
-                  Lapisan Luar Kulit (Mengunci Kelembapan)
+                  Kosmetik Perawatan (Rawatan pada Tubuh)
                 </text>
               </svg>
             </div>
 
             <div className="bg-[#FBF9F5] dark:bg-stone-950 rounded-xl p-3.5">
-              <div className="text-[14px] font-bold text-stone-500">Tujuan Penggunaan</div>
+              <div className="text-[14px] font-bold text-stone-500">Kegunaan</div>
               <p className="text-[16px] text-stone-900 dark:text-stone-100 mt-0.5 leading-snug">{selectedItem.purpose}</p>
             </div>
 
             <div className="bg-emerald-50/70 dark:bg-emerald-950/30 rounded-xl p-3.5">
-              <div className="text-[14px] font-bold text-emerald-900 dark:text-emerald-300">Kandungan &amp; Cara Tindakan</div>
-              <p className="text-[15px] text-stone-900 dark:text-stone-100 mt-0.5 leading-snug">{selectedItem.chemicalNote}</p>
+              <div className="text-[14px] font-bold text-emerald-900 dark:text-emerald-300">Nota Buku Teks</div>
+              <p className="text-[15px] text-stone-900 dark:text-stone-100 mt-0.5 leading-snug">{selectedItem.textbookNote}</p>
             </div>
           </div>
 
           <div className="mt-2 pt-2.5 border-t border-stone-200 dark:border-stone-800 text-[14px] text-stone-700 dark:text-stone-300 leading-snug">
-            Dikawal di bawah <strong>Peraturan-peraturan Kawalan Dadah dan Kosmetik 1984</strong>.
+            Tertakluk kepada <strong>Peraturan-peraturan Kawalan Dadah dan Kosmetik 1984</strong> (m.s. 185).
           </div>
         </div>
       </div>

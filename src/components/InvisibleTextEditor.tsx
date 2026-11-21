@@ -153,6 +153,7 @@ export const InvisibleTextEditor: React.FC<InvisibleTextEditorProps> = ({
         if (tag !== 'TEXT' && !hasOwnDirectText(el)) return;
 
         const key = computeDeterministicTextKey(el, root, slideIndex);
+        if (key.startsWith('__')) return;
         if (!originalTextsRef.current.has(key)) {
           originalTextsRef.current.set(key, getEditableTextValue(el));
         }

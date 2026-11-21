@@ -14,9 +14,9 @@ const CATEGORIES: {
   name: string;
   subDrugs: string[];
 }[] = [
-  { id: 'analgesik', name: '1. Analgesik (Tahan Sakit)', subDrugs: ['aspirin', 'parasetamol', 'kodeina'] },
-  { id: 'antimikrob', name: '2. Antimikrob (Lawan Kuman)', subDrugs: ['antibiotik', 'antiseptik', 'disinfektan'] },
-  { id: 'psikotik', name: '3. Ubat Psikotik', subDrugs: ['psikotik'] },
+  { id: 'analgesik', name: '1. Analgesik', subDrugs: ['aspirin', 'parasetamol', 'kodeina'] },
+  { id: 'antimikrob', name: '2. Antimikrob', subDrugs: ['antibiotik', 'antiseptik', 'disinfektan'] },
+  { id: 'psikotik', name: '3. Ubat psikotik', subDrugs: ['psikotik'] },
   { id: 'antialergi', name: '4. Antialergi', subDrugs: ['antialergi'] },
   { id: 'kortikosteroid', name: '5. Kortikosteroid', subDrugs: ['kortikosteroid'] },
 ];
@@ -26,7 +26,7 @@ const PATIENT_PROFILES: { id: PatientProfileId; label: string }[] = [
   { id: 'pesakit_gastrik', label: 'Pesakit Gastrik' },
   { id: 'kanak_kanak', label: 'Kanak-kanak' },
   { id: 'alahan_penisilin', label: 'Alahan Penisilin' },
-  { id: 'luka_luaran', label: 'Luka Terbuka' },
+  { id: 'luka_luaran', label: 'Luka Luaran' },
 ];
 
 export const Slide03ModernDrugs: React.FC<Slide03Props> = ({ interactions, onPatch }) => {
@@ -38,10 +38,10 @@ export const Slide03ModernDrugs: React.FC<Slide03Props> = ({ interactions, onPat
       <div className="shrink-0 flex items-end justify-between gap-4 border-b border-stone-200 dark:border-stone-800 pb-2.5">
         <div>
           <div className="text-[15px] font-bold text-blue-900 dark:text-blue-400">
-            5.4.1 &amp; 5.4.2 · Ubat Moden (Rajah 5.14 &amp; Jadual 5.7)
+            5.4.1 &amp; 5.4.2 · Ubat Moden (Rajah 5.14 &amp; Jadual 5.7 · m.s. 182–183)
           </div>
           <h2 className="font-display text-[29px] font-bold text-stone-900 dark:text-stone-50 mt-0.5 leading-tight">
-            Setiap Ubat Moden Ialah Kunci Molekul Khusus — Salah Pesakit Menjadi Bahaya
+            Lima Jenis Ubat Moden: Fungsi, Cara Penggunaan &amp; Kesan Sampingan
           </h2>
         </div>
 
@@ -55,7 +55,7 @@ export const Slide03ModernDrugs: React.FC<Slide03Props> = ({ interactions, onPat
           }`}
         >
           <Atom className="w-4 h-4" />
-          <span>{interactions.molecularLens ? 'Perincian Molekul: Hidup' : 'Perincian Molekul'}</span>
+          <span>{interactions.molecularLens ? 'Rujukan Jadual: Aktif' : 'Rujukan Jadual'}</span>
         </button>
       </div>
 
@@ -116,8 +116,8 @@ export const Slide03ModernDrugs: React.FC<Slide03Props> = ({ interactions, onPat
             );
           })}
 
-          <div className="text-[14px] text-stone-600 dark:text-stone-400 px-1">
-            <strong>Ibnu Sina</strong> (Bapa Perubatan Moden) · Pil, kapsul, serbuk &amp; larutan
+          <div className="text-[14px] text-stone-600 dark:text-stone-400 px-1 leading-snug">
+            <strong>Ibnu Sina</strong> (Bapa Perubatan Moden) · Bentuk: pil, kapsul, serbuk dan larutan
           </div>
         </div>
 
@@ -141,28 +141,25 @@ export const Slide03ModernDrugs: React.FC<Slide03Props> = ({ interactions, onPat
             <div className="grid grid-cols-12 gap-3 items-stretch">
               <div className="col-span-6 bg-[#FBF9F5] dark:bg-stone-950 rounded-xl p-3.5">
                 <div className="text-[14px] font-bold text-blue-900 dark:text-blue-400">
-                  Mekanisme Kunci &amp; Sasaran
+                  Fungsi (Jadual 5.7)
                 </div>
                 <p className="text-[16px] font-semibold text-stone-900 dark:text-stone-100 mt-1 leading-snug">
                   {activeDrug.functionDesc}
-                </p>
-                <p className="text-[15px] text-stone-700 dark:text-stone-300 mt-1.5 leading-snug">
-                  {activeDrug.targetLock}
                 </p>
               </div>
 
               <div className="col-span-6 bg-amber-50/80 dark:bg-amber-950/30 rounded-xl p-3.5">
                 <div className="text-[14px] font-bold text-amber-900 dark:text-amber-300">
-                  Mengapa Kesan Sampingan Berlaku?
+                  Kesan Sampingan
                 </div>
                 <p className="text-[15px] text-stone-900 dark:text-stone-100 mt-1 leading-snug">
-                  {activeDrug.whySideEffectHappens}
+                  {activeDrug.sideEffects}
                 </p>
               </div>
             </div>
 
             <div className="text-[15px] text-stone-700 dark:text-stone-300">
-              <strong>Aturan Guna:</strong> {activeDrug.usageRule}
+              <strong>Cara Penggunaan:</strong> {activeDrug.usageRule}
             </div>
           </div>
 
@@ -171,7 +168,7 @@ export const Slide03ModernDrugs: React.FC<Slide03Props> = ({ interactions, onPat
               <div className="flex items-center gap-2 mb-2">
                 <UserCheck className="w-5 h-5 text-blue-900 dark:text-blue-400" />
                 <span className="font-display text-[18px] font-bold text-stone-900 dark:text-stone-100">
-                  Uji Kesesuaian pada Pesakit Berbeza
+                  Kesesuaian Mengikut Pesakit
                 </span>
               </div>
 
@@ -217,9 +214,7 @@ export const Slide03ModernDrugs: React.FC<Slide03Props> = ({ interactions, onPat
                 <div className="text-[17px] font-bold leading-snug">{assessment.headline}</div>
                 <p className="text-[15px] mt-0.5 leading-snug">{assessment.mechanismReason}</p>
                 {interactions.molecularLens && (
-                  <p className="text-[14px] mt-1 font-semibold opacity-90">
-                    Mekanisme molekul: {assessment.molecularDeepDive}
-                  </p>
+                  <p className="text-[14px] mt-1 font-semibold opacity-90">{assessment.textbookNote}</p>
                 )}
               </div>
             </div>

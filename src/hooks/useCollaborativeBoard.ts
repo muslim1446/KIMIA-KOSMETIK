@@ -20,6 +20,7 @@ import {
 } from 'firebase/auth';
 import { auth, db, handleFirestoreError, OperationType } from '../firebase';
 import {
+  filterCurrentTextEdits,
   getRootSlideScope,
   mergeIdList,
   mergeLiveStrokeMap,
@@ -34,6 +35,9 @@ import {
   SlideImageItem,
   SlidePdfItem,
   SlideTextItem,
+  stampCurrentTextEdits,
+  TEXT_EDIT_EPOCH_KEY,
+  TEXT_EDIT_EPOCH_VALUE,
 } from '../utils/annotationEngine';
 import {
   PRESENCE_HEARTBEAT_MS,
@@ -134,9 +138,19 @@ function loadLocalBoard(): LocalBoardStorage {
     const raw = window.localStorage.getItem(LOCAL_BOARD_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<LocalBoardStorage>;
+      const rawTextEdits = parsed.textEditsBySlide ?? {};
+      const cleanedTextEdits: Record<number, Record<string, string>> = {};
+      for (const [slideKey, slideMap] of Object.entries(rawTextEdits)) {
+        const idx = Number(slideKey);
+        if (!Number.isFinite(idx)) continue;
+        const { edits } = filterCurrentTextEdits(slideMap);
+        if (Object.keys(edits).length > 0) {
+          cleanedTextEdits[idx] = edits;
+        }
+      }
       return {
         strokesBySlide: parsed.strokesBySlide ?? {},
-        textEditsBySlide: parsed.textEditsBySlide ?? {},
+        textEditsBySlide: cleanedTextEdits,
         images: Array.isArray(parsed.images) ? parsed.images : [],
         texts: Array.isArray(parsed.texts) ? parsed.texts : [],
         pdfPages: loadLocalPdfPages(),
@@ -157,8 +171,17 @@ function loadLocalBoard(): LocalBoardStorage {
 function saveLocalBoard(data: LocalBoardStorage) {
   if (typeof window === 'undefined') return;
   try {
-    const { pdfPages, ...rest } = data;
-    window.localStorage.setItem(LOCAL_BOARD_KEY, JSON.stringify(rest));
+    const { pdfPages, textEditsBySlide, ...rest } = data;
+    const stampedTextEditsBySlide: Record<number, Record<string, string>> = {};
+    for (const [slideKey, slideMap] of Object.entries(textEditsBySlide)) {
+      if (slideMap && Object.keys(slideMap).length > 0) {
+        stampedTextEditsBySlide[Number(slideKey)] = stampCurrentTextEdits(slideMap);
+      }
+    }
+    window.localStorage.setItem(
+      LOCAL_BOARD_KEY,
+      JSON.stringify({ ...rest, textEditsBySlide: stampedTextEditsBySlide }),
+    );
     if (pdfPages) saveLocalPdfPages(pdfPages);
   } catch {
     // Ignore quota overflow in localStorage
@@ -287,6 +310,7 @@ export function useCollaborativeBoard({
   const roomImageIdsRef = useRef<string[]>([]);
   const slideTxQueueRef = useRef<Record<number, Promise<void>>>({});
   const ephemeralTxQueueRef = useRef<Record<number, Promise<void>>>({});
+  const clearedLegacyTextSlidesRef = useRef<Set<string>>(new Set());
   const lastLocalLaserPushRef = useRef<number>(0);
   const lastLocalLaserActiveRef = useRef<boolean>(false);
   const laserPushTimerRef = useRef<number | null>(null);
@@ -561,14 +585,17 @@ export function useCollaborativeBoard({
             for (let i = 0; i < 9; i++) {
               const localStrokes = (strokesRef.current[i] ?? []).slice(-400);
               const localEdits = Object.fromEntries(
-                Object.entries(textEditsRef.current[i] ?? {}).slice(-200),
+                Object.entries(textEditsRef.current[i] ?? {}).slice(-199),
               );
               if (localStrokes.length > 0 || Object.keys(localEdits).length > 0) {
                 seedBatch.set(doc(db, 'rooms', safeRoomId, 'slides', `slide_${i}`), {
                   roomId: safeRoomId,
                   slideIndex: i,
                   strokes: localStrokes,
-                  textEdits: localEdits,
+                  textEdits:
+                    Object.keys(localEdits).length > 0
+                      ? stampCurrentTextEdits(localEdits)
+                      : { [TEXT_EDIT_EPOCH_KEY]: TEXT_EDIT_EPOCH_VALUE },
                   updatedAt: serverTimestamp(),
                   updatedBy: authorId,
                 });
@@ -928,10 +955,38 @@ export function useCollaborativeBoard({
                   ...prev,
                   [i]: Array.isArray(d.strokes) ? d.strokes : [],
                 }));
+                const { edits, isLegacy } = filterCurrentTextEdits(
+                  d.textEdits && typeof d.textEdits === 'object' ? d.textEdits : {},
+                );
                 setTextEditsBySlide((prev) => ({
                   ...prev,
-                  [i]: d.textEdits && typeof d.textEdits === 'object' ? d.textEdits : {},
+                  [i]: edits,
                 }));
+                if (isLegacy) {
+                  const legacyKey = `${safeRoomId}:${i}`;
+                  if (!clearedLegacyTextSlidesRef.current.has(legacyKey)) {
+                    clearedLegacyTextSlidesRef.current.add(legacyKey);
+                    void runTransaction(db, async (tx) => {
+                      const curSnap = await tx.get(slideDocRef);
+                      if (!curSnap.exists()) return;
+                      const curData = curSnap.data();
+                      const check = filterCurrentTextEdits(
+                        curData?.textEdits && typeof curData.textEdits === 'object'
+                          ? curData.textEdits
+                          : {},
+                      );
+                      if (check.isLegacy) {
+                        tx.update(slideDocRef, {
+                          textEdits: { [TEXT_EDIT_EPOCH_KEY]: TEXT_EDIT_EPOCH_VALUE },
+                          updatedAt: serverTimestamp(),
+                          updatedBy: authorId,
+                        });
+                      }
+                    }).catch(() => {
+                      // Local state already overrides legacy Firebase textEdits
+                    });
+                  }
+                }
               }
             },
             (err) =>
@@ -1559,16 +1614,20 @@ export function useCollaborativeBoard({
         textEditsRef.current[slideIndex] ?? {},
         textKey,
         value,
-        200,
+        199,
       );
       const nextMap = { ...textEditsRef.current, [slideIndex]: nextSlideMap };
       setTextEditsBySlide(nextMap);
       postLocalBoardSync({ textEditsBySlide: nextMap });
 
-      void mutateSlideBoardTx(slideIndex, (cur) => ({
-        strokes: cur.strokes,
-        textEdits: mergeTextEditMap(cur.textEdits, textKey, value, 200),
-      }));
+      void mutateSlideBoardTx(slideIndex, (cur) => {
+        const currentClean = filterCurrentTextEdits(cur.textEdits).edits;
+        const merged = mergeTextEditMap(currentClean, textKey, value, 199);
+        return {
+          strokes: cur.strokes,
+          textEdits: stampCurrentTextEdits(merged),
+        };
+      });
     },
     [mutateSlideBoardTx, postLocalBoardSync],
   );

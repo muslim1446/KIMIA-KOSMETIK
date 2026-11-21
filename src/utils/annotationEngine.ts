@@ -65,6 +65,31 @@ export interface SlideTextItem {
   updatedAt: number;
 }
 
+/**
+ * A single fixed PDF page rendered to an image and shown as a movable frame.
+ * The page number is intentionally immutable after creation; presenters add
+ * another frame when they need another page.
+ */
+export interface SlidePdfItem {
+  id: string;
+  slideIndex: number;
+  scopeKey: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  dataUrl: string;
+  fileName: string;
+  pageNumber: number;
+  pageCount: number;
+  authorId: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+/** Upper bound for rendered PDF page data URLs, kept well below Firestore's 1 MiB limit. */
+export const PDF_DATA_URL_MAX_LENGTH = 340_000;
+
 export const LOGICAL_WIDTH = 1280;
 export const LOGICAL_HEIGHT = 720;
 

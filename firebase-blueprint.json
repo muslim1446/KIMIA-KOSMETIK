@@ -324,6 +324,186 @@
         "createdAt",
         "updatedAt"
       ]
+    },
+    "SlidePdf": {
+      "title": "SlidePdf",
+      "description": "A single fixed PDF page rendered as a movable and resizable frame.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "roomId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "slideIndex": {
+          "type": "number"
+        },
+        "scopeKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "dataUrl": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 360000
+        },
+        "fileName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "pageNumber": {
+          "type": "number",
+          "minimum": 1
+        },
+        "pageCount": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "authorId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "roomId",
+        "slideIndex",
+        "scopeKey",
+        "x",
+        "y",
+        "width",
+        "height",
+        "dataUrl",
+        "fileName",
+        "pageNumber",
+        "pageCount",
+        "authorId",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "RoomPresence": {
+      "title": "RoomPresence",
+      "description": "Live presence heartbeat with optional GPS or IP-based location for a room member.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "isAnonymous": {
+          "type": "boolean"
+        },
+        "location": {
+          "type": "object",
+          "properties": {
+            "source": {
+              "type": "string",
+              "enum": ["gps", "ip", "none"]
+            },
+            "label": {
+              "type": "string",
+              "maxLength": 160
+            },
+            "city": {
+              "type": "string",
+              "maxLength": 80
+            },
+            "region": {
+              "type": "string",
+              "maxLength": 80
+            },
+            "country": {
+              "type": "string",
+              "maxLength": 80
+            },
+            "countryCode": {
+              "type": "string",
+              "maxLength": 8
+            },
+            "latitude": {
+              "type": "number"
+            },
+            "longitude": {
+              "type": "number"
+            },
+            "accuracy": {
+              "type": "number"
+            },
+            "updatedAt": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "required": [
+            "source",
+            "label",
+            "city",
+            "region",
+            "country",
+            "countryCode",
+            "latitude",
+            "longitude",
+            "accuracy",
+            "updatedAt"
+          ]
+        },
+        "lastSeen": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "uid",
+        "displayName",
+        "isAnonymous",
+        "location",
+        "lastSeen",
+        "updatedAt"
+      ]
     }
   },
   "firestore": {
@@ -350,6 +530,14 @@
     "/rooms/{roomId}/texts/{textId}": {
       "schema": { "$ref": "#/entities/SlideText" },
       "description": "Movable resizable text boxes with position, size, font styling, and content per slide."
+    },
+    "/rooms/{roomId}/pdfPages/{pdfId}": {
+      "schema": { "$ref": "#/entities/SlidePdf" },
+      "description": "Fixed PDF page frames with position, size, source file name, and immutable page number."
+    },
+    "/rooms/{roomId}/presence/{userId}": {
+      "schema": { "$ref": "#/entities/RoomPresence" },
+      "description": "Live online heartbeats with display name and GPS or IP-based location for each room member."
     }
   }
 }

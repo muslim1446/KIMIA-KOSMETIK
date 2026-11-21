@@ -12,9 +12,14 @@ import {
   PenMode,
   PenStroke,
   SlideImageItem,
+  SlidePdfItem,
   SlideTextItem,
   TempDurationSeconds,
 } from '../utils/annotationEngine';
+import {
+  PresenceLocation,
+  PresenceUser,
+} from '../utils/presence';
 import {
   laserClientToSlidePercent,
   laserSlidePercentToClient,
@@ -23,6 +28,8 @@ import { compressImageBlob, loadImageFromUrl } from '../utils/imageCompression';
 import { SlideStageContent } from './SlideStageContent';
 import { SlideAnnotationLayer } from './SlideAnnotationLayer';
 import { SlideTextLayer } from './SlideTextLayer';
+import { SlidePdfLayer } from './SlidePdfLayer';
+import { PdfFrameDialog, PdfFrameAddInput } from './PdfFrameDialog';
 import { InvisibleTextEditor } from './InvisibleTextEditor';
 import { GoogleBrowserFrame, GoogleFrameMode } from './GoogleBrowserFrame';
 import { PresentationIsland } from './PresentationIsland';
@@ -55,6 +62,7 @@ interface AudienceStageProps {
   textEdits: Record<string, string>;
   slideImages: SlideImageItem[];
   slideTexts: SlideTextItem[];
+  slidePdfs: SlidePdfItem[];
   onSignInGoogle: () => void;
   onSignOut: () => void;
   onJoinRoom: (roomId: string, joinCode: string) => void;
@@ -96,6 +104,31 @@ interface AudienceStageProps {
     commit?: boolean,
   ) => void;
   onDeleteSlideText: (textId: string) => void;
+  onAddSlidePdf: (input: {
+    slideIndex: number;
+    scopeKey?: string;
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+    dataUrl: string;
+    fileName: string;
+    pageNumber: number;
+    pageCount: number;
+  }) => SlidePdfItem;
+  onUpdateSlidePdf: (
+    pdfId: string,
+    patch: Partial<Pick<SlidePdfItem, 'scopeKey' | 'x' | 'y' | 'width' | 'height'>>,
+    commit?: boolean,
+  ) => void;
+  onDeleteSlidePdf: (pdfId: string) => void;
+  presenceUsers: PresenceUser[];
+  presenceLocation: PresenceLocation | null;
+  presenceLocationBusy: boolean;
+  presenceLocationError: string | null;
+  presenceDisplayName: string;
+  onUpdatePresenceDisplayName: (name: string) => void;
+  onRefreshPresenceLocation: () => void;
   onSaveTextEdit: (slideIndex: number, textKey: string, value: string | null) => void;
   onLaserBroadcast: (laser: LaserPoint) => void;
 }
@@ -124,6 +157,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
   textEdits,
   slideImages,
   slideTexts,
+  slidePdfs,
   onSignInGoogle,
   onSignOut,
   onJoinRoom,
@@ -137,6 +171,16 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
   onAddSlideText,
   onUpdateSlideText,
   onDeleteSlideText,
+  onAddSlidePdf,
+  onUpdateSlidePdf,
+  onDeleteSlidePdf,
+  presenceUsers,
+  presenceLocation,
+  presenceLocationBusy,
+  presenceLocationError,
+  presenceDisplayName,
+  onUpdatePresenceDisplayName,
+  onRefreshPresenceLocation,
   onSaveTextEdit,
   onLaserBroadcast,
 }) => {
@@ -157,6 +201,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
   const [textFocusRequest, setTextFocusRequest] = useState<{ id: string; token: number } | null>(
     null,
   );
+  const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
   const [laserKeyHeld, setLaserKeyHeld] = useState(false);
   const [stageSlideRect, setStageSlideRect] = useState<LogicalRect>({
     left: 0,
@@ -482,6 +527,39 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
     showToast(t('toast.textAdded'));
   }, [onAddSlideText, showToast, slideIndex, slideTexts.length, tool, t]);
 
+  const handleAddPdfFrame = useCallback(
+    (input: PdfFrameAddInput) => {
+      if (tool !== 'pointer') setTool('pointer');
+      const aspect =
+        input.renderedWidth > 0 && input.renderedHeight > 0
+          ? input.renderedWidth / input.renderedHeight
+          : 1 / Math.SQRT2;
+      let width = Math.min(380, Math.max(160, input.renderedWidth));
+      let height = width / aspect;
+      if (height > 560) {
+        height = 560;
+        width = height * aspect;
+      }
+      width = Math.round(Math.max(160, Math.min(1500, width)));
+      height = Math.round(Math.max(160, Math.min(1600, height)));
+      const offset = (slidePdfs.length % 5) * 22;
+      onAddSlidePdf({
+        slideIndex,
+        scopeKey: getRootSlideScope(slideIndex),
+        x: Math.round((LOGICAL_WIDTH - width) / 2) + offset,
+        y: Math.round((LOGICAL_HEIGHT - height) / 2) + offset,
+        width,
+        height,
+        dataUrl: input.dataUrl,
+        fileName: input.fileName,
+        pageNumber: input.pageNumber,
+        pageCount: input.pageCount,
+      });
+      showToast(t('toast.pdfAdded'));
+    },
+    [onAddSlidePdf, showToast, slideIndex, slidePdfs.length, t, tool],
+  );
+
   // Global Ctrl+V / Cmd+V Paste Image handler
   useEffect(() => {
     if (isRemoteProjector) return;
@@ -701,6 +779,22 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
         />
       )}
 
+      {/* Fixed-page PDF frames (add with the island PDF button) */}
+      {!blackout && (
+        <SlidePdfLayer
+          slideIndex={slideIndex}
+          slideContainerRef={slideContainerRef}
+          interactionsKey={interactionsKey}
+          tool={tool}
+          slidePdfs={slidePdfs}
+          onUpdatePdf={onUpdateSlidePdf}
+          onDeletePdf={onDeleteSlidePdf}
+          isRemoteProjector={isRemoteProjector}
+          zoomScale={zoomScale}
+          panOffset={panOffset}
+        />
+      )}
+
       {/* Movable, resizable text boxes (add with the island "text box" button) */}
       {!blackout && (
         <SlideTextLayer
@@ -848,6 +942,15 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
         />
       )}
 
+      {/* PDF upload + page picker (frame itself stays fixed to that page) */}
+      {!isRemoteProjector && (
+        <PdfFrameDialog
+          open={pdfDialogOpen}
+          onClose={() => setPdfDialogOpen(false)}
+          onAddFrame={handleAddPdfFrame}
+        />
+      )}
+
       {/* Presentation Island: absent in ?mode=audiens dedicated projector window */}
       {!isRemoteProjector && (
         <PresentationIsland
@@ -882,6 +985,14 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
           googleMode={googleMode}
           onToggleGoogle={handleToggleGoogle}
           onAddTextBox={handleAddTextBox}
+          onOpenPdfDialog={() => setPdfDialogOpen(true)}
+          presenceUsers={presenceUsers}
+          presenceLocation={presenceLocation}
+          presenceLocationBusy={presenceLocationBusy}
+          presenceLocationError={presenceLocationError}
+          presenceDisplayName={presenceDisplayName}
+          onUpdatePresenceDisplayName={onUpdatePresenceDisplayName}
+          onRefreshPresenceLocation={() => void onRefreshPresenceLocation()}
           user={user}
           anonBlocked={anonBlocked}
           roomId={roomId}

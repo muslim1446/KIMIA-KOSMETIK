@@ -332,9 +332,263 @@ async function generateWithQuotaSavings(args: {
   }
 }
 
+interface GeoLookupResult {
+  source: 'ip' | 'gps' | 'none';
+  label: string;
+  city: string;
+  region: string;
+  country: string;
+  countryCode: string;
+  latitude: number;
+  longitude: number;
+  accuracy: number;
+}
+
+const geoCache = new Map<string, { expiresAt: number; value: GeoLookupResult }>();
+
+function clipText(value: unknown, maxLength: number): string {
+  return typeof value === 'string' ? value.trim().slice(0, maxLength) : '';
+}
+
+function clampCoordinate(value: unknown, min: number, max: number): number {
+  const num = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(num)) return 0;
+  return Math.max(min, Math.min(max, num));
+}
+
+function buildGeoResult(input: {
+  source: 'ip' | 'gps' | 'none';
+  city?: unknown;
+  region?: unknown;
+  country?: unknown;
+  countryCode?: unknown;
+  latitude?: unknown;
+  longitude?: unknown;
+  accuracy?: unknown;
+  label?: unknown;
+}): GeoLookupResult {
+  const city = clipText(input.city, 80);
+  const region = clipText(input.region, 80);
+  const country = clipText(input.country, 80);
+  const countryCode = clipText(input.countryCode, 8).toUpperCase();
+  const parts: string[] = [];
+  const seen = new Set<string>();
+  for (const value of [city, region, country]) {
+    if (!value) continue;
+    const key = value.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    parts.push(value);
+  }
+  return {
+    source: input.source,
+    label: clipText(input.label, 160) || parts.join(', ').slice(0, 160),
+    city,
+    region,
+    country,
+    countryCode,
+    latitude: clampCoordinate(input.latitude, -90, 90),
+    longitude: clampCoordinate(input.longitude, -180, 180),
+    accuracy:
+      typeof input.accuracy === 'number' && Number.isFinite(input.accuracy)
+        ? Math.max(0, input.accuracy)
+        : input.source === 'ip'
+        ? 5000
+        : 0,
+  };
+}
+
+function getClientIp(req: Request): string {
+  const forwarded = req.headers['x-forwarded-for'];
+  const raw = Array.isArray(forwarded) ? forwarded[0] : forwarded;
+  let ip = raw?.split(',')[0]?.trim() || req.socket.remoteAddress || '';
+  if (ip.startsWith('::ffff:')) ip = ip.slice(7);
+  if (
+    !ip ||
+    ip === '::1' ||
+    /^127\./.test(ip) ||
+    /^10\./.test(ip) ||
+    /^192\.168\./.test(ip) ||
+    /^172\.(1[6-9]|2\d|3[01])\./.test(ip) ||
+    /^(fc|fd|fe80)/i.test(ip)
+  ) {
+    // Local/private clients have no public IP to resolve; fall back to the
+    // server's own public egress IP so an approximate location still appears.
+    return '';
+  }
+  return ip;
+}
+
+async function lookupIpLocation(ip: string): Promise<GeoLookupResult> {
+  const target = ip ? `/${encodeURIComponent(ip)}` : '/';
+  try {
+    const res = await fetch(`https://ipwho.is${target}`, {
+      headers: { Accept: 'application/json', 'User-Agent': 'KimiaKSSM-Presentation/1.0' },
+      signal: AbortSignal.timeout(6000),
+    });
+    if (res.ok) {
+      const data = (await res.json()) as Record<string, unknown>;
+      if (data.success !== false) {
+        return buildGeoResult({
+          source: 'ip',
+          city: data.city,
+          region: data.region,
+          country: data.country,
+          countryCode: data.country_code,
+          latitude: data.latitude,
+          longitude: data.longitude,
+        });
+      }
+    }
+  } catch {
+    // Try the secondary provider below.
+  }
+
+  try {
+    const res = await fetch(`https://ipapi.co${target === '/' ? '/json/' : `${target}/json/`}`, {
+      headers: { Accept: 'application/json', 'User-Agent': 'KimiaKSSM-Presentation/1.0' },
+      signal: AbortSignal.timeout(6000),
+    });
+    if (res.ok) {
+      const data = (await res.json()) as Record<string, unknown>;
+      if (!data.error) {
+        return buildGeoResult({
+          source: 'ip',
+          city: data.city,
+          region: data.region,
+          country: data.country_name,
+          countryCode: data.country_code,
+          latitude: data.latitude,
+          longitude: data.longitude,
+        });
+      }
+    }
+  } catch {
+    // Fall through to the unavailable result.
+  }
+
+  return buildGeoResult({ source: 'none' });
+}
+
+async function reverseGeocode(lat: number, lng: number): Promise<GeoLookupResult> {
+  try {
+    const url = new URL('https://api.bigdatacloud.net/data/reverse-geocode-client');
+    url.searchParams.set('latitude', lat.toFixed(6));
+    url.searchParams.set('longitude', lng.toFixed(6));
+    url.searchParams.set('localityLanguage', 'ms');
+    const res = await fetch(url.toString(), {
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(6000),
+    });
+    if (res.ok) {
+      const data = (await res.json()) as Record<string, unknown>;
+      return buildGeoResult({
+        source: 'gps',
+        city: data.city || data.locality,
+        region: data.principalSubdivision,
+        country: data.countryName,
+        countryCode: data.countryCode,
+        latitude: lat,
+        longitude: lng,
+        accuracy: 0,
+      });
+    }
+  } catch {
+    // Try OpenStreetMap below.
+  }
+
+  try {
+    const url = new URL('https://nominatim.openstreetmap.org/reverse');
+    url.searchParams.set('format', 'jsonv2');
+    url.searchParams.set('lat', lat.toFixed(6));
+    url.searchParams.set('lon', lng.toFixed(6));
+    url.searchParams.set('accept-language', 'ms');
+    const res = await fetch(url.toString(), {
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'KimiaKSSM-Presentation/1.0 (educational)',
+      },
+      signal: AbortSignal.timeout(6000),
+    });
+    if (res.ok) {
+      const data = (await res.json()) as {
+        address?: Record<string, string>;
+      };
+      const address = data.address ?? {};
+      return buildGeoResult({
+        source: 'gps',
+        city: address.city || address.town || address.village || address.municipality,
+        region: address.state || address.region,
+        country: address.country,
+        countryCode: address.country_code,
+        latitude: lat,
+        longitude: lng,
+        accuracy: 0,
+      });
+    }
+  } catch {
+    // Coordinates alone are still returned below.
+  }
+
+  return buildGeoResult({
+    source: 'gps',
+    latitude: lat,
+    longitude: lng,
+    accuracy: 0,
+  });
+}
+
 async function startServer() {
   const app = express();
+  app.set('trust proxy', true);
   app.use(express.json({ limit: '4mb' }));
+
+  // Approximate location from the request's public IP (works when GPS is off).
+  app.get('/api/geo', async (req: Request, res: Response) => {
+    const ip = getClientIp(req);
+    const cacheKey = ip || 'self';
+    const cached = geoCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      res.setHeader('Cache-Control', 'private, max-age=600');
+      res.json(cached.value);
+      return;
+    }
+    const value = await lookupIpLocation(ip);
+    geoCache.set(cacheKey, {
+      expiresAt: Date.now() + (value.source === 'none' ? 2 * 60_000 : 30 * 60_000),
+      value,
+    });
+    res.setHeader('Cache-Control', 'private, max-age=300');
+    res.json(value);
+  });
+
+  // Human-readable place name for precise browser GPS coordinates.
+  app.get('/api/geo/reverse', async (req: Request, res: Response) => {
+    const lat = Number(req.query.lat);
+    const lng = Number(req.query.lng);
+    if (
+      !Number.isFinite(lat) ||
+      !Number.isFinite(lng) ||
+      lat < -90 ||
+      lat > 90 ||
+      lng < -180 ||
+      lng > 180
+    ) {
+      res.status(400).json({ error: 'Koordinat tidak sah.' });
+      return;
+    }
+    const cacheKey = `rev:${lat.toFixed(2)},${lng.toFixed(2)}`;
+    const cached = geoCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      res.setHeader('Cache-Control', 'private, max-age=3600');
+      res.json(cached.value);
+      return;
+    }
+    const value = await reverseGeocode(lat, lng);
+    geoCache.set(cacheKey, { expiresAt: Date.now() + 60 * 60_000, value });
+    res.setHeader('Cache-Control', 'private, max-age=1800');
+    res.json(value);
+  });
 
   app.post('/api/gemini/ask', async (req: Request, res: Response) => {
     try {

@@ -111,6 +111,7 @@ export default function App() {
         textEdits={board.activeTextEdits}
         slideImages={board.activeSlideImages}
         slideTexts={board.activeSlideTexts}
+        slidePdfs={board.activeSlidePdfs}
         onSignInGoogle={board.signInWithGoogle}
         onSignOut={board.signOutUser}
         onJoinRoom={board.joinRoom}
@@ -124,6 +125,16 @@ export default function App() {
         onAddSlideText={board.addSlideText}
         onUpdateSlideText={board.updateSlideText}
         onDeleteSlideText={board.deleteSlideText}
+        onAddSlidePdf={board.addSlidePdf}
+        onUpdateSlidePdf={board.updateSlidePdf}
+        onDeleteSlidePdf={board.deleteSlidePdf}
+        presenceUsers={board.presenceUsers}
+        presenceLocation={board.presenceLocation}
+        presenceLocationBusy={board.presenceLocationBusy}
+        presenceLocationError={board.presenceLocationError}
+        presenceDisplayName={board.presenceDisplayName}
+        onUpdatePresenceDisplayName={board.updatePresenceDisplayName}
+        onRefreshPresenceLocation={board.refreshPresenceLocation}
         onSaveTextEdit={board.setTextEdit}
         onLaserBroadcast={(nextLaser) => {
           setLaserPoint(nextLaser, true);

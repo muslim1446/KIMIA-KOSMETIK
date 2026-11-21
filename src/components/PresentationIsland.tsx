@@ -7,14 +7,18 @@ import {
   CloudOff,
   Copy,
   Eraser,
+  FileText,
   ImagePlus,
+  Loader2,
   LocateFixed,
   LogIn,
   LogOut,
+  MapPin,
   Maximize2,
   Minimize2,
   Moon,
   MousePointer2,
+  Navigation,
   PenTool,
   Plus,
   Sparkles,
@@ -22,6 +26,7 @@ import {
   TextCursorInput,
   Trash2,
   Type,
+  Users,
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
@@ -36,6 +41,11 @@ import {
   TempDurationSeconds,
 } from '../utils/annotationEngine';
 import { BoardSyncStatus } from '../hooks/useCollaborativeBoard';
+import {
+  PresenceLocation,
+  PresenceUser,
+  presenceSourceLabel,
+} from '../utils/presence';
 import { useUiText } from '../utils/uiLanguage';
 
 interface PresentationIslandProps {
@@ -65,6 +75,14 @@ interface PresentationIslandProps {
   googleMode: GoogleFrameMode;
   onToggleGoogle: (mode: GoogleFrameMode) => void;
   onAddTextBox: () => void;
+  onOpenPdfDialog: () => void;
+  presenceUsers: PresenceUser[];
+  presenceLocation: PresenceLocation | null;
+  presenceLocationBusy: boolean;
+  presenceLocationError: string | null;
+  presenceDisplayName: string;
+  onUpdatePresenceDisplayName: (name: string) => void;
+  onRefreshPresenceLocation: () => void;
   // Firebase / Live Sync props
   user: User | null;
   anonBlocked?: boolean;
@@ -78,7 +96,7 @@ interface PresentationIslandProps {
   closePopoverSignal?: number;
 }
 
-type IslandPopover = 'none' | 'pen' | 'sync';
+type IslandPopover = 'none' | 'pen' | 'sync' | 'presence';
 
 export const PresentationIsland: React.FC<PresentationIslandProps> = ({
   slideIndex,
@@ -107,6 +125,14 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
   googleMode,
   onToggleGoogle,
   onAddTextBox,
+  onOpenPdfDialog,
+  presenceUsers,
+  presenceLocation,
+  presenceLocationBusy,
+  presenceLocationError,
+  presenceDisplayName,
+  onUpdatePresenceDisplayName,
+  onRefreshPresenceLocation,
   user,
   anonBlocked = false,
   roomId,
@@ -124,7 +150,12 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
   const [codeInput, setCodeInput] = useState(joinCode);
   const [copiedLink, setCopiedLink] = useState(false);
   const [islandHidden, setIslandHidden] = useState(false);
+  const [nameDraft, setNameDraft] = useState(presenceDisplayName);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  React.useEffect(() => {
+    setNameDraft(presenceDisplayName);
+  }, [presenceDisplayName]);
 
   React.useEffect(() => {
     if (closePopoverSignal > 0) {
@@ -498,6 +529,187 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
         </div>
       )}
 
+      {/* Live Presence Popover */}
+      {openPopover === 'presence' && (
+        <div
+          data-testid="presence-popover"
+          className="w-[min(380px,96vw)] rounded-2xl border border-stone-200 dark:border-stone-700 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md p-4 shadow-xl space-y-3 text-stone-900 dark:text-stone-100"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4 text-blue-700 dark:text-blue-300" />
+              <span className="text-xs font-bold uppercase tracking-wider text-stone-600 dark:text-stone-300">
+                {t('presence.title')}
+              </span>
+              <span className="rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 px-2 py-0.5 text-[11px] font-extrabold tabular-nums-clean">
+                {t('presence.onlineCount', { count: presenceUsers.length })}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setOpenPopover('none')}
+              className="text-xs font-semibold text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 cursor-pointer"
+            >
+              {t('common.close')}
+            </button>
+          </div>
+
+          {syncStatus !== 'synced' && (
+            <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-3 py-2 text-[11px] font-semibold text-amber-900 dark:text-amber-200 leading-snug">
+              {t('presence.offlineNote')}
+            </div>
+          )}
+
+          <div className="rounded-xl border border-stone-200 dark:border-stone-700 bg-[#FBF9F5] dark:bg-stone-950 p-3 space-y-2">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <div className="text-[10px] font-extrabold uppercase tracking-wider text-stone-500">
+                  {t('presence.yourLocation')}
+                </div>
+                <div className="mt-0.5 flex items-center gap-1.5 text-xs font-bold">
+                  <MapPin className="w-3.5 h-3.5 shrink-0 text-red-600" />
+                  <span className="truncate">
+                    {presenceLocation?.label || t('presence.unknown')}
+                  </span>
+                </div>
+                <div className="mt-1 flex items-center gap-1.5 text-[10px] font-semibold text-stone-500">
+                  <span className="rounded-full bg-stone-200 dark:bg-stone-800 px-1.5 py-0.5">
+                    {presenceSourceLabel(presenceLocation, {
+                      gps: t('presence.gps'),
+                      ip: t('presence.ip'),
+                      none: t('presence.none'),
+                    })}
+                  </span>
+                  {presenceLocation?.updatedAt ? (
+                    <span>{t('presence.cachedLocation')}</span>
+                  ) : null}
+                </div>
+              </div>
+              <button
+                type="button"
+                data-testid="presence-refresh-location"
+                onClick={onRefreshPresenceLocation}
+                disabled={presenceLocationBusy}
+                className="shrink-0 flex items-center gap-1 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 px-2 py-1.5 text-[10px] font-extrabold hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-50 cursor-pointer"
+              >
+                {presenceLocationBusy ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Navigation className="w-3 h-3" />
+                )}
+                <span>
+                  {presenceLocationBusy ? t('presence.locating') : t('presence.precise')}
+                </span>
+              </button>
+            </div>
+            <p className="text-[10px] leading-snug text-stone-500 dark:text-stone-400">
+              {t('presence.locationHint')}
+            </p>
+            {presenceLocationError && (
+              <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 px-2 py-1.5 text-[10px] font-semibold text-red-800 dark:text-red-300">
+                {presenceLocationError}
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <label
+              htmlFor="presence-name"
+              className="block text-[10px] font-extrabold uppercase tracking-wider text-stone-500"
+            >
+              {t('presence.displayName')}
+            </label>
+            <input
+              id="presence-name"
+              data-testid="presence-name-input"
+              type="text"
+              value={nameDraft}
+              maxLength={80}
+              placeholder={t('presence.displayNamePlaceholder')}
+              onChange={(e) => setNameDraft(e.target.value)}
+              onBlur={() => {
+                const clean = nameDraft.trim();
+                onUpdatePresenceDisplayName(clean);
+                setNameDraft(clean);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  e.currentTarget.blur();
+                }
+              }}
+              className="w-full rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 px-2.5 py-1.5 text-xs font-semibold"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="text-[10px] font-extrabold uppercase tracking-wider text-stone-500">
+              {t('presence.onlineList')}
+            </div>
+            {presenceUsers.length === 0 ? (
+              <p className="rounded-xl border border-stone-200 dark:border-stone-700 bg-white/70 dark:bg-stone-950/40 px-3 py-2.5 text-[11px] font-semibold text-stone-500 dark:text-stone-400">
+                {t('presence.empty')}
+              </p>
+            ) : (
+              <div className="max-h-[260px] overflow-y-auto space-y-1.5 pr-0.5">
+                {presenceUsers.map((entry) => {
+                  const isSelf = entry.uid === user?.uid;
+                  const initial =
+                    entry.displayName.trim().charAt(0).toUpperCase() || '?';
+                  const locationLabel = entry.location?.label || '';
+                  return (
+                    <div
+                      key={entry.uid}
+                      data-testid="presence-user-row"
+                      className={`flex items-start gap-2 rounded-xl border px-2.5 py-2 ${
+                        isSelf
+                          ? 'border-blue-300 dark:border-blue-800 bg-blue-50/80 dark:bg-blue-950/30'
+                          : 'border-stone-200 dark:border-stone-700 bg-white/80 dark:bg-stone-950/40'
+                      }`}
+                    >
+                      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-stone-800 text-[11px] font-extrabold text-white dark:bg-stone-200 dark:text-stone-900">
+                        {initial}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="truncate text-xs font-bold">{entry.displayName}</span>
+                          {isSelf && (
+                            <span className="shrink-0 rounded bg-blue-700 px-1 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-white">
+                              {t('presence.you')}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-0.5 flex items-center gap-1 text-[10px] font-semibold text-stone-500 dark:text-stone-400">
+                          <MapPin className="w-2.5 h-2.5 shrink-0" />
+                          <span className="truncate">
+                            {locationLabel || t('presence.unknown')}
+                          </span>
+                        </div>
+                      </div>
+                      <span
+                        className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide ${
+                          entry.location?.source === 'gps'
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                            : entry.location?.source === 'ip'
+                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                            : 'bg-stone-200 text-stone-600 dark:bg-stone-800 dark:text-stone-300'
+                        }`}
+                      >
+                        {presenceSourceLabel(entry.location, {
+                          gps: t('presence.gps'),
+                          ip: t('presence.ip'),
+                          none: t('presence.none'),
+                        })}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── Main Floating Presentation Island ─────────────────────────────── */}
       {/*
         On wide screens (≥ sm / ≥ 640 px) everything fits in a single row.
@@ -618,6 +830,21 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
             className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
           >
             <ImagePlus className="w-4 h-4" />
+          </button>
+
+          {/* Add Fixed PDF Page Frame */}
+          <button
+            type="button"
+            data-testid="island-pdf-button"
+            aria-label={t('island.pdf')}
+            title={t('island.pdfTitle')}
+            onClick={() => {
+              onOpenPdfDialog();
+              setOpenPopover('none');
+            }}
+            className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
+          >
+            <FileText className="w-4 h-4" />
           </button>
 
           {/* Add Movable Text Box (separate from editing embedded slide text) */}
@@ -762,6 +989,32 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
           </button>
 
           <div className="w-px h-5 bg-stone-200 dark:bg-stone-700 mx-0.5" />
+
+          {/* Live presence: how many partners are here right now */}
+          <button
+            type="button"
+            data-testid="island-presence-button"
+            aria-label={t('island.presence')}
+            title={t('island.presenceTitle')}
+            onClick={() => setOpenPopover((p) => (p === 'presence' ? 'none' : 'presence'))}
+            className={`flex items-center gap-1.5 px-2 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+              openPopover === 'presence'
+                ? 'bg-blue-800 text-white'
+                : 'hover:bg-stone-100 dark:hover:bg-stone-800'
+            }`}
+          >
+            <span className="relative flex items-center justify-center">
+              <Users className="w-4 h-4" />
+              <span
+                className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-white dark:border-stone-900 ${
+                  presenceUsers.length > 0 ? 'bg-emerald-500' : 'bg-stone-400'
+                }`}
+              />
+            </span>
+            <span className="tabular-nums-clean text-[11px] min-w-[12px] text-center">
+              {presenceUsers.length}
+            </span>
+          </button>
 
           {/* Firebase Cloud Live Sync Button */}
           <button

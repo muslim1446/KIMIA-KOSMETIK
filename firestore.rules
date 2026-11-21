@@ -159,6 +159,74 @@ service cloud.firestore {
       && data.updatedAt is timestamp;
     }
 
+    function isValidSlidePdf(data, roomId, pdfId) {
+      return data.keys().hasAll([
+        'id', 'roomId', 'slideIndex', 'scopeKey', 'x', 'y', 'width', 'height',
+        'dataUrl', 'fileName', 'pageNumber', 'pageCount', 'authorId', 'createdAt', 'updatedAt'
+      ])
+      && data.keys().hasOnly([
+        'id', 'roomId', 'slideIndex', 'scopeKey', 'x', 'y', 'width', 'height',
+        'dataUrl', 'fileName', 'pageNumber', 'pageCount', 'authorId', 'createdAt', 'updatedAt'
+      ])
+      && data.id == pdfId
+      && isValidId(data.id)
+      && data.roomId == roomId
+      && isValidId(data.roomId)
+      && data.slideIndex is number && data.slideIndex >= 0 && data.slideIndex <= 8
+      && data.scopeKey is string && data.scopeKey.size() >= 1 && data.scopeKey.size() <= 160
+      && data.x is number && data.y is number
+      && data.width is number && data.width >= 40 && data.width <= 1500
+      && data.height is number && data.height >= 40 && data.height <= 1600
+      && data.dataUrl is string && data.dataUrl.size() >= 1 && data.dataUrl.size() <= 360000
+      && data.fileName is string && data.fileName.size() >= 1 && data.fileName.size() <= 160
+      && data.pageNumber is number && data.pageNumber >= 1
+      && data.pageCount is number && data.pageCount >= 1 && data.pageCount <= 10000
+      && data.pageNumber <= data.pageCount
+      && isValidId(data.authorId)
+      && data.createdAt is timestamp
+      && data.updatedAt is timestamp;
+    }
+
+    function isValidPresenceLocation(location) {
+      return location is map
+      && location.keys().hasAll([
+        'source', 'label', 'city', 'region', 'country', 'countryCode',
+        'latitude', 'longitude', 'accuracy', 'updatedAt'
+      ])
+      && location.keys().hasOnly([
+        'source', 'label', 'city', 'region', 'country', 'countryCode',
+        'latitude', 'longitude', 'accuracy', 'updatedAt'
+      ])
+      && location.source is string
+      && (location.source == 'gps' || location.source == 'ip' || location.source == 'none')
+      && location.label is string && location.label.size() <= 160
+      && location.city is string && location.city.size() <= 80
+      && location.region is string && location.region.size() <= 80
+      && location.country is string && location.country.size() <= 80
+      && location.countryCode is string && location.countryCode.size() <= 8
+      && location.latitude is number && location.latitude >= -90 && location.latitude <= 90
+      && location.longitude is number && location.longitude >= -180 && location.longitude <= 180
+      && location.accuracy is number && location.accuracy >= 0
+      && location.updatedAt is timestamp;
+    }
+
+    function isValidPresence(data, roomId, userId) {
+      return data.keys().hasAll([
+        'uid', 'displayName', 'isAnonymous', 'location', 'lastSeen', 'updatedAt'
+      ])
+      && data.keys().hasOnly([
+        'uid', 'displayName', 'isAnonymous', 'location', 'lastSeen', 'updatedAt'
+      ])
+      && data.uid == userId
+      && isValidId(data.uid)
+      && data.displayName is string
+      && data.displayName.size() >= 1 && data.displayName.size() <= 80
+      && data.isAnonymous is bool
+      && isValidPresenceLocation(data.location)
+      && data.lastSeen is timestamp
+      && data.updatedAt is timestamp;
+    }
+
     // --- Collection Rules ---
     match /rooms/{roomId} {
       allow list: if false;
@@ -343,6 +411,58 @@ service cloud.firestore {
           ]);
 
         allow delete: if isSignedIn() && isValidId(roomId) && isValidId(textId) && isRoomMember(roomId);
+      }
+
+      match /pdfPages/{pdfId} {
+        allow list: if isSignedIn() && isValidId(roomId) && isRoomMember(roomId);
+        allow get: if isSignedIn() && isValidId(roomId) && isValidId(pdfId) && isRoomMember(roomId);
+
+        allow create: if isSignedIn()
+          && isValidId(roomId)
+          && isValidId(pdfId)
+          && isValidSlidePdf(incoming(), roomId, pdfId)
+          && incoming().authorId == request.auth.uid
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && isRoomMember(roomId);
+
+        allow update: if isSignedIn()
+          && isValidId(roomId)
+          && isValidId(pdfId)
+          && isValidSlidePdf(incoming(), roomId, pdfId)
+          && incoming().id == existing().id
+          && incoming().roomId == existing().roomId
+          && incoming().slideIndex == existing().slideIndex
+          && incoming().authorId == existing().authorId
+          && incoming().createdAt == existing().createdAt
+          && incoming().dataUrl == existing().dataUrl
+          && incoming().fileName == existing().fileName
+          && incoming().pageNumber == existing().pageNumber
+          && incoming().pageCount == existing().pageCount
+          && incoming().updatedAt == request.time
+          && isRoomMember(roomId)
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'scopeKey', 'x', 'y', 'width', 'height', 'updatedAt'
+          ]);
+
+        allow delete: if isSignedIn() && isValidId(roomId) && isValidId(pdfId) && isRoomMember(roomId);
+      }
+
+      match /presence/{userId} {
+        allow list: if isSignedIn() && isValidId(roomId) && isRoomMember(roomId);
+        allow get: if isSignedIn() && isValidId(roomId) && isValidId(userId) && isRoomMember(roomId);
+
+        allow create, update: if isSignedIn()
+          && isValidId(roomId)
+          && isValidId(userId)
+          && userId == request.auth.uid
+          && isValidPresence(incoming(), roomId, userId)
+          && isRoomMember(roomId);
+
+        allow delete: if isSignedIn()
+          && isValidId(roomId)
+          && isValidId(userId)
+          && (userId == request.auth.uid || isRoomOwner(roomId));
       }
     }
   }

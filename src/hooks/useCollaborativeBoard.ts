@@ -8,6 +8,7 @@ import {
   runTransaction,
   serverTimestamp,
   setDoc,
+  Timestamp,
   Unsubscribe,
   updateDoc,
   writeBatch,
@@ -33,8 +34,22 @@ import {
   removeStrokesFromList,
   sanitizeTextOverride,
   SlideImageItem,
+  SlidePdfItem,
   SlideTextItem,
 } from '../utils/annotationEngine';
+import {
+  PRESENCE_HEARTBEAT_MS,
+  PRESENCE_LOCATION_MAX_AGE_MS,
+  PRESENCE_ONLINE_WINDOW_MS,
+  PresenceLocation,
+  PresenceUser,
+  buildLocationLabel,
+  cachePresenceLocation,
+  loadCachedPresenceLocation,
+  loadPresenceDisplayName,
+  normalizePresenceLocation,
+  savePresenceDisplayName,
+} from '../utils/presence';
 import { LaserPoint, SyncedPresentationState } from './usePresentationSync';
 
 export type BoardSyncStatus = 'local' | 'connecting' | 'synced' | 'error';
@@ -48,12 +63,46 @@ interface LocalBoardStorage {
   textEditsBySlide: Record<number, Record<string, string>>;
   images: SlideImageItem[];
   texts?: SlideTextItem[];
+  pdfPages?: SlidePdfItem[];
 }
 
 const LOCAL_BOARD_KEY = 'kimia-5-4-board-v3';
+const LOCAL_PDF_PAGES_KEY = 'kimia-5-4-pdf-pages-v1';
 const BOARD_BC_NAME = 'kimia-5-4-board-channel-v3';
 const DEFAULT_ROOM_ID = 'kimia-5-4-main';
 const DEFAULT_JOIN_CODE = 'KIMIA54';
+
+function loadLocalPdfPages(): SlidePdfItem[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(LOCAL_PDF_PAGES_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as SlidePdfItem[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalPdfPages(pdfPages: SlidePdfItem[]): void {
+  if (typeof window === 'undefined') return;
+  // Data URLs make PDF frames much larger than strokes, so keep this in a
+  // separate key and gracefully trim the oldest frames if the quota is tight.
+  let items = pdfPages.slice(-12);
+  while (items.length > 0) {
+    try {
+      window.localStorage.setItem(LOCAL_PDF_PAGES_KEY, JSON.stringify(items));
+      return;
+    } catch {
+      items = items.slice(Math.ceil(items.length / 2));
+    }
+  }
+  try {
+    window.localStorage.removeItem(LOCAL_PDF_PAGES_KEY);
+  } catch {
+    // Ignore storage failures
+  }
+}
 
 function getInitialRoomParams(): { roomId: string; joinCode: string } {
   if (typeof window === 'undefined') {
@@ -75,7 +124,7 @@ function getInitialRoomParams(): { roomId: string; joinCode: string } {
 
 function loadLocalBoard(): LocalBoardStorage {
   if (typeof window === 'undefined') {
-    return { strokesBySlide: {}, textEditsBySlide: {}, images: [], texts: [] };
+    return { strokesBySlide: {}, textEditsBySlide: {}, images: [], texts: [], pdfPages: [] };
   }
   try {
     const raw = window.localStorage.getItem(LOCAL_BOARD_KEY);
@@ -86,18 +135,27 @@ function loadLocalBoard(): LocalBoardStorage {
         textEditsBySlide: parsed.textEditsBySlide ?? {},
         images: Array.isArray(parsed.images) ? parsed.images : [],
         texts: Array.isArray(parsed.texts) ? parsed.texts : [],
+        pdfPages: loadLocalPdfPages(),
       };
     }
   } catch {
     // Ignore corrupt localStorage
   }
-  return { strokesBySlide: {}, textEditsBySlide: {}, images: [], texts: [] };
+  return {
+    strokesBySlide: {},
+    textEditsBySlide: {},
+    images: [],
+    texts: [],
+    pdfPages: loadLocalPdfPages(),
+  };
 }
 
 function saveLocalBoard(data: LocalBoardStorage) {
   if (typeof window === 'undefined') return;
   try {
-    window.localStorage.setItem(LOCAL_BOARD_KEY, JSON.stringify(data));
+    const { pdfPages, ...rest } = data;
+    window.localStorage.setItem(LOCAL_BOARD_KEY, JSON.stringify(rest));
+    if (pdfPages) saveLocalPdfPages(pdfPages);
   } catch {
     // Ignore quota overflow in localStorage
   }
@@ -139,6 +197,39 @@ function clampSlideText(text: SlideTextItem): SlideTextItem {
   };
 }
 
+function clampSlidePdf(pdf: SlidePdfItem): SlidePdfItem {
+  const finite = (value: number, fallback: number) =>
+    Number.isFinite(value) ? value : fallback;
+  const pageCount = Math.max(1, Math.min(10_000, Math.trunc(finite(pdf.pageCount, 1))));
+  const pageNumber = Math.max(1, Math.min(pageCount, Math.trunc(finite(pdf.pageNumber, 1))));
+  return {
+    ...pdf,
+    slideIndex: Math.max(0, Math.min(8, Math.trunc(finite(pdf.slideIndex, 0)))),
+    scopeKey: (pdf.scopeKey ?? '').slice(0, 160),
+    x: Math.round(finite(pdf.x, 420)),
+    y: Math.round(finite(pdf.y, 120)),
+    width: Math.max(40, Math.min(1500, Math.round(finite(pdf.width, 360)))),
+    height: Math.max(40, Math.min(1600, Math.round(finite(pdf.height, 509)))),
+    dataUrl: (pdf.dataUrl ?? '').slice(0, 340_000),
+    fileName: (pdf.fileName ?? 'dokumen.pdf').slice(0, 160),
+    pageNumber,
+    pageCount,
+  };
+}
+
+function timestampToMillisOrZero(value: unknown): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (
+    value &&
+    typeof value === 'object' &&
+    'toMillis' in value &&
+    typeof (value as { toMillis?: unknown }).toMillis === 'function'
+  ) {
+    return (value as { toMillis: () => number }).toMillis();
+  }
+  return 0;
+}
+
 interface UseCollaborativeBoardArgs {
   currentSlideIndex: number;
   presentationState: SyncedPresentationState;
@@ -171,6 +262,16 @@ export function useCollaborativeBoard({
   );
   const [images, setImages] = useState<SlideImageItem[]>(initialBoard.images);
   const [texts, setTexts] = useState<SlideTextItem[]>(initialBoard.texts ?? []);
+  const [pdfPages, setPdfPages] = useState<SlidePdfItem[]>(initialBoard.pdfPages ?? []);
+
+  const [presenceUsers, setPresenceUsers] = useState<PresenceUser[]>([]);
+  const [presenceTick, setPresenceTick] = useState(0);
+  const [presenceLocation, setPresenceLocation] = useState<PresenceLocation | null>(() =>
+    loadCachedPresenceLocation(),
+  );
+  const [presenceLocationBusy, setPresenceLocationBusy] = useState(false);
+  const [presenceLocationError, setPresenceLocationError] = useState<string | null>(null);
+  const [presenceName, setPresenceName] = useState<string>(() => loadPresenceDisplayName());
 
   const localAuthorIdRef = useRef<string>(
     `local-${Math.random().toString(36).slice(2, 8)}`,
@@ -199,9 +300,22 @@ export function useCollaborativeBoard({
   imagesRef.current = images;
   const textsRef = useRef(texts);
   textsRef.current = texts;
+  const pdfPagesRef = useRef(pdfPages);
+  pdfPagesRef.current = pdfPages;
+
+  const presenceLocationRef = useRef<PresenceLocation | null>(presenceLocation);
+  presenceLocationRef.current = presenceLocation;
 
   const isFirebaseActive = Boolean(authReady && user && syncStatus === 'synced');
   const currentAuthorId = user?.uid ?? localAuthorIdRef.current;
+  const defaultPresenceName = (
+    user?.displayName ||
+    user?.email ||
+    (user?.isAnonymous ? `Tetamu-${user.uid.slice(0, 5)}` : 'Pembentang')
+  ).slice(0, 80);
+  const effectivePresenceName = (presenceName.trim() || defaultPresenceName).slice(0, 80);
+  const effectivePresenceNameRef = useRef(effectivePresenceName);
+  effectivePresenceNameRef.current = effectivePresenceName;
 
   // Persist local board & broadcast to same-browser tabs (?mode=audiens)
   useEffect(() => {
@@ -210,8 +324,9 @@ export function useCollaborativeBoard({
       textEditsBySlide,
       images,
       texts,
+      pdfPages,
     });
-  }, [strokesBySlide, textEditsBySlide, images, texts]);
+  }, [strokesBySlide, textEditsBySlide, images, texts, pdfPages]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !('BroadcastChannel' in window)) return;
@@ -225,6 +340,7 @@ export function useCollaborativeBoard({
         if (msg.textEditsBySlide) setTextEditsBySlide(msg.textEditsBySlide);
         if (msg.images) setImages(msg.images);
         if (msg.texts) setTexts(msg.texts);
+        if (msg.pdfPages) setPdfPages(msg.pdfPages);
       } else if (msg.type === 'EPHEMERAL_UPDATE') {
         setTempStrokesBySlide((prev) => ({
           ...prev,
@@ -252,6 +368,7 @@ export function useCollaborativeBoard({
           textEditsBySlide: next.textEditsBySlide ?? textEditsRef.current,
           images: next.images ?? imagesRef.current,
           texts: next.texts ?? textsRef.current,
+          pdfPages: next.pdfPages ?? pdfPagesRef.current,
         });
       } catch {
         // Ignore BroadcastChannel errors
@@ -616,6 +733,91 @@ export function useCollaborativeBoard({
           (err) => handleFirestoreError(err, OperationType.GET, `rooms/${safeRoomId}/texts`),
         );
         unsubs.push(unsubTexts);
+
+        // 1c. Listen to fixed PDF page frames (collection keeps room document small)
+        const pdfsCollectionRef = collection(db, 'rooms', safeRoomId, 'pdfPages');
+        let pdfsHydrated = false;
+        const unsubPdfs = onSnapshot(
+          pdfsCollectionRef,
+          (snap) => {
+            const remotePdfs: SlidePdfItem[] = [];
+            for (const pdfSnap of snap.docs) {
+              const d = pdfSnap.data();
+              if (!d || typeof d !== 'object') continue;
+              const slideIdx = Number(d.slideIndex);
+              if (!Number.isFinite(slideIdx)) continue;
+              const pageCount = Number.isFinite(Number(d.pageCount))
+                ? Math.max(1, Math.trunc(Number(d.pageCount)))
+                : 1;
+              const pageNumber = Number.isFinite(Number(d.pageNumber))
+                ? Math.max(1, Math.min(pageCount, Math.trunc(Number(d.pageNumber))))
+                : 1;
+              remotePdfs.push(
+                clampSlidePdf({
+                  id: typeof d.id === 'string' && d.id ? d.id : pdfSnap.id,
+                  slideIndex: Math.max(0, Math.min(8, Math.trunc(slideIdx))),
+                  scopeKey:
+                    typeof d.scopeKey === 'string' && d.scopeKey
+                      ? d.scopeKey
+                      : getRootSlideScope(Math.trunc(slideIdx)),
+                  x: Number.isFinite(Number(d.x)) ? Number(d.x) : 420,
+                  y: Number.isFinite(Number(d.y)) ? Number(d.y) : 120,
+                  width: Number.isFinite(Number(d.width)) ? Number(d.width) : 360,
+                  height: Number.isFinite(Number(d.height)) ? Number(d.height) : 509,
+                  dataUrl: typeof d.dataUrl === 'string' ? d.dataUrl : '',
+                  fileName: typeof d.fileName === 'string' ? d.fileName : 'dokumen.pdf',
+                  pageNumber,
+                  pageCount,
+                  authorId: typeof d.authorId === 'string' ? d.authorId : '',
+                  createdAt: timestampToMillisOrZero(d.createdAt),
+                  updatedAt: timestampToMillisOrZero(d.updatedAt),
+                }),
+              );
+            }
+
+            // On the first snapshot, push offline-local PDF frames into Firestore.
+            if (!pdfsHydrated) {
+              pdfsHydrated = true;
+              const remoteIds = new Set(remotePdfs.map((pdf) => pdf.id));
+              const localOnly = pdfPagesRef.current
+                .filter((pdf) => !remoteIds.has(pdf.id) && pdf.dataUrl)
+                .slice(-20);
+              if (localOnly.length > 0) {
+                for (const pdf of localOnly) {
+                  void setDoc(doc(db, 'rooms', safeRoomId, 'pdfPages', pdf.id), {
+                    id: pdf.id,
+                    roomId: safeRoomId,
+                    slideIndex: pdf.slideIndex,
+                    scopeKey: pdf.scopeKey.slice(0, 160),
+                    x: pdf.x,
+                    y: pdf.y,
+                    width: pdf.width,
+                    height: pdf.height,
+                    dataUrl: pdf.dataUrl.slice(0, 340_000),
+                    fileName: pdf.fileName.slice(0, 160),
+                    pageNumber: pdf.pageNumber,
+                    pageCount: pdf.pageCount,
+                    authorId: user.uid,
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp(),
+                  }).catch((err) =>
+                    handleFirestoreError(
+                      err,
+                      OperationType.WRITE,
+                      `rooms/${safeRoomId}/pdfPages/${pdf.id}`,
+                    ),
+                  );
+                }
+                setPdfPages([...remotePdfs, ...localOnly].slice(-20));
+                return;
+              }
+            }
+
+            setPdfPages(remotePdfs.slice(-20));
+          },
+          (err) => handleFirestoreError(err, OperationType.GET, `rooms/${safeRoomId}/pdfPages`),
+        );
+        unsubs.push(unsubPdfs);
 
         // 2. Listen to all 9 slide boards & ephemeral boards
         for (let i = 0; i < 9; i++) {
@@ -1438,12 +1640,356 @@ export function useCollaborativeBoard({
     [isFirebaseActive, postLocalBoardSync, roomId, user],
   );
 
+  // Add Fixed PDF Page Frame
+  const addSlidePdf = useCallback(
+    (input: {
+      slideIndex: number;
+      scopeKey?: string;
+      x?: number;
+      y?: number;
+      width?: number;
+      height?: number;
+      dataUrl: string;
+      fileName: string;
+      pageNumber: number;
+      pageCount: number;
+    }) => {
+      const id = makeClientId('pdf');
+      const now = Date.now();
+      const item = clampSlidePdf({
+        id,
+        slideIndex: input.slideIndex,
+        scopeKey: input.scopeKey ?? getRootSlideScope(input.slideIndex),
+        x: input.x ?? 420,
+        y: input.y ?? 120,
+        width: input.width ?? 360,
+        height: input.height ?? 509,
+        dataUrl: input.dataUrl,
+        fileName: input.fileName,
+        pageNumber: input.pageNumber,
+        pageCount: input.pageCount,
+        authorId: currentAuthorId,
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      const nextPdfs = [...pdfPagesRef.current, item].slice(-20);
+      setPdfPages(nextPdfs);
+      postLocalBoardSync({ pdfPages: nextPdfs });
+
+      if (isFirebaseActive && user) {
+        void setDoc(doc(db, 'rooms', roomId, 'pdfPages', id), {
+          id: item.id,
+          roomId,
+          slideIndex: item.slideIndex,
+          scopeKey: item.scopeKey,
+          x: item.x,
+          y: item.y,
+          width: item.width,
+          height: item.height,
+          dataUrl: item.dataUrl,
+          fileName: item.fileName,
+          pageNumber: item.pageNumber,
+          pageCount: item.pageCount,
+          authorId: user.uid,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        }).catch((err) =>
+          handleFirestoreError(err, OperationType.WRITE, `rooms/${roomId}/pdfPages/${id}`),
+        );
+      }
+
+      return item;
+    },
+    [currentAuthorId, isFirebaseActive, postLocalBoardSync, roomId, user],
+  );
+
+  // Update PDF Frame Position/Size (the chosen page itself never changes)
+  const updateSlidePdf = useCallback(
+    (
+      pdfId: string,
+      patch: Partial<Pick<SlidePdfItem, 'scopeKey' | 'x' | 'y' | 'width' | 'height'>>,
+      commitToRemote = true,
+    ) => {
+      let updatedItem: SlidePdfItem | null = null;
+      const nextPdfs = pdfPagesRef.current.map((pdf) => {
+        if (pdf.id !== pdfId) return pdf;
+        updatedItem = clampSlidePdf({
+          ...pdf,
+          ...patch,
+          id: pdf.id,
+          slideIndex: pdf.slideIndex,
+          dataUrl: pdf.dataUrl,
+          fileName: pdf.fileName,
+          pageNumber: pdf.pageNumber,
+          pageCount: pdf.pageCount,
+          authorId: pdf.authorId,
+          createdAt: pdf.createdAt,
+          updatedAt: Date.now(),
+        });
+        return updatedItem;
+      });
+      setPdfPages(nextPdfs);
+      if (commitToRemote) {
+        postLocalBoardSync({ pdfPages: nextPdfs });
+      }
+
+      if (commitToRemote && isFirebaseActive && user && updatedItem) {
+        const finalItem = updatedItem as SlidePdfItem;
+        void updateDoc(doc(db, 'rooms', roomId, 'pdfPages', pdfId), {
+          scopeKey: finalItem.scopeKey,
+          x: finalItem.x,
+          y: finalItem.y,
+          width: finalItem.width,
+          height: finalItem.height,
+          updatedAt: serverTimestamp(),
+        }).catch((err) =>
+          handleFirestoreError(err, OperationType.UPDATE, `rooms/${roomId}/pdfPages/${pdfId}`),
+        );
+      }
+    },
+    [isFirebaseActive, postLocalBoardSync, roomId, user],
+  );
+
+  // Delete PDF Frame
+  const deleteSlidePdf = useCallback(
+    (pdfId: string) => {
+      const nextPdfs = pdfPagesRef.current.filter((pdf) => pdf.id !== pdfId);
+      setPdfPages(nextPdfs);
+      postLocalBoardSync({ pdfPages: nextPdfs });
+
+      if (isFirebaseActive && user) {
+        void deleteDoc(doc(db, 'rooms', roomId, 'pdfPages', pdfId)).catch((err) =>
+          handleFirestoreError(err, OperationType.DELETE, `rooms/${roomId}/pdfPages/${pdfId}`),
+        );
+      }
+    },
+    [isFirebaseActive, postLocalBoardSync, roomId, user],
+  );
+
+  // ── Live room presence & location ─────────────────────────────────────────
+
+  // Keep the online window fresh even when no Firestore snapshot arrives.
+  useEffect(() => {
+    const timer = window.setInterval(() => setPresenceTick((n) => n + 1), 15_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  // Silent IP-based location so partners still see an approximate place when
+  // device GPS is disabled or permission is denied.
+  const ipPresenceLookupRef = useRef(false);
+  useEffect(() => {
+    if (ipPresenceLookupRef.current) return;
+    const cached = loadCachedPresenceLocation();
+    if (cached) {
+      setPresenceLocation(cached);
+      return;
+    }
+    ipPresenceLookupRef.current = true;
+    void fetch('/api/geo', { headers: { Accept: 'application/json' } })
+      .then((res) => (res.ok ? (res.json() as Promise<Record<string, unknown>>) : null))
+      .then((raw) => {
+        if (!raw) return;
+        const location = normalizePresenceLocation({ ...raw, updatedAt: Date.now() });
+        if (location.source === 'none') return;
+        setPresenceLocation(location);
+        cachePresenceLocation(location);
+      })
+      .catch(() => {
+        // Approximation is optional; GPS refresh remains available.
+      });
+  }, []);
+
+  const pushPresenceHeartbeat = useCallback(
+    async (locationOverride?: PresenceLocation | null) => {
+      if (!isFirebaseActive || !user) return;
+      const location = locationOverride ?? presenceLocationRef.current;
+      const safeLocation = location ?? normalizePresenceLocation(null);
+      try {
+        await setDoc(
+          doc(db, 'rooms', roomId, 'presence', user.uid),
+          {
+            uid: user.uid,
+            displayName: effectivePresenceNameRef.current,
+            isAnonymous: user.isAnonymous,
+            location: {
+              source: safeLocation.source,
+              label: safeLocation.label.slice(0, 160),
+              city: safeLocation.city.slice(0, 80),
+              region: safeLocation.region.slice(0, 80),
+              country: safeLocation.country.slice(0, 80),
+              countryCode: safeLocation.countryCode.slice(0, 8),
+              latitude: safeLocation.latitude,
+              longitude: safeLocation.longitude,
+              accuracy: safeLocation.accuracy,
+              updatedAt: Timestamp.fromMillis(safeLocation.updatedAt || Date.now()),
+            },
+            lastSeen: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true },
+        );
+      } catch (err) {
+        handleFirestoreError(err, OperationType.WRITE, `rooms/${roomId}/presence/${user.uid}`);
+      }
+    },
+    [isFirebaseActive, roomId, user],
+  );
+
+  // Subscribe to the presence collection for this room.
+  useEffect(() => {
+    if (!isFirebaseActive || !user) {
+      setPresenceUsers([]);
+      return;
+    }
+    const presenceRef = collection(db, 'rooms', roomId, 'presence');
+    const unsub = onSnapshot(
+      presenceRef,
+      (snap) => {
+        const list: PresenceUser[] = [];
+        for (const presenceSnap of snap.docs) {
+          const d = presenceSnap.data();
+          if (!d || typeof d !== 'object') continue;
+          const uid = typeof d.uid === 'string' && d.uid ? d.uid : presenceSnap.id;
+          const pending = presenceSnap.metadata.hasPendingWrites;
+          const lastSeen = timestampToMillisOrZero(d.lastSeen) || (pending ? Date.now() : 0);
+          const location = normalizePresenceLocation(d.location);
+          list.push({
+            uid,
+            displayName:
+              typeof d.displayName === 'string' && d.displayName.trim()
+                ? d.displayName.trim().slice(0, 80)
+                : `Tetamu-${uid.slice(0, 5)}`,
+            isAnonymous: Boolean(d.isAnonymous),
+            location: location.source === 'none' ? null : location,
+            lastSeen,
+          });
+        }
+        setPresenceUsers(list);
+      },
+      (err) =>
+        handleFirestoreError(err, OperationType.GET, `rooms/${roomId}/presence`),
+    );
+    return () => unsub();
+  }, [isFirebaseActive, roomId, user]);
+
+  // Heartbeat every 25s (and immediately when the tab becomes visible again).
+  useEffect(() => {
+    if (!isFirebaseActive || !user) return;
+    void pushPresenceHeartbeat();
+    const timer = window.setInterval(() => void pushPresenceHeartbeat(), PRESENCE_HEARTBEAT_MS);
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') void pushPresenceHeartbeat();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisibility);
+      void deleteDoc(doc(db, 'rooms', roomId, 'presence', user.uid)).catch(() => {
+        // Best-effort departure marker; stale heartbeats are filtered anyway.
+      });
+    };
+  }, [isFirebaseActive, pushPresenceHeartbeat, roomId, user]);
+
+  // Publish immediately after a name or location change.
+  useEffect(() => {
+    if (!isFirebaseActive || !user) return;
+    void pushPresenceHeartbeat();
+  }, [isFirebaseActive, presenceLocation, presenceName, pushPresenceHeartbeat, user]);
+
+  const refreshPresenceLocation = useCallback(async () => {
+    if (typeof navigator === 'undefined' || !('geolocation' in navigator)) {
+      setPresenceLocationError(
+        'Peranti ini tidak menyokong GPS. Lokasi anggaran internet masih dipaparkan.',
+      );
+      return;
+    }
+    setPresenceLocationBusy(true);
+    setPresenceLocationError(null);
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 12_000,
+          maximumAge: 30_000,
+        });
+      });
+      const { latitude, longitude, accuracy } = position.coords;
+      let details: Record<string, unknown> = {};
+      try {
+        const res = await fetch(
+          `/api/geo/reverse?lat=${latitude.toFixed(6)}&lng=${longitude.toFixed(6)}`,
+          { headers: { Accept: 'application/json' } },
+        );
+        if (res.ok) details = (await res.json()) as Record<string, unknown>;
+      } catch {
+        // Coordinates are still useful without a reverse-geocoded label.
+      }
+      const city = typeof details.city === 'string' ? details.city : '';
+      const region = typeof details.region === 'string' ? details.region : '';
+      const country = typeof details.country === 'string' ? details.country : '';
+      const location = normalizePresenceLocation({
+        ...details,
+        source: 'gps',
+        latitude,
+        longitude,
+        accuracy,
+        label: buildLocationLabel(city, region, country),
+        updatedAt: Date.now(),
+      });
+      setPresenceLocation(location);
+      presenceLocationRef.current = location;
+      cachePresenceLocation(location);
+      await pushPresenceHeartbeat(location);
+    } catch (err) {
+      const code = (err as { code?: number })?.code;
+      setPresenceLocationError(
+        code === 1
+          ? 'Kebenaran lokasi ditolak. Lokasi anggaran internet masih dipaparkan kepada rakan pasukan.'
+          : 'Lokasi tepat tidak dapat diperoleh. Lokasi anggaran internet masih digunakan.',
+      );
+    } finally {
+      setPresenceLocationBusy(false);
+    }
+  }, [pushPresenceHeartbeat]);
+
+  const updatePresenceDisplayName = useCallback((next: string) => {
+    const clean = next.trim().slice(0, 80);
+    setPresenceName(clean);
+    savePresenceDisplayName(clean);
+  }, []);
+
+  const onlinePresenceUsers = useMemo(() => {
+    const now = Date.now();
+    const fresh = presenceUsers.filter(
+      (entry) =>
+        entry.lastSeen > 0 && now - entry.lastSeen <= PRESENCE_ONLINE_WINDOW_MS,
+    );
+    if (isFirebaseActive && user && !fresh.some((entry) => entry.uid === user.uid)) {
+      fresh.push({
+        uid: user.uid,
+        displayName: effectivePresenceName,
+        isAnonymous: user.isAnonymous,
+        location: presenceLocation,
+        lastSeen: now,
+      });
+    }
+    fresh.sort((a, b) => {
+      if (a.uid === user?.uid) return -1;
+      if (b.uid === user?.uid) return 1;
+      return a.displayName.localeCompare(b.displayName);
+    });
+    return fresh;
+    // presenceTick intentionally re-evaluates the online window over time.
+  }, [presenceUsers, presenceTick, isFirebaseActive, user, effectivePresenceName, presenceLocation]);
+
   const activePermanentStrokes = strokesBySlide[currentSlideIndex] ?? [];
   const activeTempStrokes = tempStrokesBySlide[currentSlideIndex] ?? [];
   const activeLiveStrokes = liveStrokesBySlide[currentSlideIndex] ?? {};
   const activeTextEdits = textEditsBySlide[currentSlideIndex] ?? {};
   const activeSlideImages = images.filter((img) => img.slideIndex === currentSlideIndex);
   const activeSlideTexts = texts.filter((t) => t.slideIndex === currentSlideIndex);
+  const activeSlidePdfs = pdfPages.filter((pdf) => pdf.slideIndex === currentSlideIndex);
 
   return {
     user,
@@ -1461,6 +2007,14 @@ export function useCollaborativeBoard({
     activeTextEdits,
     activeSlideImages,
     activeSlideTexts,
+    activeSlidePdfs,
+    presenceUsers: onlinePresenceUsers,
+    presenceLocation,
+    presenceLocationBusy,
+    presenceLocationError,
+    presenceDisplayName: effectivePresenceName,
+    updatePresenceDisplayName,
+    refreshPresenceLocation,
     signInWithGoogle,
     signOutUser,
     joinRoom,
@@ -1478,5 +2032,8 @@ export function useCollaborativeBoard({
     addSlideText,
     updateSlideText,
     deleteSlideText,
+    addSlidePdf,
+    updateSlidePdf,
+    deleteSlidePdf,
   };
 }

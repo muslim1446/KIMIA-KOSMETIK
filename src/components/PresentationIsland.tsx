@@ -11,8 +11,6 @@ import {
   ImagePlus,
   Loader2,
   LocateFixed,
-  LogIn,
-  LogOut,
   MapPin,
   Maximize2,
   Minimize2,
@@ -90,8 +88,6 @@ interface PresentationIslandProps {
   joinCode: string;
   syncStatus: BoardSyncStatus;
   syncError: string | null;
-  onSignInGoogle: () => void;
-  onSignOut: () => void;
   onJoinRoom: (roomId: string, joinCode: string) => void;
   closePopoverSignal?: number;
 }
@@ -139,8 +135,6 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
   joinCode,
   syncStatus,
   syncError,
-  onSignInGoogle,
-  onSignOut,
   onJoinRoom,
   closePopoverSignal = 0,
 }) => {
@@ -391,71 +385,20 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
           </div>
 
           <div className="rounded-xl bg-[#FBF9F5] dark:bg-stone-950 border border-stone-200 dark:border-stone-800 p-2.5 text-xs space-y-2">
-            {user && !user.isAnonymous ? (
-              <div className="flex items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="font-bold truncate">{user.displayName || user.email}</div>
-                  <div className="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold">
-                    {syncStatus === 'synced'
-                      ? t('sync.connected')
-                      : syncStatus === 'connecting'
-                      ? t('sync.connecting')
-                      : t('sync.error')}
-                  </div>
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <div className="font-bold text-stone-900 dark:text-stone-100">
+                  {t('sync.openGuest')}
                 </div>
-                <button
-                  type="button"
-                  onClick={onSignOut}
-                  className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-stone-300 dark:border-stone-700 text-xs font-bold hover:bg-stone-100 cursor-pointer"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span>{t('sync.signOut')}</span>
-                </button>
-              </div>
-            ) : user && user.isAnonymous ? (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <div className="font-bold text-stone-900 dark:text-stone-100">
-                      {t('sync.openGuest')}
-                    </div>
-                    <div className="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold">
-                      {syncStatus === 'synced'
-                        ? t('sync.guestConnected')
-                        : syncStatus === 'connecting'
-                        ? t('sync.guestConnecting')
-                        : t('sync.guestError')}
-                    </div>
-                  </div>
+                <div className="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold">
+                  {syncStatus === 'synced'
+                    ? t('sync.guestConnected')
+                    : syncStatus === 'connecting'
+                    ? t('sync.guestConnecting')
+                    : t('sync.guestError')}
                 </div>
-                <button
-                  type="button"
-                  data-testid="google-signin-button"
-                  onClick={onSignInGoogle}
-                  className="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-xl border border-stone-300 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 text-xs font-bold cursor-pointer"
-                >
-                  <LogIn className="w-3.5 h-3.5" />
-                  <span>{t('sync.optionalGoogle')}</span>
-                </button>
               </div>
-            ) : (
-              <div className="space-y-2">
-                <p className="text-stone-600 dark:text-stone-400 leading-snug">
-                  {anonBlocked
-                    ? t('sync.enableGuest')
-                    : t('sync.autoConnect')}
-                </p>
-                <button
-                  type="button"
-                  data-testid="google-signin-button"
-                  onClick={onSignInGoogle}
-                  className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold cursor-pointer"
-                >
-                  <LogIn className="w-3.5 h-3.5" />
-                  <span>{t('sync.googleSignIn')}</span>
-                </button>
-              </div>
-            )}
+            </div>
           </div>
 
           {/* Room ID & Join Code */}
@@ -519,9 +462,9 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
                 {t('sync.firebaseGuest')}
               </li>
               <li>
-                {t('sync.firebaseGoogle')}{' '}
+                {t('sync.firebaseRules')}{' '}
                 <code className="px-1 py-0.5 bg-stone-100 dark:bg-stone-800 rounded">
-                  beijing-xinjiang.pages.dev
+                  Firebase Console → Firestore Database → Rules → Publish
                 </code>
               </li>
             </ol>

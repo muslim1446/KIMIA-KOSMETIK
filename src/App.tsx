@@ -104,6 +104,7 @@ export default function App() {
         joinCode={board.joinCode}
         syncStatus={board.syncStatus}
         syncError={board.syncError}
+        syncWarning={board.syncWarning}
         currentAuthorId={board.currentAuthorId}
         permanentStrokes={board.activePermanentStrokes}
         tempStrokes={board.activeTempStrokes}
@@ -112,8 +113,6 @@ export default function App() {
         slideImages={board.activeSlideImages}
         slideTexts={board.activeSlideTexts}
         slidePdfs={board.activeSlidePdfs}
-        onSignInGoogle={board.signInWithGoogle}
-        onSignOut={board.signOutUser}
         onJoinRoom={board.joinRoom}
         onLiveStroke={(stroke) => board.updateLiveStroke(state.slideIndex, stroke)}
         onCommitStroke={board.commitStroke}

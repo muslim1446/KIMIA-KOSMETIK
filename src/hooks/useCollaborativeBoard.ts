@@ -16,11 +16,9 @@ import {
 import {
   onAuthStateChanged,
   signInAnonymously,
-  signInWithPopup,
-  signOut,
   User,
 } from 'firebase/auth';
-import { auth, db, googleProvider, handleFirestoreError, OperationType } from '../firebase';
+import { auth, db, handleFirestoreError, OperationType } from '../firebase';
 import {
   getRootSlideScope,
   mergeIdList,
@@ -251,6 +249,9 @@ export function useCollaborativeBoard({
   const [syncStatus, setSyncStatus] = useState<BoardSyncStatus>('connecting');
   const [syncError, setSyncError] = useState<string | null>(null);
   const [anonBlocked, setAnonBlocked] = useState(false);
+  // Channels whose live data stream is blocked (e.g. Firestore rules not published).
+  // Drives a prominent, unmissable warning so a silent sync failure can never happen.
+  const [blockedSyncChannels, setBlockedSyncChannels] = useState<string[]>([]);
 
   const [strokesBySlide, setStrokesBySlide] = useState<Record<number, PenStroke[]>>(
     initialBoard.strokesBySlide,
@@ -306,12 +307,51 @@ export function useCollaborativeBoard({
   const presenceLocationRef = useRef<PresenceLocation | null>(presenceLocation);
   presenceLocationRef.current = presenceLocation;
 
-  const isFirebaseActive = Boolean(authReady && user && syncStatus === 'synced');
+  // Open-world sync: never depends on auth. A stable per-tab author id is used
+  // for labels/presence, so writes flow even when anonymous sign-in is unavailable.
+  const isFirebaseActive = Boolean(authReady && syncStatus === 'synced');
   const currentAuthorId = user?.uid ?? localAuthorIdRef.current;
+
+  // Track per-channel health so a blocked stream (most commonly unpublished
+  // Firestore rules) surfaces as a loud warning instead of a silent no-sync.
+  const markSyncChannel = useCallback((channel: string, blocked: boolean) => {
+    setBlockedSyncChannels((prev) => {
+      const has = prev.includes(channel);
+      if (blocked && !has) return [...prev, channel];
+      if (!blocked && has) return prev.filter((item) => item !== channel);
+      return prev;
+    });
+  }, []);
+
+  const syncWarning =
+    blockedSyncChannels.length > 0
+      ? 'Penyegerakan langsung TERGENDALA — nota teks, PDF dan kehadiran mungkin TIDAK sampai ke peranti lain. ' +
+        'Sebab paling biasa: peraturan Firestore (firestore.rules) belum diterbitkan. ' +
+        'Buka Firebase Console → Firestore Database → Rules, tampal kandungan firestore.rules, kemudian klik Publish.'
+      : null;
+
+  // Record a failed write/stream so the user is told instead of losing data silently.
+  const reportSyncFailure = useCallback(
+    (channel: string, err: unknown, op: OperationType, path: string) => {
+      const code = (err as { code?: string } | null | undefined)?.code ?? '';
+      if (code === 'permission-denied' || code === 'PERMISSION_DENIED') {
+        markSyncChannel(channel, true);
+      }
+      try {
+        handleFirestoreError(err, op, path);
+      } catch {
+        // Already surfaced to the user through syncWarning.
+      }
+    },
+    [markSyncChannel],
+  );
+
   const defaultPresenceName = (
     user?.displayName ||
     user?.email ||
-    (user?.isAnonymous ? `Tetamu-${user.uid.slice(0, 5)}` : 'Pembentang')
+    (user?.isAnonymous
+      ? `Tetamu-${user.uid.slice(0, 5)}`
+      : `Tetamu-${localAuthorIdRef.current.slice(-4)}`)
   ).slice(0, 80);
   const effectivePresenceName = (presenceName.trim() || defaultPresenceName).slice(0, 80);
   const effectivePresenceNameRef = useRef(effectivePresenceName);
@@ -377,10 +417,21 @@ export function useCollaborativeBoard({
     [],
   );
 
-  // Silent Open-World Auth: automatically sign in anonymously if not signed in
+  // Best-effort anonymous identity ONLY. Sync itself is open-world and never
+  // waits on auth — if sign-in is disabled or hangs, we fall back to a stable
+  // per-tab id and keep syncing, so a room is never blocked by a login problem.
   useEffect(() => {
+    let authSettled = false;
+    const fallbackTimer = window.setTimeout(() => {
+      if (authSettled) return;
+      authSettled = true;
+      setAuthReady(true);
+    }, 5000);
+
     const unsub = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
+        authSettled = true;
+        window.clearTimeout(fallbackTimer);
         setUser(firebaseUser);
         setAuthReady(true);
         setAnonBlocked(false);
@@ -390,37 +441,33 @@ export function useCollaborativeBoard({
       if (!anonAttemptedRef.current) {
         anonAttemptedRef.current = true;
         setSyncStatus('connecting');
-        void signInAnonymously(auth).catch((err: unknown) => {
-          const code = (err as { code?: string })?.code ?? '';
+        void signInAnonymously(auth).catch(() => {
+          authSettled = true;
+          window.clearTimeout(fallbackTimer);
           setUser(null);
           setAuthReady(true);
-          if (
-            code === 'auth/operation-not-allowed' ||
-            code === 'auth/admin-restricted-operation'
-          ) {
-            setAnonBlocked(true);
-            setSyncStatus('local');
-            setSyncError(
-              'Aktifkan "Anonymous" di Firebase Console -> Authentication -> Sign-in method supaya semua ahli pasukan terus sync automatik tanpa log masuk.',
-            );
-          } else {
-            setSyncStatus('local');
-            setSyncError(err instanceof Error ? err.message : 'Mod luar talian aktif.');
-          }
+          setAnonBlocked(true);
         });
         return;
       }
 
+      authSettled = true;
+      window.clearTimeout(fallbackTimer);
       setUser(null);
       setAuthReady(true);
-      setSyncStatus('local');
     });
-    return () => unsub();
+
+    return () => {
+      authSettled = true;
+      window.clearTimeout(fallbackTimer);
+      unsub();
+    };
   }, []);
 
-  // Connect & Subscribe to Firestore Room automatically once signed in (anonymous or Google)
+  // Connect & Subscribe to Firestore Room. Open-world: gated only on auth settling
+  // (never on having a user), so streaming starts even with anonymous auth disabled.
   useEffect(() => {
-    if (!authReady || !user) return;
+    if (!authReady) return;
 
     let cancelled = false;
     const unsubs: Unsubscribe[] = [];
@@ -429,15 +476,17 @@ export function useCollaborativeBoard({
     const setupRoomAndListen = async () => {
       setSyncStatus('connecting');
       setSyncError(null);
+      // Stable author label: real uid when available, otherwise per-tab id.
+      const authorId = user?.uid ?? localAuthorIdRef.current;
 
       const safeRoomId = /^[a-zA-Z0-9_-]{3,128}$/.test(roomId) ? roomId : DEFAULT_ROOM_ID;
       const safeJoinCode = /^[a-zA-Z0-9_-]{3,32}$/.test(joinCode) ? joinCode : DEFAULT_JOIN_CODE;
       const roomRef = doc(db, 'rooms', safeRoomId);
-      const memberRef = doc(db, 'rooms', safeRoomId, 'members', user.uid);
+      const memberRef = doc(db, 'rooms', safeRoomId, 'members', authorId);
       const memberDisplayName = (
-        user.displayName ||
-        user.email ||
-        (user.isAnonymous ? `Tetamu-${user.uid.slice(0, 5)}` : 'Pembentang')
+        user?.displayName ||
+        user?.email ||
+        (user?.isAnonymous ? `Tetamu-${user.uid.slice(0, 5)}` : `Tetamu-${authorId.slice(-4)}`)
       ).slice(0, 80);
 
       try {
@@ -460,7 +509,7 @@ export function useCollaborativeBoard({
           let joinedExisting = false;
           try {
             await setDoc(memberRef, {
-              uid: user.uid,
+              uid: authorId,
               displayName: memberDisplayName,
               role: 'editor',
               joinCode: safeJoinCode,
@@ -481,7 +530,7 @@ export function useCollaborativeBoard({
             const ps = presentationStateRef.current;
 
             createBatch.set(roomRef, {
-              ownerId: user.uid,
+              ownerId: authorId,
               title: 'Pembentangan Kimia 5.4',
               joinCode: safeJoinCode,
               slideIndex: ps.slideIndex,
@@ -494,7 +543,7 @@ export function useCollaborativeBoard({
               updatedAt: serverTimestamp(),
             });
             createBatch.set(memberRef, {
-              uid: user.uid,
+              uid: authorId,
               displayName: memberDisplayName,
               role: 'owner',
               joinCode: safeJoinCode,
@@ -524,7 +573,7 @@ export function useCollaborativeBoard({
                     strokes: localStrokes,
                     textEdits: localEdits,
                     updatedAt: serverTimestamp(),
-                    updatedBy: user.uid,
+                    updatedBy: authorId,
                   });
                 }
               }
@@ -540,7 +589,7 @@ export function useCollaborativeBoard({
                     width: Math.max(24, Math.min(1600, Math.round(img.width))),
                     height: Math.max(24, Math.min(1200, Math.round(img.height))),
                     dataUrl: img.dataUrl.slice(0, 360_000),
-                    authorId: user.uid,
+                    authorId: authorId,
                     createdAt: serverTimestamp(),
                     updatedAt: serverTimestamp(),
                   });
@@ -565,7 +614,7 @@ export function useCollaborativeBoard({
                   color: text.color.slice(0, 32),
                   isBold: Boolean(text.isBold),
                   bgColor: (text.bgColor ?? 'transparent').slice(0, 32),
-                  authorId: user.uid,
+                  authorId: authorId,
                   createdAt: serverTimestamp(),
                   updatedAt: serverTimestamp(),
                 });
@@ -660,6 +709,7 @@ export function useCollaborativeBoard({
         const unsubTexts = onSnapshot(
           textsCollectionRef,
           (snap) => {
+            markSyncChannel('texts', false);
             const remoteTexts: SlideTextItem[] = [];
             for (const textSnap of snap.docs) {
               const d = textSnap.data();
@@ -712,11 +762,12 @@ export function useCollaborativeBoard({
                     color: text.color.slice(0, 32),
                     isBold: Boolean(text.isBold),
                     bgColor: (text.bgColor ?? 'transparent').slice(0, 32),
-                    authorId: user.uid,
+                    authorId: authorId,
                     createdAt: serverTimestamp(),
                     updatedAt: serverTimestamp(),
                   }).catch((err) =>
-                    handleFirestoreError(
+                    reportSyncFailure(
+                      'texts',
                       err,
                       OperationType.WRITE,
                       `rooms/${safeRoomId}/texts/${text.id}`,
@@ -730,7 +781,14 @@ export function useCollaborativeBoard({
 
             setTexts(remoteTexts.slice(-200));
           },
-          (err) => handleFirestoreError(err, OperationType.GET, `rooms/${safeRoomId}/texts`),
+          (err) => {
+            markSyncChannel('texts', true);
+            try {
+              handleFirestoreError(err, OperationType.GET, `rooms/${safeRoomId}/texts`);
+            } catch {
+              // Surfaced to the user through syncWarning.
+            }
+          },
         );
         unsubs.push(unsubTexts);
 
@@ -740,6 +798,7 @@ export function useCollaborativeBoard({
         const unsubPdfs = onSnapshot(
           pdfsCollectionRef,
           (snap) => {
+            markSyncChannel('pdfPages', false);
             const remotePdfs: SlidePdfItem[] = [];
             for (const pdfSnap of snap.docs) {
               const d = pdfSnap.data();
@@ -797,11 +856,12 @@ export function useCollaborativeBoard({
                     fileName: pdf.fileName.slice(0, 160),
                     pageNumber: pdf.pageNumber,
                     pageCount: pdf.pageCount,
-                    authorId: user.uid,
+                    authorId: authorId,
                     createdAt: serverTimestamp(),
                     updatedAt: serverTimestamp(),
                   }).catch((err) =>
-                    handleFirestoreError(
+                    reportSyncFailure(
+                      'pdfPages',
                       err,
                       OperationType.WRITE,
                       `rooms/${safeRoomId}/pdfPages/${pdf.id}`,
@@ -815,7 +875,14 @@ export function useCollaborativeBoard({
 
             setPdfPages(remotePdfs.slice(-20));
           },
-          (err) => handleFirestoreError(err, OperationType.GET, `rooms/${safeRoomId}/pdfPages`),
+          (err) => {
+            markSyncChannel('pdfPages', true);
+            try {
+              handleFirestoreError(err, OperationType.GET, `rooms/${safeRoomId}/pdfPages`);
+            } catch {
+              // Surfaced to the user through syncWarning.
+            }
+          },
         );
         unsubs.push(unsubPdfs);
 
@@ -896,12 +963,12 @@ export function useCollaborativeBoard({
       unsubs.forEach((u) => u());
       imageUnsubs.forEach((u) => u());
     };
-  }, [authReady, user, roomId, joinCode, onRemotePresentationSync]);
+  }, [authReady, roomId, joinCode, onRemotePresentationSync]);
 
   // Push presentation state updates (slide change, tab clicks, etc.)
   const pushPresentationStateToFirebase = useCallback(
     async (next: SyncedPresentationState) => {
-      if (!isFirebaseActive || !user) return;
+      if (!isFirebaseActive) return;
       const path = `rooms/${roomId}`;
       try {
         await updateDoc(doc(db, 'rooms', roomId), {
@@ -927,7 +994,7 @@ export function useCollaborativeBoard({
   const broadcastLaserToFirebase = useCallback(
     (laser: LaserPoint) => {
       lastLocalLaserActiveRef.current = Boolean(laser.active);
-      if (!isFirebaseActive || !user) return;
+      if (!isFirebaseActive) return;
 
       const cleanLaser = {
         active: Boolean(laser.active),
@@ -996,7 +1063,7 @@ export function useCollaborativeBoard({
         textEdits: Record<string, string>;
       }) => { strokes: PenStroke[]; textEdits: Record<string, string> },
     ) => {
-      if (!isFirebaseActive || !user) return Promise.resolve();
+      if (!isFirebaseActive) return Promise.resolve();
       const prev = slideTxQueueRef.current[slideIndex] ?? Promise.resolve();
       const nextTask = prev
         .catch(() => {})
@@ -1025,7 +1092,7 @@ export function useCollaborativeBoard({
                   strokes: boundedStrokes,
                   textEdits: boundedTextEdits,
                   updatedAt: serverTimestamp(),
-                  updatedBy: user.uid,
+                  updatedBy: currentAuthorId,
                 });
               } else {
                 tx.set(ref, {
@@ -1034,7 +1101,7 @@ export function useCollaborativeBoard({
                   strokes: boundedStrokes,
                   textEdits: boundedTextEdits,
                   updatedAt: serverTimestamp(),
-                  updatedBy: user.uid,
+                  updatedBy: currentAuthorId,
                 });
               }
             });
@@ -1057,7 +1124,7 @@ export function useCollaborativeBoard({
         liveStrokes: LiveStrokeMap;
       }) => { tempStrokes: PenStroke[]; liveStrokes: LiveStrokeMap },
     ) => {
-      if (!isFirebaseActive || !user) return Promise.resolve();
+      if (!isFirebaseActive) return Promise.resolve();
       const prev = ephemeralTxQueueRef.current[slideIndex] ?? Promise.resolve();
       const nextTask = prev
         .catch(() => {})
@@ -1091,7 +1158,7 @@ export function useCollaborativeBoard({
                   tempStrokes: boundedTemp,
                   liveStrokes: boundedLive,
                   updatedAt: serverTimestamp(),
-                  updatedBy: user.uid,
+                  updatedBy: currentAuthorId,
                 });
               } else {
                 tx.set(ref, {
@@ -1100,7 +1167,7 @@ export function useCollaborativeBoard({
                   tempStrokes: boundedTemp,
                   liveStrokes: boundedLive,
                   updatedAt: serverTimestamp(),
-                  updatedBy: user.uid,
+                  updatedBy: currentAuthorId,
                 });
               }
             });
@@ -1328,7 +1395,7 @@ export function useCollaborativeBoard({
       setImages(nextImages);
       postLocalBoardSync({ images: nextImages });
 
-      if (isFirebaseActive && user) {
+      if (isFirebaseActive) {
         const roomRef = doc(db, 'rooms', roomId);
         const imgRef = doc(db, 'rooms', roomId, 'images', id);
         try {
@@ -1350,7 +1417,7 @@ export function useCollaborativeBoard({
               width: item.width,
               height: item.height,
               dataUrl: item.dataUrl,
-              authorId: user.uid,
+              authorId: currentAuthorId,
               createdAt: serverTimestamp(),
               updatedAt: serverTimestamp(),
             });
@@ -1396,7 +1463,7 @@ export function useCollaborativeBoard({
         postLocalBoardSync({ images: nextImages });
       }
 
-      if (commitToRemote && isFirebaseActive && user && updatedItem) {
+      if (commitToRemote && isFirebaseActive && updatedItem) {
         const finalItem = updatedItem as SlideImageItem;
         const path = `rooms/${roomId}/images/${imageId}`;
         try {
@@ -1423,7 +1490,7 @@ export function useCollaborativeBoard({
       setImages(nextImages);
       postLocalBoardSync({ images: nextImages });
 
-      if (isFirebaseActive && user) {
+      if (isFirebaseActive) {
         const roomRef = doc(db, 'rooms', roomId);
         const imgRef = doc(db, 'rooms', roomId, 'images', imageId);
         try {
@@ -1469,37 +1536,6 @@ export function useCollaborativeBoard({
     },
     [mutateSlideBoardTx, postLocalBoardSync],
   );
-
-  const signInWithGoogle = useCallback(async () => {
-    setSyncError(null);
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (err: unknown) {
-      const code = (err as { code?: string })?.code ?? '';
-      if (code === 'auth/unauthorized-domain') {
-        setSyncError(
-          `Domain (${window.location.hostname}) belum didaftarkan di Firebase Console -> Authentication -> Settings -> Authorized domains.`,
-        );
-      } else if (code !== 'auth/popup-closed-by-user') {
-        setSyncError(err instanceof Error ? err.message : 'Log masuk Google gagal.');
-      }
-    }
-  }, []);
-
-  const signOutUser = useCallback(async () => {
-    await signOut(auth);
-    anonAttemptedRef.current = false;
-    setSyncError(null);
-    if (!anonBlocked) {
-      try {
-        await signInAnonymously(auth);
-      } catch {
-        setSyncStatus('local');
-      }
-    } else {
-      setSyncStatus('local');
-    }
-  }, [anonBlocked]);
 
   const joinRoom = useCallback((nextRoomId: string, nextJoinCode: string) => {
     const cleanRoom = nextRoomId.trim().replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64);
@@ -1552,7 +1588,7 @@ export function useCollaborativeBoard({
       setTexts(nextTexts);
       postLocalBoardSync({ texts: nextTexts });
 
-      if (isFirebaseActive && user) {
+      if (isFirebaseActive) {
         void setDoc(doc(db, 'rooms', roomId, 'texts', id), {
           id: item.id,
           roomId,
@@ -1567,11 +1603,11 @@ export function useCollaborativeBoard({
           color: item.color,
           isBold: item.isBold,
           bgColor: item.bgColor,
-          authorId: user.uid,
+          authorId: currentAuthorId,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         }).catch((err) =>
-          handleFirestoreError(err, OperationType.WRITE, `rooms/${roomId}/texts/${id}`),
+          reportSyncFailure('texts', err, OperationType.WRITE, `rooms/${roomId}/texts/${id}`),
         );
       }
 
@@ -1602,7 +1638,7 @@ export function useCollaborativeBoard({
         postLocalBoardSync({ texts: nextTexts });
       }
 
-      if (commitToRemote && isFirebaseActive && user && updatedItem) {
+      if (commitToRemote && isFirebaseActive && updatedItem) {
         const finalItem = updatedItem as SlideTextItem;
         void updateDoc(doc(db, 'rooms', roomId, 'texts', textId), {
           scopeKey: finalItem.scopeKey,
@@ -1617,7 +1653,7 @@ export function useCollaborativeBoard({
           bgColor: finalItem.bgColor,
           updatedAt: serverTimestamp(),
         }).catch((err) =>
-          handleFirestoreError(err, OperationType.UPDATE, `rooms/${roomId}/texts/${textId}`),
+          reportSyncFailure('texts', err, OperationType.UPDATE, `rooms/${roomId}/texts/${textId}`),
         );
       }
     },
@@ -1631,9 +1667,9 @@ export function useCollaborativeBoard({
       setTexts(nextTexts);
       postLocalBoardSync({ texts: nextTexts });
 
-      if (isFirebaseActive && user) {
+      if (isFirebaseActive) {
         void deleteDoc(doc(db, 'rooms', roomId, 'texts', textId)).catch((err) =>
-          handleFirestoreError(err, OperationType.DELETE, `rooms/${roomId}/texts/${textId}`),
+          reportSyncFailure('texts', err, OperationType.DELETE, `rooms/${roomId}/texts/${textId}`),
         );
       }
     },
@@ -1677,7 +1713,7 @@ export function useCollaborativeBoard({
       setPdfPages(nextPdfs);
       postLocalBoardSync({ pdfPages: nextPdfs });
 
-      if (isFirebaseActive && user) {
+      if (isFirebaseActive) {
         void setDoc(doc(db, 'rooms', roomId, 'pdfPages', id), {
           id: item.id,
           roomId,
@@ -1691,11 +1727,11 @@ export function useCollaborativeBoard({
           fileName: item.fileName,
           pageNumber: item.pageNumber,
           pageCount: item.pageCount,
-          authorId: user.uid,
+          authorId: currentAuthorId,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         }).catch((err) =>
-          handleFirestoreError(err, OperationType.WRITE, `rooms/${roomId}/pdfPages/${id}`),
+          reportSyncFailure('pdfPages', err, OperationType.WRITE, `rooms/${roomId}/pdfPages/${id}`),
         );
       }
 
@@ -1734,7 +1770,7 @@ export function useCollaborativeBoard({
         postLocalBoardSync({ pdfPages: nextPdfs });
       }
 
-      if (commitToRemote && isFirebaseActive && user && updatedItem) {
+      if (commitToRemote && isFirebaseActive && updatedItem) {
         const finalItem = updatedItem as SlidePdfItem;
         void updateDoc(doc(db, 'rooms', roomId, 'pdfPages', pdfId), {
           scopeKey: finalItem.scopeKey,
@@ -1744,7 +1780,7 @@ export function useCollaborativeBoard({
           height: finalItem.height,
           updatedAt: serverTimestamp(),
         }).catch((err) =>
-          handleFirestoreError(err, OperationType.UPDATE, `rooms/${roomId}/pdfPages/${pdfId}`),
+          reportSyncFailure('pdfPages', err, OperationType.UPDATE, `rooms/${roomId}/pdfPages/${pdfId}`),
         );
       }
     },
@@ -1758,9 +1794,9 @@ export function useCollaborativeBoard({
       setPdfPages(nextPdfs);
       postLocalBoardSync({ pdfPages: nextPdfs });
 
-      if (isFirebaseActive && user) {
+      if (isFirebaseActive) {
         void deleteDoc(doc(db, 'rooms', roomId, 'pdfPages', pdfId)).catch((err) =>
-          handleFirestoreError(err, OperationType.DELETE, `rooms/${roomId}/pdfPages/${pdfId}`),
+          reportSyncFailure('pdfPages', err, OperationType.DELETE, `rooms/${roomId}/pdfPages/${pdfId}`),
         );
       }
     },
@@ -1802,16 +1838,16 @@ export function useCollaborativeBoard({
 
   const pushPresenceHeartbeat = useCallback(
     async (locationOverride?: PresenceLocation | null) => {
-      if (!isFirebaseActive || !user) return;
+      if (!isFirebaseActive) return;
       const location = locationOverride ?? presenceLocationRef.current;
       const safeLocation = location ?? normalizePresenceLocation(null);
       try {
         await setDoc(
-          doc(db, 'rooms', roomId, 'presence', user.uid),
+          doc(db, 'rooms', roomId, 'presence', currentAuthorId),
           {
-            uid: user.uid,
+            uid: currentAuthorId,
             displayName: effectivePresenceNameRef.current,
-            isAnonymous: user.isAnonymous,
+            isAnonymous: !user || user.isAnonymous,
             location: {
               source: safeLocation.source,
               label: safeLocation.label.slice(0, 160),
@@ -1830,15 +1866,15 @@ export function useCollaborativeBoard({
           { merge: true },
         );
       } catch (err) {
-        handleFirestoreError(err, OperationType.WRITE, `rooms/${roomId}/presence/${user.uid}`);
+        reportSyncFailure('presence', err, OperationType.WRITE, `rooms/${roomId}/presence/${currentAuthorId}`);
       }
     },
-    [isFirebaseActive, roomId, user],
+    [currentAuthorId, isFirebaseActive, roomId, user],
   );
 
   // Subscribe to the presence collection for this room.
   useEffect(() => {
-    if (!isFirebaseActive || !user) {
+    if (!isFirebaseActive) {
       setPresenceUsers([]);
       return;
     }
@@ -1846,6 +1882,7 @@ export function useCollaborativeBoard({
     const unsub = onSnapshot(
       presenceRef,
       (snap) => {
+        markSyncChannel('presence', false);
         const list: PresenceUser[] = [];
         for (const presenceSnap of snap.docs) {
           const d = presenceSnap.data();
@@ -1867,15 +1904,21 @@ export function useCollaborativeBoard({
         }
         setPresenceUsers(list);
       },
-      (err) =>
-        handleFirestoreError(err, OperationType.GET, `rooms/${roomId}/presence`),
+      (err) => {
+        markSyncChannel('presence', true);
+        try {
+          handleFirestoreError(err, OperationType.GET, `rooms/${roomId}/presence`);
+        } catch {
+          // Surfaced to the user through syncWarning.
+        }
+      },
     );
     return () => unsub();
-  }, [isFirebaseActive, roomId, user]);
+  }, [isFirebaseActive, roomId]);
 
   // Heartbeat every 25s (and immediately when the tab becomes visible again).
   useEffect(() => {
-    if (!isFirebaseActive || !user) return;
+    if (!isFirebaseActive) return;
     void pushPresenceHeartbeat();
     const timer = window.setInterval(() => void pushPresenceHeartbeat(), PRESENCE_HEARTBEAT_MS);
     const onVisibility = () => {
@@ -1885,17 +1928,17 @@ export function useCollaborativeBoard({
     return () => {
       window.clearInterval(timer);
       document.removeEventListener('visibilitychange', onVisibility);
-      void deleteDoc(doc(db, 'rooms', roomId, 'presence', user.uid)).catch(() => {
+      void deleteDoc(doc(db, 'rooms', roomId, 'presence', currentAuthorId)).catch(() => {
         // Best-effort departure marker; stale heartbeats are filtered anyway.
       });
     };
-  }, [isFirebaseActive, pushPresenceHeartbeat, roomId, user]);
+  }, [currentAuthorId, isFirebaseActive, pushPresenceHeartbeat, roomId]);
 
   // Publish immediately after a name or location change.
   useEffect(() => {
-    if (!isFirebaseActive || !user) return;
+    if (!isFirebaseActive) return;
     void pushPresenceHeartbeat();
-  }, [isFirebaseActive, presenceLocation, presenceName, pushPresenceHeartbeat, user]);
+  }, [isFirebaseActive, presenceLocation, presenceName, pushPresenceHeartbeat]);
 
   const refreshPresenceLocation = useCallback(async () => {
     if (typeof navigator === 'undefined' || !('geolocation' in navigator)) {
@@ -1965,23 +2008,23 @@ export function useCollaborativeBoard({
       (entry) =>
         entry.lastSeen > 0 && now - entry.lastSeen <= PRESENCE_ONLINE_WINDOW_MS,
     );
-    if (isFirebaseActive && user && !fresh.some((entry) => entry.uid === user.uid)) {
+    if (isFirebaseActive && !fresh.some((entry) => entry.uid === currentAuthorId)) {
       fresh.push({
-        uid: user.uid,
+        uid: currentAuthorId,
         displayName: effectivePresenceName,
-        isAnonymous: user.isAnonymous,
+        isAnonymous: !user || user.isAnonymous,
         location: presenceLocation,
         lastSeen: now,
       });
     }
     fresh.sort((a, b) => {
-      if (a.uid === user?.uid) return -1;
-      if (b.uid === user?.uid) return 1;
+      if (a.uid === currentAuthorId) return -1;
+      if (b.uid === currentAuthorId) return 1;
       return a.displayName.localeCompare(b.displayName);
     });
     return fresh;
     // presenceTick intentionally re-evaluates the online window over time.
-  }, [presenceUsers, presenceTick, isFirebaseActive, user, effectivePresenceName, presenceLocation]);
+  }, [presenceUsers, presenceTick, isFirebaseActive, currentAuthorId, user, effectivePresenceName, presenceLocation]);
 
   const activePermanentStrokes = strokesBySlide[currentSlideIndex] ?? [];
   const activeTempStrokes = tempStrokesBySlide[currentSlideIndex] ?? [];
@@ -1999,6 +2042,7 @@ export function useCollaborativeBoard({
     joinCode,
     syncStatus,
     syncError,
+    syncWarning,
     isFirebaseActive,
     currentAuthorId,
     activePermanentStrokes,
@@ -2015,8 +2059,6 @@ export function useCollaborativeBoard({
     presenceDisplayName: effectivePresenceName,
     updatePresenceDisplayName,
     refreshPresenceLocation,
-    signInWithGoogle,
-    signOutUser,
     joinRoom,
     pushPresentationStateToFirebase,
     broadcastLaserToFirebase,

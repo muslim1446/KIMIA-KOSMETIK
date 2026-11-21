@@ -55,6 +55,7 @@ interface AudienceStageProps {
   joinCode: string;
   syncStatus: BoardSyncStatus;
   syncError: string | null;
+  syncWarning?: string | null;
   currentAuthorId: string;
   permanentStrokes: PenStroke[];
   tempStrokes: PenStroke[];
@@ -63,8 +64,6 @@ interface AudienceStageProps {
   slideImages: SlideImageItem[];
   slideTexts: SlideTextItem[];
   slidePdfs: SlidePdfItem[];
-  onSignInGoogle: () => void;
-  onSignOut: () => void;
   onJoinRoom: (roomId: string, joinCode: string) => void;
   onLiveStroke: (stroke: PenStroke | null) => void;
   onCommitStroke: (stroke: PenStroke) => void;
@@ -150,6 +149,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
   joinCode,
   syncStatus,
   syncError,
+  syncWarning,
   currentAuthorId,
   permanentStrokes,
   tempStrokes,
@@ -158,8 +158,6 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
   slideImages,
   slideTexts,
   slidePdfs,
-  onSignInGoogle,
-  onSignOut,
   onJoinRoom,
   onLiveStroke,
   onCommitStroke,
@@ -914,6 +912,17 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
         </div>
       )}
 
+      {/* Prominent sync-blocked warning: never let collaborative data fail silently */}
+      {!isRemoteProjector && syncWarning && (
+        <div
+          role="alert"
+          data-testid="sync-warning-banner"
+          className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] w-[min(720px,94vw)] rounded-xl border-2 border-red-300 bg-red-600 text-white px-4 py-2.5 text-[11px] font-bold leading-snug shadow-2xl"
+        >
+          {syncWarning}
+        </div>
+      )}
+
       {/* Flush hairline progress indicator at very bottom edge */}
       {!blackout && (
         <div className="pointer-events-none fixed bottom-0 left-0 right-0 h-[2px] z-30 bg-stone-200/50 dark:bg-stone-800/50">
@@ -999,8 +1008,6 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
           joinCode={joinCode}
           syncStatus={syncStatus}
           syncError={syncError}
-          onSignInGoogle={() => void onSignInGoogle()}
-          onSignOut={() => void onSignOut()}
           onJoinRoom={onJoinRoom}
           closePopoverSignal={closePopoverSignal}
         />

@@ -1,0 +1,28 @@
+rules_version = '2';
+
+// ============================================================================
+// KIMIA 5.4 — STORAGE RULES (original PDF files)
+// ----------------------------------------------------------------------------
+// Matches the open-world Firestore rules: anyone can upload a PDF and anyone
+// can download one, with no sign-in. Files are permanent — there is no delete
+// path — so a shared document can never be wiped from under another device.
+//
+// Publish this in: Firebase Console → Storage → Rules → Publish
+// ============================================================================
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Original PDFs live under rooms/{roomId}/pdfs/{file}.pdf
+    match /rooms/{roomId}/pdfs/{fileName} {
+      allow read: if true;   // any device may render any page
+      allow write: if true;  // upload / overwrite when a file changes
+      allow delete: if false; // permanent — protects everyone's documents
+    }
+
+    // Everything else stays private by default.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

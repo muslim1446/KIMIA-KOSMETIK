@@ -15,8 +15,9 @@ import {
   CachedPdfMeta,
   PdfSource,
   RenderedPdfPage,
-  RoomPdfLibraryItem,
+  RoomPdfEntry,
   RoomPdfLibraryPage,
+  importPdfSourceFromStorage,
   listCachedPdfs,
   renderPdfPage,
   resolveCachedPdf,
@@ -37,15 +38,18 @@ interface PdfFrameDialogProps {
   open: boolean;
   onClose: () => void;
   onAddFrame: (input: PdfFrameAddInput) => void | Promise<void>;
-  /** PDFs already added to this room by anyone, with their stored pages. */
-  library: RoomPdfLibraryItem[];
+  /** Every PDF in this room (originals in Storage + already-rendered pages). */
+  entries: RoomPdfEntry[];
+  /** Publishes the original PDF to Firebase Storage so all devices can reuse it. */
+  onPublishPdf: (file: File, source: PdfSource) => void | Promise<void>;
 }
 
 export const PdfFrameDialog: React.FC<PdfFrameDialogProps> = ({
   open,
   onClose,
   onAddFrame,
-  library,
+  entries,
+  onPublishPdf,
 }) => {
   const t = useUiText();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -62,10 +66,9 @@ export const PdfFrameDialog: React.FC<PdfFrameDialogProps> = ({
   const [libraryFileName, setLibraryFileName] = useState<string | null>(null);
   const previewTokenRef = useRef(0);
 
-  // Derived from the live room library so the page list always reflects the
+  // Derived from the live room entries so the page list always reflects the
   // latest pages other teammates may have added while the dialog is open.
-  const libraryFile =
-    library.find((item) => item.fileName === libraryFileName) ?? null;
+  const libraryFile = entries.find((item) => item.fileName === libraryFileName) ?? null;
 
   const refreshRecent = useCallback(async () => {
     try {
@@ -150,6 +153,10 @@ export const PdfFrameDialog: React.FC<PdfFrameDialogProps> = ({
       try {
         const resolved = await resolvePdfFile(file);
         applySource(resolved.source, resolved.reused);
+        // Upload the original document to Firebase Storage once, so every other
+        // device can render ANY page later without re-uploading. Fire-and-forget
+        // so the presenter is never blocked; failures degrade gracefully.
+        if (!resolved.reused) void onPublishPdf(file, resolved.source);
         void refreshRecent();
       } catch (err) {
         setError(err instanceof Error ? err.message : t('pdf.error'));
@@ -157,7 +164,7 @@ export const PdfFrameDialog: React.FC<PdfFrameDialogProps> = ({
         setBusy(false);
       }
     },
-    [applySource, refreshRecent, t],
+    [applySource, onPublishPdf, refreshRecent, t],
   );
 
   const handlePickCached = useCallback(
@@ -220,9 +227,36 @@ export const PdfFrameDialog: React.FC<PdfFrameDialogProps> = ({
     }
   }, [busy, onAddFrame, onClose, pageNumber, source, t]);
 
+  // Opens a room PDF. When its original file is in Storage, the full document is
+  // pulled once so ANY page can be rendered; otherwise falls back to the pages
+  // already rendered into Firestore.
+  const handlePickLibraryEntry = useCallback(
+    async (entry: RoomPdfEntry) => {
+      setError(null);
+      if (!entry.storagePath) {
+        setLibraryFileName(entry.fileName);
+        return;
+      }
+      setBusy(true);
+      try {
+        const resolved = await importPdfSourceFromStorage(
+          entry.fileName,
+          entry.storagePath,
+          entry.pageCount,
+        );
+        applySource(resolved, true);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : t('pdf.error'));
+      } finally {
+        setBusy(false);
+      }
+    },
+    [applySource, t],
+  );
+
   // Adds a page that is already stored in the room — no upload, no rendering.
   const handlePickLibraryPage = useCallback(
-    async (file: RoomPdfLibraryItem, page: RoomPdfLibraryPage) => {
+    async (file: RoomPdfEntry, page: RoomPdfLibraryPage) => {
       if (busy) return;
       setBusy(true);
       setError(null);
@@ -443,32 +477,35 @@ export const PdfFrameDialog: React.FC<PdfFrameDialogProps> = ({
                     {t('pdf.roomFilesShared')}
                   </span>
                 </div>
-                {library.length === 0 ? (
+                {entries.length === 0 ? (
                   <p className="rounded-xl border border-stone-200 dark:border-stone-700 bg-white/70 dark:bg-stone-950/40 px-3 py-2.5 text-[11px] text-stone-500 dark:text-stone-400">
                     {t('pdf.noRoomFiles')}
                   </p>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {library.map((file) => (
+                    {entries.map((file) => (
                       <button
                         key={file.fileName}
                         type="button"
                         data-testid="pdf-library-item"
                         disabled={busy}
-                        onClick={() => {
-                          setLibraryFileName(file.fileName);
-                          setError(null);
-                        }}
+                        onClick={() => void handlePickLibraryEntry(file)}
                         className="flex items-center gap-2 rounded-xl border border-stone-200 dark:border-stone-700 bg-white/80 dark:bg-stone-950/40 px-3 py-2 text-left hover:border-red-400 hover:bg-white dark:hover:bg-stone-800/70 transition-colors disabled:opacity-50 cursor-pointer"
                       >
                         <FileText className="w-4 h-4 shrink-0 text-red-700 dark:text-red-300" />
                         <span className="min-w-0 flex-1">
                           <span className="block text-xs font-bold truncate">{file.fileName}</span>
                           <span className="block text-[10px] text-stone-500">
-                            {t('pdf.roomPagesAvailable', { count: file.pages.length })}
+                            {file.storagePath
+                              ? t('pdf.anyPageAvailable', { count: file.pageCount })
+                              : t('pdf.roomPagesAvailable', { count: file.pages.length })}
                           </span>
                         </span>
-                        <ChevronRight className="w-3.5 h-3.5 shrink-0 text-stone-400" />
+                        {busy ? (
+                          <Loader2 className="w-3.5 h-3.5 shrink-0 text-stone-400 animate-spin" />
+                        ) : (
+                          <ChevronRight className="w-3.5 h-3.5 shrink-0 text-stone-400" />
+                        )}
                       </button>
                     ))}
                   </div>

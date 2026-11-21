@@ -54,6 +54,13 @@ service cloud.firestore {
         allow read, create, update, delete: if true;
       }
 
+      // Original PDF files uploaded to Storage. Kept permanent so a shared
+      // document can never be wiped from under another device.
+      match /pdfLibrary/{fileId} {
+        allow read, create, update: if true;
+        allow delete: if false;
+      }
+
       match /presence/{userId} {
         allow read, create, update, delete: if true;
       }

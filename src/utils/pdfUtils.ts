@@ -1,4 +1,6 @@
+import { getBytes, ref, uploadBytes } from 'firebase/storage';
 import { PDF_DATA_URL_MAX_LENGTH } from './annotationEngine';
+import { storage } from '../firebase';
 
 export interface PdfSource {
   /** Stable cache key derived from the normalized file name. */
@@ -34,15 +36,23 @@ export interface RoomPdfLibraryPage {
   height: number;
 }
 
-/**
- * A PDF file that someone already added to this room. Its pages are stored in
- * Firebase, so any teammate can drop in another page without re-uploading the
- * original document.
- */
-export interface RoomPdfLibraryItem {
+/** An original PDF stored in Firebase Storage so every device can re-render it. */
+export interface RoomPdfFileItem {
   fileName: string;
-  /** Total pages in the original document (may exceed `pages.length`). */
   pageCount: number;
+  size: number;
+  storagePath: string;
+}
+
+/**
+ * The merged room view of one PDF: the original bytes in Storage (when someone
+ * uploaded it) plus the pages already rendered into Firestore.
+ */
+export interface RoomPdfEntry {
+  fileName: string;
+  pageCount: number;
+  /** Storage path of the original PDF, or null when only pages exist. */
+  storagePath: string | null;
   pages: RoomPdfLibraryPage[];
 }
 
@@ -298,6 +308,63 @@ function toPdfError(err: unknown): Error {
     return new Error('Fail PDF ini rosak atau tidak sah.');
   }
   return err instanceof Error ? err : new Error('Gagal membaca fail PDF.');
+}
+
+/** A stable, filesystem-safe id for a PDF, derived from its normalised name. */
+export function pdfStorageId(fileName: string): string {
+  const base = normalizePdfFileName(fileName)
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+  return `${base || 'pdf'}`;
+}
+
+/** Uploads the original PDF bytes to Firebase Storage. */
+export async function uploadPdfToStorage(
+  storagePath: string,
+  bytes: ArrayBuffer,
+  contentType = 'application/pdf',
+): Promise<void> {
+  await uploadBytes(ref(storage, storagePath), new Blob([bytes], { type: contentType }), {
+    contentType,
+    // Revalidate so a re-uploaded document is never served stale from a cache.
+    cacheControl: 'public, max-age=0, must-revalidate',
+  });
+}
+
+/** Downloads the original PDF bytes from Firebase Storage. */
+export async function downloadPdfFromStorage(storagePath: string): Promise<ArrayBuffer> {
+  return getBytes(ref(storage, storagePath));
+}
+
+/**
+ * Resolves a room PDF into a reusable source. When this device already cached
+ * the same document (same file name and page count), the cached bytes are
+ * reused; otherwise the original is pulled from Firebase Storage. Either way the
+ * full document becomes renderable, so ANY page can be added without the
+ * original uploader being online.
+ */
+export async function importPdfSourceFromStorage(
+  fileName: string,
+  storagePath: string,
+  pageCount: number,
+): Promise<PdfSource> {
+  const safeCount = Math.max(1, pageCount);
+  const cached = await getCachedPdf(fileName);
+  if (cached && cached.pageCount === safeCount) return cached;
+
+  const bytes = await downloadPdfFromStorage(storagePath);
+  const source: PdfSource = {
+    key: pdfCacheKey(fileName),
+    fileName: fileName.slice(0, 160),
+    size: bytes.byteLength,
+    lastModified: Date.now(),
+    pageCount: safeCount,
+    bytes,
+  };
+  rememberInMemory(source);
+  await writeStoredRecord({ ...source, savedAt: Date.now() });
+  return source;
 }
 
 interface RenderPdfPageOptions {

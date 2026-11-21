@@ -48,7 +48,13 @@ import {
   savePresenceDisplayName,
 } from '../utils/presence';
 import { LaserPoint, SyncedPresentationState } from './usePresentationSync';
-import { RoomPdfLibraryItem } from '../utils/pdfUtils';
+import {
+  PdfSource,
+  RoomPdfEntry,
+  RoomPdfFileItem,
+  pdfStorageId,
+  uploadPdfToStorage,
+} from '../utils/pdfUtils';
 
 export type BoardSyncStatus = 'local' | 'connecting' | 'synced' | 'error';
 
@@ -264,6 +270,7 @@ export function useCollaborativeBoard({
   const [images, setImages] = useState<SlideImageItem[]>(initialBoard.images);
   const [texts, setTexts] = useState<SlideTextItem[]>(initialBoard.texts ?? []);
   const [pdfPages, setPdfPages] = useState<SlidePdfItem[]>(initialBoard.pdfPages ?? []);
+  const [pdfFiles, setPdfFiles] = useState<RoomPdfFileItem[]>([]);
 
   const [presenceUsers, setPresenceUsers] = useState<PresenceUser[]>([]);
   const [presenceTick, setPresenceTick] = useState(0);
@@ -874,6 +881,40 @@ export function useCollaborativeBoard({
           },
         );
         unsubs.push(unsubPdfs);
+
+        // 1d. Listen to the room's uploaded PDF files (original documents in
+        // Storage). Any device can then re-render any page without re-uploading.
+        const pdfLibraryRef = collection(db, 'rooms', safeRoomId, 'pdfLibrary');
+        const unsubPdfLibrary = onSnapshot(
+          pdfLibraryRef,
+          (snap) => {
+            const files: RoomPdfFileItem[] = [];
+            for (const fileSnap of snap.docs) {
+              const d = fileSnap.data();
+              if (!d || typeof d !== 'object') continue;
+              const storagePath = typeof d.storagePath === 'string' ? d.storagePath : '';
+              if (!storagePath) continue;
+              const fileName = typeof d.fileName === 'string' ? d.fileName : '';
+              if (!fileName) continue;
+              const pageCount = Number.isFinite(Number(d.pageCount))
+                ? Math.max(1, Math.trunc(Number(d.pageCount)))
+                : 1;
+              files.push({
+                fileName,
+                pageCount,
+                size: Number.isFinite(Number(d.size)) ? Number(d.size) : 0,
+                storagePath,
+              });
+            }
+            setPdfFiles(files);
+          },
+          (err) => {
+            // The library is an enhancement; a failure here never blocks frames.
+            markSyncChannel('pdfLibrary', true);
+            console.warn('pdfLibrary subscribe failed', err);
+          },
+        );
+        unsubs.push(unsubPdfLibrary);
 
         // 2. Listen to all 9 slide boards & ephemeral boards
         for (let i = 0; i < 9; i++) {
@@ -1735,6 +1776,36 @@ export function useCollaborativeBoard({
     [currentAuthorId, isFirebaseActive, postLocalBoardSync, roomId, user],
   );
 
+  // Uploads the original PDF to Firebase Storage and registers it in the room's
+  // shared library. Best-effort: if Storage is unavailable the frame still works
+  // from its rendered pages, so this never blocks or breaks adding a page.
+  const publishRoomPdf = useCallback(
+    async (file: File, source: PdfSource) => {
+      if (!isFirebaseActive) return;
+      try {
+        const storagePath = `rooms/${roomId}/pdfs/${pdfStorageId(source.fileName)}.pdf`;
+        await uploadPdfToStorage(storagePath, source.bytes, file.type || 'application/pdf');
+        await setDoc(
+          doc(db, 'rooms', roomId, 'pdfLibrary', pdfStorageId(source.fileName)),
+          {
+            fileName: source.fileName.slice(0, 160),
+            pageCount: source.pageCount,
+            size: source.size,
+            storagePath,
+            contentType: file.type || 'application/pdf',
+            uploadedBy: currentAuthorId,
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true },
+        );
+      } catch (err) {
+        // Non-fatal: the room simply falls back to already-rendered pages.
+        console.warn('PDF publish to Storage failed', err);
+      }
+    },
+    [currentAuthorId, isFirebaseActive, roomId],
+  );
+
   // Update PDF Frame Position/Size (the chosen page itself never changes)
   const updateSlidePdf = useCallback(
     (
@@ -1997,18 +2068,23 @@ export function useCollaborativeBoard({
   const activeSlideTexts = texts.filter((t) => t.slideIndex === currentSlideIndex);
   const activeSlidePdfs = pdfPages.filter((pdf) => pdf.slideIndex === currentSlideIndex);
 
-  // PDFs already added to this room by anyone, grouped by file name. Every page
-  // here is already stored in Firebase, so a teammate can drop in another page
-  // straight from the dialog without re-uploading the original document.
-  const roomPdfLibrary = useMemo<RoomPdfLibraryItem[]>(() => {
-    const byFile = new Map<string, RoomPdfLibraryItem>();
-    for (const pdf of pdfPages) {
-      const fileName = pdf.fileName || 'PDF';
+  // Every PDF in this room, merged from two Firebase sources:
+  //   * pdfLibrary — the original file in Storage (any page can be rendered), and
+  //   * pdfPages   — pages already rendered into Firestore.
+  // A teammate can drop in any page straight from the dialog without re-upload.
+  const roomPdfEntries = useMemo<RoomPdfEntry[]>(() => {
+    const byFile = new Map<string, RoomPdfEntry>();
+    const ensure = (fileName: string): RoomPdfEntry => {
       let entry = byFile.get(fileName);
       if (!entry) {
-        entry = { fileName, pageCount: Math.max(1, pdf.pageCount || 1), pages: [] };
+        entry = { fileName, pageCount: 1, storagePath: null, pages: [] };
         byFile.set(fileName, entry);
       }
+      return entry;
+    };
+
+    for (const pdf of pdfPages) {
+      const entry = ensure(pdf.fileName || 'PDF');
       entry.pageCount = Math.max(entry.pageCount, pdf.pageCount || 1);
       if (!entry.pages.some((page) => page.pageNumber === pdf.pageNumber)) {
         entry.pages.push({
@@ -2019,13 +2095,20 @@ export function useCollaborativeBoard({
         });
       }
     }
+
+    for (const file of pdfFiles) {
+      const entry = ensure(file.fileName);
+      entry.pageCount = Math.max(entry.pageCount, file.pageCount || 1);
+      entry.storagePath = file.storagePath;
+    }
+
     return Array.from(byFile.values())
       .map((entry) => ({
         ...entry,
         pages: [...entry.pages].sort((a, b) => a.pageNumber - b.pageNumber),
       }))
       .sort((a, b) => a.fileName.localeCompare(b.fileName));
-  }, [pdfPages]);
+  }, [pdfFiles, pdfPages]);
 
   return {
     user,
@@ -2045,7 +2128,8 @@ export function useCollaborativeBoard({
     activeSlideImages,
     activeSlideTexts,
     activeSlidePdfs,
-    roomPdfLibrary,
+    roomPdfEntries,
+    publishRoomPdf,
     presenceUsers: onlinePresenceUsers,
     presenceLocation,
     presenceLocationBusy,

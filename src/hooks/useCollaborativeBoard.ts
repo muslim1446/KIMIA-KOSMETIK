@@ -40,6 +40,23 @@ import {
   TEXT_EDIT_EPOCH_VALUE,
 } from '../utils/annotationEngine';
 import {
+  BoardUndoAction,
+  createEmptyUndoRedoState,
+  imagePatchChanged,
+  ImageGeometryPatch,
+  pdfPatchChanged,
+  PdfGeometryPatch,
+  pickImagePatch,
+  pickPdfPatch,
+  pickSlideTextPatch,
+  popRedoAction,
+  popUndoAction,
+  pushUndoAction,
+  SlideTextPatch,
+  slideTextPatchChanged,
+  SlideUndoRedoState,
+} from '../utils/undoHistory';
+import {
   PRESENCE_HEARTBEAT_MS,
   PRESENCE_ONLINE_WINDOW_MS,
   PresenceLocation,
@@ -294,6 +311,9 @@ export function useCollaborativeBoard({
   const [texts, setTexts] = useState<SlideTextItem[]>(initialBoard.texts ?? []);
   const [pdfPages, setPdfPages] = useState<SlidePdfItem[]>(initialBoard.pdfPages ?? []);
   const [pdfFiles, setPdfFiles] = useState<RoomPdfFileItem[]>([]);
+  const [undoRedoState, setUndoRedoState] = useState<SlideUndoRedoState>(() =>
+    createEmptyUndoRedoState(),
+  );
 
   const [presenceUsers, setPresenceUsers] = useState<PresenceUser[]>([]);
   const [presenceTick, setPresenceTick] = useState(0);
@@ -332,6 +352,11 @@ export function useCollaborativeBoard({
   textsRef.current = texts;
   const pdfPagesRef = useRef(pdfPages);
   pdfPagesRef.current = pdfPages;
+  const undoRedoRef = useRef(undoRedoState);
+  undoRedoRef.current = undoRedoState;
+  const pendingImageBeforeRef = useRef<Record<string, ImageGeometryPatch>>({});
+  const pendingTextBeforeRef = useRef<Record<string, SlideTextPatch>>({});
+  const pendingPdfBeforeRef = useRef<Record<string, PdfGeometryPatch>>({});
 
   const presenceLocationRef = useRef<PresenceLocation | null>(presenceLocation);
   presenceLocationRef.current = presenceLocation;
@@ -1315,6 +1340,12 @@ export function useCollaborativeBoard({
     [broadcastEphemeralLocal, currentAuthorId, mutateEphemeralBoardTx],
   );
 
+  const recordUndoAction = useCallback((action: BoardUndoAction) => {
+    const next = pushUndoAction(undoRedoRef.current, action);
+    undoRedoRef.current = next;
+    setUndoRedoState(next);
+  }, []);
+
   // Commit finished stroke (Permanent or Temporary) via conflict-free transaction
   const commitStroke = useCallback(
     (stroke: PenStroke) => {
@@ -1353,6 +1384,8 @@ export function useCollaborativeBoard({
           liveStrokes: mergeLiveStrokeMap(cur.liveStrokes, currentAuthorId, null),
         }));
       }
+
+      recordUndoAction({ type: 'stroke-add', slideIndex: sIdx, stroke });
     },
     [
       broadcastEphemeralLocal,
@@ -1360,19 +1393,22 @@ export function useCollaborativeBoard({
       mutateEphemeralBoardTx,
       mutateSlideBoardTx,
       postLocalBoardSync,
+      recordUndoAction,
     ],
   );
 
   // Erase strokes by ID (transaction removes only hit IDs, keeping concurrent teammates' strokes)
   const deleteStrokesById = useCallback(
-    (slideIndex: number, idsToDelete: Set<string>) => {
+    (slideIndex: number, idsToDelete: Set<string>, batchId?: string) => {
       if (idsToDelete.size === 0) return;
 
       const curPerm = strokesRef.current[slideIndex] ?? [];
+      const removedPerm = curPerm.filter((s) => idsToDelete.has(s.id));
       const nextPerm = removeStrokesFromList(curPerm, idsToDelete);
       const permChanged = nextPerm.length !== curPerm.length;
 
       const curTemp = tempStrokesRef.current[slideIndex] ?? [];
+      const removedTemp = curTemp.filter((s) => idsToDelete.has(s.id));
       const nextTemp = removeStrokesFromList(curTemp, idsToDelete);
       const tempChanged = nextTemp.length !== curTemp.length;
 
@@ -1397,15 +1433,33 @@ export function useCollaborativeBoard({
           liveStrokes: cur.liveStrokes,
         }));
       }
+
+      if (removedPerm.length > 0 || removedTemp.length > 0) {
+        recordUndoAction({
+          type: 'strokes-remove',
+          slideIndex,
+          permanentStrokes: removedPerm,
+          tempStrokes: removedTemp,
+          batchId,
+        });
+      }
     },
-    [broadcastEphemeralLocal, mutateEphemeralBoardTx, mutateSlideBoardTx, postLocalBoardSync],
+    [
+      broadcastEphemeralLocal,
+      mutateEphemeralBoardTx,
+      mutateSlideBoardTx,
+      postLocalBoardSync,
+      recordUndoAction,
+    ],
   );
 
   const clearScopeStrokes = useCallback(
     (slideIndex: number, scopeKey: string) => {
       const curPerm = strokesRef.current[slideIndex] ?? [];
+      const removedPerm = curPerm.filter((s) => s.scopeKey === scopeKey);
       const nextPerm = curPerm.filter((s) => s.scopeKey !== scopeKey);
       const curTemp = tempStrokesRef.current[slideIndex] ?? [];
+      const removedTemp = curTemp.filter((s) => s.scopeKey === scopeKey);
       const nextTemp = curTemp.filter((s) => s.scopeKey !== scopeKey);
       const nextLive = Object.fromEntries(
         Object.entries(liveStrokesRef.current[slideIndex] ?? {}).filter(
@@ -1430,12 +1484,30 @@ export function useCollaborativeBoard({
           Object.entries(cur.liveStrokes).filter(([, s]) => s.scopeKey !== scopeKey),
         ),
       }));
+
+      if (removedPerm.length > 0 || removedTemp.length > 0) {
+        recordUndoAction({
+          type: 'strokes-remove',
+          slideIndex,
+          permanentStrokes: removedPerm,
+          tempStrokes: removedTemp,
+        });
+      }
     },
-    [broadcastEphemeralLocal, mutateEphemeralBoardTx, mutateSlideBoardTx, postLocalBoardSync],
+    [
+      broadcastEphemeralLocal,
+      mutateEphemeralBoardTx,
+      mutateSlideBoardTx,
+      postLocalBoardSync,
+      recordUndoAction,
+    ],
   );
 
   const clearSlideStrokes = useCallback(
     (slideIndex: number) => {
+      const removedPerm = strokesRef.current[slideIndex] ?? [];
+      const removedTemp = tempStrokesRef.current[slideIndex] ?? [];
+
       const nextMap = { ...strokesRef.current, [slideIndex]: [] };
       setStrokesBySlide(nextMap);
       setTempStrokesBySlide((prev) => ({ ...prev, [slideIndex]: [] }));
@@ -1451,8 +1523,102 @@ export function useCollaborativeBoard({
         tempStrokes: [],
         liveStrokes: {},
       }));
+
+      if (removedPerm.length > 0 || removedTemp.length > 0) {
+        recordUndoAction({
+          type: 'strokes-remove',
+          slideIndex,
+          permanentStrokes: removedPerm,
+          tempStrokes: removedTemp,
+        });
+      }
     },
-    [broadcastEphemeralLocal, mutateEphemeralBoardTx, mutateSlideBoardTx, postLocalBoardSync],
+    [
+      broadcastEphemeralLocal,
+      mutateEphemeralBoardTx,
+      mutateSlideBoardTx,
+      postLocalBoardSync,
+      recordUndoAction,
+    ],
+  );
+
+  // Low-level reversible helpers shared by both live user actions and undo/redo
+  const restoreImageExact = useCallback(
+    async (item: SlideImageItem) => {
+      const nextImages = [...imagesRef.current.filter((img) => img.id !== item.id), item].slice(-50);
+      setImages(nextImages);
+      postLocalBoardSync({ images: nextImages });
+
+      if (isFirebaseActive) {
+        const roomRef = doc(db, 'rooms', roomId);
+        const imgRef = doc(db, 'rooms', roomId, 'images', item.id);
+        try {
+          await runTransaction(db, async (tx) => {
+            const roomSnap = await tx.get(roomRef);
+            const curIds: string[] =
+              roomSnap.exists() && Array.isArray(roomSnap.data().imageIds)
+                ? roomSnap.data().imageIds
+                : roomImageIdsRef.current;
+            const nextIds = mergeIdList(curIds, item.id, undefined, 50);
+
+            tx.set(imgRef, {
+              id: item.id,
+              roomId,
+              slideIndex: item.slideIndex,
+              scopeKey: item.scopeKey,
+              x: item.x,
+              y: item.y,
+              width: item.width,
+              height: item.height,
+              dataUrl: item.dataUrl,
+              authorId: item.authorId || currentAuthorId,
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp(),
+            });
+            tx.update(roomRef, {
+              imageIds: nextIds,
+              updatedAt: serverTimestamp(),
+            });
+          });
+        } catch (err) {
+          handleFirestoreError(err, OperationType.WRITE, `rooms/${roomId}/images/${item.id}`);
+        }
+      }
+    },
+    [currentAuthorId, isFirebaseActive, postLocalBoardSync, roomId],
+  );
+
+  const removeImageExact = useCallback(
+    async (imageId: string) => {
+      delete pendingImageBeforeRef.current[imageId];
+      const nextImages = imagesRef.current.filter((img) => img.id !== imageId);
+      setImages(nextImages);
+      postLocalBoardSync({ images: nextImages });
+
+      if (isFirebaseActive) {
+        const roomRef = doc(db, 'rooms', roomId);
+        const imgRef = doc(db, 'rooms', roomId, 'images', imageId);
+        try {
+          await runTransaction(db, async (tx) => {
+            const roomSnap = await tx.get(roomRef);
+            const curIds: string[] =
+              roomSnap.exists() && Array.isArray(roomSnap.data().imageIds)
+                ? roomSnap.data().imageIds
+                : roomImageIdsRef.current;
+            const nextIds = mergeIdList(curIds, undefined, imageId, 50);
+
+            tx.delete(imgRef);
+            tx.update(roomRef, {
+              imageIds: nextIds,
+              updatedAt: serverTimestamp(),
+            });
+          });
+        } catch (err) {
+          handleFirestoreError(err, OperationType.DELETE, `rooms/${roomId}/images/${imageId}`);
+        }
+      }
+    },
+    [isFirebaseActive, postLocalBoardSync, roomId],
   );
 
   // Add Pasted/Uploaded Image via room transaction so concurrent uploads never overwrite imageIds
@@ -1482,57 +1648,19 @@ export function useCollaborativeBoard({
         updatedAt: now,
       };
 
-      const nextImages = [...imagesRef.current, item].slice(-50);
-      setImages(nextImages);
-      postLocalBoardSync({ images: nextImages });
-
-      if (isFirebaseActive) {
-        const roomRef = doc(db, 'rooms', roomId);
-        const imgRef = doc(db, 'rooms', roomId, 'images', id);
-        try {
-          await runTransaction(db, async (tx) => {
-            const roomSnap = await tx.get(roomRef);
-            const curIds: string[] =
-              roomSnap.exists() && Array.isArray(roomSnap.data().imageIds)
-                ? roomSnap.data().imageIds
-                : roomImageIdsRef.current;
-            const nextIds = mergeIdList(curIds, id, undefined, 50);
-
-            tx.set(imgRef, {
-              id: item.id,
-              roomId,
-              slideIndex: item.slideIndex,
-              scopeKey: item.scopeKey,
-              x: item.x,
-              y: item.y,
-              width: item.width,
-              height: item.height,
-              dataUrl: item.dataUrl,
-              authorId: currentAuthorId,
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp(),
-            });
-            tx.update(roomRef, {
-              imageIds: nextIds,
-              updatedAt: serverTimestamp(),
-            });
-          });
-        } catch (err) {
-          handleFirestoreError(err, OperationType.WRITE, `rooms/${roomId}/images/${id}`);
-        }
-      }
+      recordUndoAction({ type: 'image-add', slideIndex: item.slideIndex, image: item });
+      await restoreImageExact(item);
       return item;
     },
-    [currentAuthorId, isFirebaseActive, postLocalBoardSync, roomId, user],
+    [currentAuthorId, recordUndoAction, restoreImageExact],
   );
 
-  // Update Image Position/Size/Scope
-  const updateImage = useCallback(
+  const applyImageUpdateExact = useCallback(
     async (
       imageId: string,
       patch: Partial<Pick<SlideImageItem, 'scopeKey' | 'x' | 'y' | 'width' | 'height'>>,
       commitToRemote = true,
-    ) => {
+    ): Promise<SlideImageItem | null> => {
       let updatedItem: SlideImageItem | null = null;
       const nextImages = imagesRef.current.map((img) => {
         if (img.id !== imageId) return img;
@@ -1570,45 +1698,61 @@ export function useCollaborativeBoard({
           handleFirestoreError(err, OperationType.UPDATE, path);
         }
       }
+      return updatedItem;
     },
-    [isFirebaseActive, postLocalBoardSync, roomId, user],
+    [isFirebaseActive, postLocalBoardSync, roomId],
+  );
+
+  // Update Image Position/Size/Scope
+  const updateImage = useCallback(
+    async (
+      imageId: string,
+      patch: Partial<Pick<SlideImageItem, 'scopeKey' | 'x' | 'y' | 'width' | 'height'>>,
+      commitToRemote = true,
+    ) => {
+      const existing = imagesRef.current.find((img) => img.id === imageId);
+      if (existing) {
+        if (!commitToRemote) {
+          if (!pendingImageBeforeRef.current[imageId]) {
+            pendingImageBeforeRef.current[imageId] = pickImagePatch(existing);
+          }
+        } else {
+          const before = pendingImageBeforeRef.current[imageId] ?? pickImagePatch(existing);
+          delete pendingImageBeforeRef.current[imageId];
+          const updatedItem = await applyImageUpdateExact(imageId, patch, true);
+          if (updatedItem) {
+            const after = pickImagePatch(updatedItem);
+            if (imagePatchChanged(before, after)) {
+              recordUndoAction({
+                type: 'image-update',
+                slideIndex: updatedItem.slideIndex,
+                imageId,
+                before,
+                after,
+              });
+            }
+          }
+          return;
+        }
+      }
+      await applyImageUpdateExact(imageId, patch, commitToRemote);
+    },
+    [applyImageUpdateExact, recordUndoAction],
   );
 
   // Delete Image via room transaction
   const deleteImage = useCallback(
     async (imageId: string) => {
-      const nextImages = imagesRef.current.filter((img) => img.id !== imageId);
-      setImages(nextImages);
-      postLocalBoardSync({ images: nextImages });
-
-      if (isFirebaseActive) {
-        const roomRef = doc(db, 'rooms', roomId);
-        const imgRef = doc(db, 'rooms', roomId, 'images', imageId);
-        try {
-          await runTransaction(db, async (tx) => {
-            const roomSnap = await tx.get(roomRef);
-            const curIds: string[] =
-              roomSnap.exists() && Array.isArray(roomSnap.data().imageIds)
-                ? roomSnap.data().imageIds
-                : roomImageIdsRef.current;
-            const nextIds = mergeIdList(curIds, undefined, imageId, 50);
-
-            tx.delete(imgRef);
-            tx.update(roomRef, {
-              imageIds: nextIds,
-              updatedAt: serverTimestamp(),
-            });
-          });
-        } catch (err) {
-          handleFirestoreError(err, OperationType.DELETE, `rooms/${roomId}/images/${imageId}`);
-        }
+      const existing = imagesRef.current.find((img) => img.id === imageId);
+      if (existing) {
+        recordUndoAction({ type: 'image-delete', slideIndex: existing.slideIndex, image: existing });
       }
+      await removeImageExact(imageId);
     },
-    [isFirebaseActive, postLocalBoardSync, roomId, user],
+    [recordUndoAction, removeImageExact],
   );
 
-  // Inline Text Edit (create/update/reset) via conflict-free transaction
-  const setTextEdit = useCallback(
+  const applyTextEditExact = useCallback(
     (slideIndex: number, textKey: string, value: string | null) => {
       const nextSlideMap = mergeTextEditMap(
         textEditsRef.current[slideIndex] ?? {},
@@ -1632,6 +1776,28 @@ export function useCollaborativeBoard({
     [mutateSlideBoardTx, postLocalBoardSync],
   );
 
+  // Inline Text Edit (create/update/reset) via conflict-free transaction
+  const setTextEdit = useCallback(
+    (slideIndex: number, textKey: string, value: string | null) => {
+      const slideMap = textEditsRef.current[slideIndex] ?? {};
+      const prevValue = Object.prototype.hasOwnProperty.call(slideMap, textKey)
+        ? slideMap[textKey]
+        : null;
+      const nextValue = value === null ? null : sanitizeTextOverride(value);
+      applyTextEditExact(slideIndex, textKey, value);
+      if (prevValue !== nextValue) {
+        recordUndoAction({
+          type: 'text-edit',
+          slideIndex,
+          textKey,
+          prevValue,
+          nextValue,
+        });
+      }
+    },
+    [applyTextEditExact, recordUndoAction],
+  );
+
   const joinRoom = useCallback((nextRoomId: string, nextJoinCode: string) => {
     const cleanRoom = nextRoomId.trim().replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64);
     const cleanCode = nextJoinCode.trim().replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 32);
@@ -1639,52 +1805,26 @@ export function useCollaborativeBoard({
       setSyncError('ID Bilik dan Kod Sertai mesti sekurang-kurangnya 3 aksara (huruf/nombor).');
       return;
     }
+    const emptyHistory = createEmptyUndoRedoState();
+    undoRedoRef.current = emptyHistory;
+    setUndoRedoState(emptyHistory);
+    pendingImageBeforeRef.current = {};
+    pendingTextBeforeRef.current = {};
+    pendingPdfBeforeRef.current = {};
     setSyncError(null);
     setRoomId(cleanRoom);
     setJoinCode(cleanCode);
   }, []);
 
-  // Add Movable Text Box
-  const addSlideText = useCallback(
-    (input: {
-      slideIndex: number;
-      scopeKey?: string;
-      x?: number;
-      y?: number;
-      width?: number;
-      height?: number;
-      text?: string;
-      fontSize?: number;
-      color?: string;
-      isBold?: boolean;
-      bgColor?: string;
-    }) => {
-      const id = makeClientId('txt');
-      const now = Date.now();
-      const item: SlideTextItem = clampSlideText({
-        id,
-        slideIndex: input.slideIndex,
-        scopeKey: input.scopeKey ?? getRootSlideScope(input.slideIndex),
-        x: input.x ?? 380,
-        y: input.y ?? 200,
-        width: input.width ?? 300,
-        height: input.height ?? 100,
-        text: input.text ?? 'Taip nota di sini...',
-        fontSize: input.fontSize ?? 20,
-        color: input.color ?? '#1C1917',
-        isBold: Boolean(input.isBold),
-        bgColor: input.bgColor ?? 'transparent',
-        authorId: currentAuthorId,
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      const nextTexts = [...textsRef.current, item].slice(-60);
+  const restoreSlideTextExact = useCallback(
+    (rawItem: SlideTextItem) => {
+      const item = clampSlideText(rawItem);
+      const nextTexts = [...textsRef.current.filter((t) => t.id !== item.id), item].slice(-60);
       setTexts(nextTexts);
       postLocalBoardSync({ texts: nextTexts });
 
       if (isFirebaseActive) {
-        void setDoc(doc(db, 'rooms', roomId, 'texts', id), {
+        void setDoc(doc(db, 'rooms', roomId, 'texts', item.id), {
           id: item.id,
           roomId,
           slideIndex: item.slideIndex,
@@ -1698,22 +1838,19 @@ export function useCollaborativeBoard({
           color: item.color,
           isBold: item.isBold,
           bgColor: item.bgColor,
-          authorId: currentAuthorId,
+          authorId: item.authorId || currentAuthorId,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         }).catch((err) =>
-          reportSyncFailure('texts', err, OperationType.WRITE, `rooms/${roomId}/texts/${id}`),
+          reportSyncFailure('texts', err, OperationType.WRITE, `rooms/${roomId}/texts/${item.id}`),
         );
       }
-
-      return item;
     },
-    [currentAuthorId, isFirebaseActive, postLocalBoardSync, roomId, user],
+    [currentAuthorId, isFirebaseActive, postLocalBoardSync, reportSyncFailure, roomId],
   );
 
-  // Update Movable Text Box
-  const updateSlideText = useCallback(
-    (textId: string, patch: Partial<SlideTextItem>, commitToRemote = true) => {
+  const applySlideTextUpdateExact = useCallback(
+    (textId: string, patch: Partial<SlideTextItem>, commitToRemote = true): SlideTextItem | null => {
       let updatedItem: SlideTextItem | null = null;
       const nextTexts = textsRef.current.map((t) => {
         if (t.id !== textId) return t;
@@ -1751,13 +1888,14 @@ export function useCollaborativeBoard({
           reportSyncFailure('texts', err, OperationType.UPDATE, `rooms/${roomId}/texts/${textId}`),
         );
       }
+      return updatedItem;
     },
-    [isFirebaseActive, postLocalBoardSync, roomId, user],
+    [isFirebaseActive, postLocalBoardSync, reportSyncFailure, roomId],
   );
 
-  // Delete Movable Text Box
-  const deleteSlideText = useCallback(
+  const removeSlideTextExact = useCallback(
     (textId: string) => {
+      delete pendingTextBeforeRef.current[textId];
       const nextTexts = textsRef.current.filter((t) => t.id !== textId);
       setTexts(nextTexts);
       postLocalBoardSync({ texts: nextTexts });
@@ -1768,7 +1906,198 @@ export function useCollaborativeBoard({
         );
       }
     },
-    [isFirebaseActive, postLocalBoardSync, roomId, user],
+    [isFirebaseActive, postLocalBoardSync, reportSyncFailure, roomId],
+  );
+
+  // Add Movable Text Box
+  const addSlideText = useCallback(
+    (input: {
+      slideIndex: number;
+      scopeKey?: string;
+      x?: number;
+      y?: number;
+      width?: number;
+      height?: number;
+      text?: string;
+      fontSize?: number;
+      color?: string;
+      isBold?: boolean;
+      bgColor?: string;
+    }) => {
+      const id = makeClientId('txt');
+      const now = Date.now();
+      const item: SlideTextItem = clampSlideText({
+        id,
+        slideIndex: input.slideIndex,
+        scopeKey: input.scopeKey ?? getRootSlideScope(input.slideIndex),
+        x: input.x ?? 380,
+        y: input.y ?? 200,
+        width: input.width ?? 300,
+        height: input.height ?? 100,
+        text: input.text ?? 'Taip nota di sini...',
+        fontSize: input.fontSize ?? 20,
+        color: input.color ?? '#1C1917',
+        isBold: Boolean(input.isBold),
+        bgColor: input.bgColor ?? 'transparent',
+        authorId: currentAuthorId,
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      restoreSlideTextExact(item);
+      if (item.text.trim().length > 0) {
+        recordUndoAction({ type: 'slide-text-add', slideIndex: item.slideIndex, item });
+      }
+      return item;
+    },
+    [currentAuthorId, recordUndoAction, restoreSlideTextExact],
+  );
+
+  // Update Movable Text Box
+  const updateSlideText = useCallback(
+    (textId: string, patch: Partial<SlideTextItem>, commitToRemote = true) => {
+      const existing = textsRef.current.find((t) => t.id === textId);
+      if (existing) {
+        if (!commitToRemote) {
+          if (!pendingTextBeforeRef.current[textId]) {
+            pendingTextBeforeRef.current[textId] = pickSlideTextPatch(existing);
+          }
+          applySlideTextUpdateExact(textId, patch, false);
+          return;
+        }
+        const before = pendingTextBeforeRef.current[textId] ?? pickSlideTextPatch(existing);
+        delete pendingTextBeforeRef.current[textId];
+        const updatedItem = applySlideTextUpdateExact(textId, patch, true);
+        if (updatedItem) {
+          const after = pickSlideTextPatch(updatedItem);
+          if (before.text.trim().length === 0 && after.text.trim().length > 0) {
+            recordUndoAction({
+              type: 'slide-text-add',
+              slideIndex: updatedItem.slideIndex,
+              item: updatedItem,
+            });
+          } else if (after.text.trim().length > 0 && slideTextPatchChanged(before, after)) {
+            recordUndoAction({
+              type: 'slide-text-update',
+              slideIndex: updatedItem.slideIndex,
+              textId,
+              before,
+              after,
+            });
+          }
+        }
+        return;
+      }
+      applySlideTextUpdateExact(textId, patch, commitToRemote);
+    },
+    [applySlideTextUpdateExact, recordUndoAction],
+  );
+
+  // Delete Movable Text Box
+  const deleteSlideText = useCallback(
+    (textId: string) => {
+      const existing = textsRef.current.find((t) => t.id === textId);
+      if (existing && existing.text.trim().length > 0) {
+        recordUndoAction({ type: 'slide-text-delete', slideIndex: existing.slideIndex, item: existing });
+      }
+      removeSlideTextExact(textId);
+    },
+    [recordUndoAction, removeSlideTextExact],
+  );
+
+  const restoreSlidePdfExact = useCallback(
+    (rawItem: SlidePdfItem) => {
+      const item = clampSlidePdf(rawItem);
+      const nextPdfs = [...pdfPagesRef.current.filter((p) => p.id !== item.id), item].slice(-20);
+      setPdfPages(nextPdfs);
+      postLocalBoardSync({ pdfPages: nextPdfs });
+
+      if (isFirebaseActive) {
+        void setDoc(doc(db, 'rooms', roomId, 'pdfPages', item.id), {
+          id: item.id,
+          roomId,
+          slideIndex: item.slideIndex,
+          scopeKey: item.scopeKey,
+          x: item.x,
+          y: item.y,
+          width: item.width,
+          height: item.height,
+          dataUrl: item.dataUrl,
+          fileName: item.fileName,
+          pageNumber: item.pageNumber,
+          pageCount: item.pageCount,
+          authorId: item.authorId || currentAuthorId,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        }).catch((err) =>
+          reportSyncFailure('pdfPages', err, OperationType.WRITE, `rooms/${roomId}/pdfPages/${item.id}`),
+        );
+      }
+    },
+    [currentAuthorId, isFirebaseActive, postLocalBoardSync, reportSyncFailure, roomId],
+  );
+
+  const applySlidePdfUpdateExact = useCallback(
+    (
+      pdfId: string,
+      patch: Partial<Pick<SlidePdfItem, 'scopeKey' | 'x' | 'y' | 'width' | 'height'>>,
+      commitToRemote = true,
+    ): SlidePdfItem | null => {
+      let updatedItem: SlidePdfItem | null = null;
+      const nextPdfs = pdfPagesRef.current.map((pdf) => {
+        if (pdf.id !== pdfId) return pdf;
+        updatedItem = clampSlidePdf({
+          ...pdf,
+          ...patch,
+          id: pdf.id,
+          slideIndex: pdf.slideIndex,
+          dataUrl: pdf.dataUrl,
+          fileName: pdf.fileName,
+          pageNumber: pdf.pageNumber,
+          pageCount: pdf.pageCount,
+          authorId: pdf.authorId,
+          createdAt: pdf.createdAt,
+          updatedAt: Date.now(),
+        });
+        return updatedItem;
+      });
+      setPdfPages(nextPdfs);
+      if (commitToRemote) {
+        postLocalBoardSync({ pdfPages: nextPdfs });
+      }
+
+      if (commitToRemote && isFirebaseActive && updatedItem) {
+        const finalItem = updatedItem as SlidePdfItem;
+        void updateDoc(doc(db, 'rooms', roomId, 'pdfPages', pdfId), {
+          scopeKey: finalItem.scopeKey,
+          x: finalItem.x,
+          y: finalItem.y,
+          width: finalItem.width,
+          height: finalItem.height,
+          updatedAt: serverTimestamp(),
+        }).catch((err) =>
+          reportSyncFailure('pdfPages', err, OperationType.UPDATE, `rooms/${roomId}/pdfPages/${pdfId}`),
+        );
+      }
+      return updatedItem;
+    },
+    [isFirebaseActive, postLocalBoardSync, reportSyncFailure, roomId],
+  );
+
+  const removeSlidePdfExact = useCallback(
+    (pdfId: string) => {
+      delete pendingPdfBeforeRef.current[pdfId];
+      const nextPdfs = pdfPagesRef.current.filter((pdf) => pdf.id !== pdfId);
+      setPdfPages(nextPdfs);
+      postLocalBoardSync({ pdfPages: nextPdfs });
+
+      if (isFirebaseActive) {
+        void deleteDoc(doc(db, 'rooms', roomId, 'pdfPages', pdfId)).catch((err) =>
+          reportSyncFailure('pdfPages', err, OperationType.DELETE, `rooms/${roomId}/pdfPages/${pdfId}`),
+        );
+      }
+    },
+    [isFirebaseActive, postLocalBoardSync, reportSyncFailure, roomId],
   );
 
   // Add Fixed PDF Page Frame
@@ -1804,35 +2133,11 @@ export function useCollaborativeBoard({
         updatedAt: now,
       });
 
-      const nextPdfs = [...pdfPagesRef.current, item].slice(-20);
-      setPdfPages(nextPdfs);
-      postLocalBoardSync({ pdfPages: nextPdfs });
-
-      if (isFirebaseActive) {
-        void setDoc(doc(db, 'rooms', roomId, 'pdfPages', id), {
-          id: item.id,
-          roomId,
-          slideIndex: item.slideIndex,
-          scopeKey: item.scopeKey,
-          x: item.x,
-          y: item.y,
-          width: item.width,
-          height: item.height,
-          dataUrl: item.dataUrl,
-          fileName: item.fileName,
-          pageNumber: item.pageNumber,
-          pageCount: item.pageCount,
-          authorId: currentAuthorId,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        }).catch((err) =>
-          reportSyncFailure('pdfPages', err, OperationType.WRITE, `rooms/${roomId}/pdfPages/${id}`),
-        );
-      }
-
+      restoreSlidePdfExact(item);
+      recordUndoAction({ type: 'slide-pdf-add', slideIndex: item.slideIndex, item });
       return item;
     },
-    [currentAuthorId, isFirebaseActive, postLocalBoardSync, roomId, user],
+    [currentAuthorId, recordUndoAction, restoreSlidePdfExact],
   );
 
   // Uploads the original PDF to Firebase Storage and registers it in the room's
@@ -1872,61 +2177,245 @@ export function useCollaborativeBoard({
       patch: Partial<Pick<SlidePdfItem, 'scopeKey' | 'x' | 'y' | 'width' | 'height'>>,
       commitToRemote = true,
     ) => {
-      let updatedItem: SlidePdfItem | null = null;
-      const nextPdfs = pdfPagesRef.current.map((pdf) => {
-        if (pdf.id !== pdfId) return pdf;
-        updatedItem = clampSlidePdf({
-          ...pdf,
-          ...patch,
-          id: pdf.id,
-          slideIndex: pdf.slideIndex,
-          dataUrl: pdf.dataUrl,
-          fileName: pdf.fileName,
-          pageNumber: pdf.pageNumber,
-          pageCount: pdf.pageCount,
-          authorId: pdf.authorId,
-          createdAt: pdf.createdAt,
-          updatedAt: Date.now(),
-        });
-        return updatedItem;
-      });
-      setPdfPages(nextPdfs);
-      if (commitToRemote) {
-        postLocalBoardSync({ pdfPages: nextPdfs });
+      const existing = pdfPagesRef.current.find((pdf) => pdf.id === pdfId);
+      if (existing) {
+        if (!commitToRemote) {
+          if (!pendingPdfBeforeRef.current[pdfId]) {
+            pendingPdfBeforeRef.current[pdfId] = pickPdfPatch(existing);
+          }
+          applySlidePdfUpdateExact(pdfId, patch, false);
+          return;
+        }
+        const before = pendingPdfBeforeRef.current[pdfId] ?? pickPdfPatch(existing);
+        delete pendingPdfBeforeRef.current[pdfId];
+        const updatedItem = applySlidePdfUpdateExact(pdfId, patch, true);
+        if (updatedItem) {
+          const after = pickPdfPatch(updatedItem);
+          if (pdfPatchChanged(before, after)) {
+            recordUndoAction({
+              type: 'slide-pdf-update',
+              slideIndex: updatedItem.slideIndex,
+              pdfId,
+              before,
+              after,
+            });
+          }
+        }
+        return;
       }
-
-      if (commitToRemote && isFirebaseActive && updatedItem) {
-        const finalItem = updatedItem as SlidePdfItem;
-        void updateDoc(doc(db, 'rooms', roomId, 'pdfPages', pdfId), {
-          scopeKey: finalItem.scopeKey,
-          x: finalItem.x,
-          y: finalItem.y,
-          width: finalItem.width,
-          height: finalItem.height,
-          updatedAt: serverTimestamp(),
-        }).catch((err) =>
-          reportSyncFailure('pdfPages', err, OperationType.UPDATE, `rooms/${roomId}/pdfPages/${pdfId}`),
-        );
-      }
+      applySlidePdfUpdateExact(pdfId, patch, commitToRemote);
     },
-    [isFirebaseActive, postLocalBoardSync, roomId, user],
+    [applySlidePdfUpdateExact, recordUndoAction],
   );
 
   // Delete PDF Frame
   const deleteSlidePdf = useCallback(
     (pdfId: string) => {
-      const nextPdfs = pdfPagesRef.current.filter((pdf) => pdf.id !== pdfId);
-      setPdfPages(nextPdfs);
-      postLocalBoardSync({ pdfPages: nextPdfs });
+      const existing = pdfPagesRef.current.find((pdf) => pdf.id === pdfId);
+      if (existing) {
+        recordUndoAction({ type: 'slide-pdf-delete', slideIndex: existing.slideIndex, item: existing });
+      }
+      removeSlidePdfExact(pdfId);
+    },
+    [recordUndoAction, removeSlidePdfExact],
+  );
 
-      if (isFirebaseActive) {
-        void deleteDoc(doc(db, 'rooms', roomId, 'pdfPages', pdfId)).catch((err) =>
-          reportSyncFailure('pdfPages', err, OperationType.DELETE, `rooms/${roomId}/pdfPages/${pdfId}`),
-        );
+  // Execute Undo or Redo action cleanly without recording new history entries
+  const applyHistoryAction = useCallback(
+    (action: BoardUndoAction, direction: 'undo' | 'redo') => {
+      const sIdx = action.slideIndex;
+
+      const restoreStrokes = (permList: PenStroke[], tempList: PenStroke[]) => {
+        if (permList.length > 0) {
+          const nextList = mergeStrokeBatch(strokesRef.current[sIdx] ?? [], permList, 400);
+          const nextMap = { ...strokesRef.current, [sIdx]: nextList };
+          setStrokesBySlide(nextMap);
+          postLocalBoardSync({ strokesBySlide: nextMap });
+          void mutateSlideBoardTx(sIdx, (cur) => ({
+            strokes: mergeStrokeBatch(cur.strokes, permList, 400),
+            textEdits: cur.textEdits,
+          }));
+        }
+        if (tempList.length > 0) {
+          const now = Date.now();
+          const refreshedTemp = tempList.map((s) => ({
+            ...s,
+            createdAt: now,
+            expiresAt: now + (s.ttlSeconds ?? 3) * 1000,
+          }));
+          const existingTemp = pruneExpiredTempStrokes(tempStrokesRef.current[sIdx] ?? [], now);
+          const nextTemp = mergeStrokeBatch(existingTemp, refreshedTemp, 120);
+          setTempStrokesBySlide((prev) => ({ ...prev, [sIdx]: nextTemp }));
+          broadcastEphemeralLocal(sIdx, nextTemp, liveStrokesRef.current[sIdx] ?? {});
+          void mutateEphemeralBoardTx(sIdx, (cur) => ({
+            tempStrokes: mergeStrokeBatch(cur.tempStrokes, refreshedTemp, 120),
+            liveStrokes: cur.liveStrokes,
+          }));
+        }
+      };
+
+      const removeStrokes = (ids: Set<string>, hasPerm: boolean, hasTemp: boolean) => {
+        if (ids.size === 0) return;
+        if (hasPerm) {
+          const nextPerm = removeStrokesFromList(strokesRef.current[sIdx] ?? [], ids);
+          const nextMap = { ...strokesRef.current, [sIdx]: nextPerm };
+          setStrokesBySlide(nextMap);
+          postLocalBoardSync({ strokesBySlide: nextMap });
+          void mutateSlideBoardTx(sIdx, (cur) => ({
+            strokes: removeStrokesFromList(cur.strokes, ids),
+            textEdits: cur.textEdits,
+          }));
+        }
+        if (hasTemp) {
+          const nextTemp = removeStrokesFromList(tempStrokesRef.current[sIdx] ?? [], ids);
+          setTempStrokesBySlide((prev) => ({ ...prev, [sIdx]: nextTemp }));
+          broadcastEphemeralLocal(sIdx, nextTemp, liveStrokesRef.current[sIdx] ?? {});
+          void mutateEphemeralBoardTx(sIdx, (cur) => ({
+            tempStrokes: removeStrokesFromList(cur.tempStrokes, ids),
+            liveStrokes: cur.liveStrokes,
+          }));
+        }
+      };
+
+      switch (action.type) {
+        case 'stroke-add': {
+          const isPerm = action.stroke.mode === 'permanent';
+          if (direction === 'undo') {
+            removeStrokes(new Set([action.stroke.id]), isPerm, !isPerm);
+          } else {
+            restoreStrokes(isPerm ? [action.stroke] : [], isPerm ? [] : [action.stroke]);
+          }
+          break;
+        }
+        case 'strokes-remove': {
+          if (direction === 'undo') {
+            restoreStrokes(action.permanentStrokes, action.tempStrokes);
+          } else {
+            const ids = new Set<string>([
+              ...action.permanentStrokes.map((s) => s.id),
+              ...action.tempStrokes.map((s) => s.id),
+            ]);
+            removeStrokes(ids, action.permanentStrokes.length > 0, action.tempStrokes.length > 0);
+          }
+          break;
+        }
+        case 'text-edit': {
+          applyTextEditExact(
+            sIdx,
+            action.textKey,
+            direction === 'undo' ? action.prevValue : action.nextValue,
+          );
+          break;
+        }
+        case 'image-add': {
+          if (direction === 'undo') {
+            void removeImageExact(action.image.id);
+          } else {
+            void restoreImageExact(action.image);
+          }
+          break;
+        }
+        case 'image-update': {
+          void applyImageUpdateExact(
+            action.imageId,
+            direction === 'undo' ? action.before : action.after,
+            true,
+          );
+          break;
+        }
+        case 'image-delete': {
+          if (direction === 'undo') {
+            void restoreImageExact(action.image);
+          } else {
+            void removeImageExact(action.image.id);
+          }
+          break;
+        }
+        case 'slide-text-add': {
+          if (direction === 'undo') {
+            removeSlideTextExact(action.item.id);
+          } else {
+            restoreSlideTextExact(action.item);
+          }
+          break;
+        }
+        case 'slide-text-update': {
+          applySlideTextUpdateExact(
+            action.textId,
+            direction === 'undo' ? action.before : action.after,
+            true,
+          );
+          break;
+        }
+        case 'slide-text-delete': {
+          if (direction === 'undo') {
+            restoreSlideTextExact(action.item);
+          } else {
+            removeSlideTextExact(action.item.id);
+          }
+          break;
+        }
+        case 'slide-pdf-add': {
+          if (direction === 'undo') {
+            removeSlidePdfExact(action.item.id);
+          } else {
+            restoreSlidePdfExact(action.item);
+          }
+          break;
+        }
+        case 'slide-pdf-update': {
+          applySlidePdfUpdateExact(
+            action.pdfId,
+            direction === 'undo' ? action.before : action.after,
+            true,
+          );
+          break;
+        }
+        case 'slide-pdf-delete': {
+          if (direction === 'undo') {
+            restoreSlidePdfExact(action.item);
+          } else {
+            removeSlidePdfExact(action.item.id);
+          }
+          break;
+        }
       }
     },
-    [isFirebaseActive, postLocalBoardSync, roomId, user],
+    [
+      applyImageUpdateExact,
+      applySlidePdfUpdateExact,
+      applySlideTextUpdateExact,
+      applyTextEditExact,
+      broadcastEphemeralLocal,
+      mutateEphemeralBoardTx,
+      mutateSlideBoardTx,
+      postLocalBoardSync,
+      removeImageExact,
+      removeSlidePdfExact,
+      removeSlideTextExact,
+      restoreImageExact,
+      restoreSlidePdfExact,
+      restoreSlideTextExact,
+    ],
   );
+
+  const undo = useCallback((): boolean => {
+    const { action, nextState } = popUndoAction(undoRedoRef.current, currentSlideIndex);
+    if (!action) return false;
+    undoRedoRef.current = nextState;
+    setUndoRedoState(nextState);
+    applyHistoryAction(action, 'undo');
+    return true;
+  }, [applyHistoryAction, currentSlideIndex]);
+
+  const redo = useCallback((): boolean => {
+    const { action, nextState } = popRedoAction(undoRedoRef.current, currentSlideIndex);
+    if (!action) return false;
+    undoRedoRef.current = nextState;
+    setUndoRedoState(nextState);
+    applyHistoryAction(action, 'redo');
+    return true;
+  }, [applyHistoryAction, currentSlideIndex]);
 
   // ── Live room presence & location ─────────────────────────────────────────
 
@@ -2169,6 +2658,9 @@ export function useCollaborativeBoard({
       .sort((a, b) => a.fileName.localeCompare(b.fileName));
   }, [pdfFiles, pdfPages]);
 
+  const canUndo = (undoRedoState.undoBySlide[currentSlideIndex]?.length ?? 0) > 0;
+  const canRedo = (undoRedoState.redoBySlide[currentSlideIndex]?.length ?? 0) > 0;
+
   return {
     user,
     authReady,
@@ -2214,5 +2706,9 @@ export function useCollaborativeBoard({
     addSlidePdf,
     updateSlidePdf,
     deleteSlidePdf,
+    canUndo,
+    canRedo,
+    undo,
+    redo,
   };
 }

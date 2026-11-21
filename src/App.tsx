@@ -45,6 +45,9 @@ export default function App() {
         : '5.4 Ubat-ubatan dan Bahan Kosmetik — Pembentangan Kimia KSSM';
   }, [uiLanguage]);
 
+  const undoRedoRef = useRef({ undo: board.undo, redo: board.redo });
+  undoRedoRef.current = { undo: board.undo, redo: board.redo };
+
   // Global keyboard shortcuts for crisp presentation control
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -56,6 +59,28 @@ export default function App() {
           target.tagName === 'SELECT' ||
           target.isContentEditable)
       ) {
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+        const lower = e.key.toLowerCase();
+        if (lower === 'z') {
+          e.preventDefault();
+          if (e.shiftKey) {
+            undoRedoRef.current.redo();
+          } else {
+            undoRedoRef.current.undo();
+          }
+          return;
+        }
+        if (lower === 'y' && !e.shiftKey) {
+          e.preventDefault();
+          undoRedoRef.current.redo();
+          return;
+        }
+      }
+
+      if (e.ctrlKey || e.metaKey || e.altKey) {
         return;
       }
 
@@ -118,8 +143,12 @@ export default function App() {
         onJoinRoom={board.joinRoom}
         onLiveStroke={(stroke) => board.updateLiveStroke(state.slideIndex, stroke)}
         onCommitStroke={board.commitStroke}
-        onDeleteStrokes={(ids) => board.deleteStrokesById(state.slideIndex, ids)}
+        onDeleteStrokes={(ids, batchId) => board.deleteStrokesById(state.slideIndex, ids, batchId)}
         onClearSlideRootStrokes={() => board.clearSlideStrokes(state.slideIndex)}
+        canUndo={board.canUndo}
+        canRedo={board.canRedo}
+        onUndo={board.undo}
+        onRedo={board.redo}
         onAddImage={board.addImage}
         onUpdateImage={board.updateImage}
         onDeleteImage={board.deleteImage}

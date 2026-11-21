@@ -45,7 +45,7 @@ interface SlideAnnotationLayerProps {
   slideImages: SlideImageItem[];
   onLiveStroke: (stroke: PenStroke | null) => void;
   onCommitStroke: (stroke: PenStroke) => void;
-  onDeleteStrokes: (ids: Set<string>) => void;
+  onDeleteStrokes: (ids: Set<string>, batchId?: string) => void;
   onUpdateImage: (
     imageId: string,
     patch: Partial<Pick<SlideImageItem, 'scopeKey' | 'x' | 'y' | 'width' | 'height'>>,
@@ -112,6 +112,7 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
   } | null>(null);
   const lastLiveEmitRef = useRef<number>(0);
   const isErasingRef = useRef<boolean>(false);
+  const eraserBatchIdRef = useRef<string | null>(null);
   const lastImagePointerRef = useRef<{ id: string; time: number } | null>(null);
 
   const imageActionRef = useRef<{
@@ -210,6 +211,7 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
       }
       activePointerIdRef.current = null;
       isErasingRef.current = false;
+      eraserBatchIdRef.current = null;
       imageActionRef.current = null;
     }
   }, [isPinchingOrPanning, onLiveStroke]);
@@ -356,7 +358,7 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
         }
       }
       if (hitIds.size > 0) {
-        onDeleteStrokes(hitIds);
+        onDeleteStrokes(hitIds, eraserBatchIdRef.current ?? undefined);
       }
     },
     [
@@ -383,6 +385,7 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
 
     if (tool === 'eraser') {
       isErasingRef.current = true;
+      eraserBatchIdRef.current = `erase-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
       runEraserAt(e.clientX, e.clientY);
       return;
     }
@@ -465,6 +468,7 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
 
     if (tool === 'eraser') {
       isErasingRef.current = false;
+      eraserBatchIdRef.current = null;
       return;
     }
 

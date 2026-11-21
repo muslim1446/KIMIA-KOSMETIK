@@ -19,11 +19,13 @@ import {
   Navigation,
   PenTool,
   Plus,
+  Redo2,
   Sparkles,
   Sun,
   TextCursorInput,
   Trash2,
   Type,
+  Undo2,
   Users,
   ZoomIn,
   ZoomOut,
@@ -68,6 +70,10 @@ interface PresentationIslandProps {
   penSize: number;
   onPenSizeChange: (next: number) => void;
   onClearSlideRootStrokes: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
+  onUndo?: () => void;
+  onRedo?: () => void;
   onPickImageFile: (file: File) => void;
   googleOpen: boolean;
   googleMode: GoogleFrameMode;
@@ -117,6 +123,10 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
   penSize,
   onPenSizeChange,
   onClearSlideRootStrokes,
+  canUndo = false,
+  canRedo = false,
+  onUndo,
+  onRedo,
   onPickImageFile,
   googleOpen,
   googleMode,
@@ -752,6 +762,36 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
             }`}
           >
             <Eraser className="w-4 h-4" />
+          </button>
+
+          {/* Undo & Redo */}
+          <button
+            type="button"
+            data-testid="island-undo-button"
+            aria-label={t('island.undo')}
+            title={t('island.undoTitle')}
+            onClick={() => {
+              onUndo?.();
+              setOpenPopover('none');
+            }}
+            disabled={!canUndo || !onUndo}
+            className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+          >
+            <Undo2 className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            data-testid="island-redo-button"
+            aria-label={t('island.redo')}
+            title={t('island.redoTitle')}
+            onClick={() => {
+              onRedo?.();
+              setOpenPopover('none');
+            }}
+            disabled={!canRedo || !onRedo}
+            className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+          >
+            <Redo2 className="w-4 h-4" />
           </button>
 
           {/* Add Image (file picker + Ctrl+V support) */}

@@ -70,8 +70,12 @@ interface AudienceStageProps {
   onJoinRoom: (roomId: string, joinCode: string) => void;
   onLiveStroke: (stroke: PenStroke | null) => void;
   onCommitStroke: (stroke: PenStroke) => void;
-  onDeleteStrokes: (ids: Set<string>) => void;
+  onDeleteStrokes: (ids: Set<string>, batchId?: string) => void;
   onClearSlideRootStrokes: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+  onUndo: () => void;
+  onRedo: () => void;
   onAddImage: (input: {
     slideIndex: number;
     scopeKey: string;
@@ -168,6 +172,10 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
   onCommitStroke,
   onDeleteStrokes,
   onClearSlideRootStrokes,
+  canUndo,
+  canRedo,
+  onUndo,
+  onRedo,
   onAddImage,
   onUpdateImage,
   onDeleteImage,
@@ -996,6 +1004,10 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
           penSize={penSize}
           onPenSizeChange={setPenSize}
           onClearSlideRootStrokes={onClearSlideRootStrokes}
+          canUndo={canUndo}
+          canRedo={canRedo}
+          onUndo={onUndo}
+          onRedo={onRedo}
           onPickImageFile={(file) => void addCompressedImageToSlide(file)}
           googleOpen={googleOpen}
           googleMode={googleMode}

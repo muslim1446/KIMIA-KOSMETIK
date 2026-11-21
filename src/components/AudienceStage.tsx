@@ -27,6 +27,7 @@ import { InvisibleTextEditor } from './InvisibleTextEditor';
 import { GoogleBrowserFrame, GoogleFrameMode } from './GoogleBrowserFrame';
 import { PresentationIsland } from './PresentationIsland';
 import { FirstVisitGuide } from './FirstVisitGuide';
+import { useUiText } from '../utils/uiLanguage';
 
 interface AudienceStageProps {
   /** True when opened via ?mode=audiens (dedicated projector window with zero controls) */
@@ -139,6 +140,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
   onSaveTextEdit,
   onLaserBroadcast,
 }) => {
+  const t = useUiText();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [zoomScale, setZoomScale] = useState(1);
   // Free-pan offset (in CSS pixels) so users can scroll the zoomed canvas freely
@@ -437,12 +439,13 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
           height: compressed.height,
           dataUrl: compressed.dataUrl,
         });
-        showToast('Gambar ditambah! Klik 2x gambar untuk seret, tarik sudut untuk ubah saiz.');
+        showToast(t('toast.imageAdded'));
       } catch (err) {
-        showToast(err instanceof Error ? err.message : 'Gagal memuat naik gambar.');
+        console.error('Image upload failed', err);
+        showToast(t('toast.imageFailed'));
       }
     },
-    [onAddImage, showToast, slideImages.length, slideIndex],
+    [onAddImage, showToast, slideImages.length, slideIndex, t],
   );
 
   const handleToggleGoogle = useCallback(
@@ -476,8 +479,8 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
       bgColor: 'transparent',
     });
     setTextFocusRequest({ id: item.id, token: Date.now() });
-    showToast('Kotak teks ditambah — terus taip, kemudian seret atau tarik sudut untuk ubah saiz.');
-  }, [onAddSlideText, showToast, slideIndex, slideTexts.length, tool]);
+    showToast(t('toast.textAdded'));
+  }, [onAddSlideText, showToast, slideIndex, slideTexts.length, tool, t]);
 
   // Global Ctrl+V / Cmd+V Paste Image handler
   useEffect(() => {
@@ -525,16 +528,16 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
             height: loaded.height,
             dataUrl: loaded.dataUrl,
           });
-          showToast('Gambar dari pautan ditampal! Klik 2x untuk seret.');
+          showToast(t('toast.pastedImage'));
         } catch {
-          showToast('Tidak dapat memuatkan gambar dari pautan tersebut.');
+          showToast(t('toast.imageLinkFailed'));
         }
       }
     };
 
     window.addEventListener('paste', onPaste);
     return () => window.removeEventListener('paste', onPaste);
-  }, [addCompressedImageToSlide, isRemoteProjector, onAddImage, showToast, slideImages.length, slideIndex]);
+  }, [addCompressedImageToSlide, isRemoteProjector, onAddImage, showToast, slideImages.length, slideIndex, t]);
 
 
   // Real-time Collaborative Laser Pointer: hold 'L' key + move mouse/touch OR use Laser tool
@@ -805,7 +808,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
       {/* Blackout Curtain (Keyboard 'B' or Presenter toggle) */}
       {blackout && (
         <div
-          aria-label="Skrin digelapkan sementara"
+          aria-label={t('stage.blackout')}
           className="fixed inset-0 z-50 bg-black flex items-center justify-center"
         />
       )}
@@ -813,7 +816,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
       {/* Subtle laser hold indicator or paste toast */}
       {(toastMsg || (laserKeyHeld && !isRemoteProjector)) && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 rounded-xl bg-stone-900/90 text-white px-3.5 py-2 text-xs font-semibold shadow-lg pointer-events-none">
-          {laserKeyHeld ? 'Mod Laser Aktif — Gerakkan tetikus (Lepaskan L untuk berhenti)' : toastMsg}
+          {laserKeyHeld ? t('toast.laser') : toastMsg}
         </div>
       )}
 
@@ -892,7 +895,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
         />
       )}
 
-      <FirstVisitGuide disabled={isRemoteProjector} />
+      <FirstVisitGuide disabled={isRemoteProjector} isFullscreen={isFullscreen} />
     </main>
   );
 };

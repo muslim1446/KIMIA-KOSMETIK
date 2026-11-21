@@ -27,6 +27,7 @@ import {
   toSlideGlobalPoints,
 } from '../utils/annotationEngine';
 import { LiveStrokeMap } from '../hooks/useCollaborativeBoard';
+import { useUiText } from '../utils/uiLanguage';
 
 interface SlideAnnotationLayerProps {
   slideIndex: number;
@@ -85,6 +86,7 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
   panOffset = { x: 0, y: 0 },
   isPinchingOrPanning = false,
 }) => {
+  const t = useUiText();
   const [slideRect, setSlideRect] = useState<LogicalRect>({
     left: 0,
     top: 0,
@@ -758,7 +760,7 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
             >
               <img
                 src={img.dataUrl}
-                alt="Gambar pembentangan"
+                alt={t('image.alt')}
                 draggable={false}
                 className="w-full h-full object-contain rounded-lg pointer-events-none"
               />
@@ -775,14 +777,14 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
                       onClick={() =>
                         setUnlockedDragId((cur) => (cur === img.id ? null : img.id))
                       }
-                      title="Klik dua kali gambar atau tekan sini untuk seret"
+                      title={isUnlocked ? t('image.dragEnabled') : t('image.dragEnable')}
                       className={`flex items-center gap-1 px-1.5 py-0.5 rounded cursor-pointer ${
                         isUnlocked ? 'bg-emerald-600 text-white' : 'hover:bg-stone-700'
                       }`}
                     >
                       {isUnlocked ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
                       <Move className="w-3 h-3" />
-                      <span>{isUnlocked ? 'Seret Aktif' : '2x Klik Seret'}</span>
+                      <span>{isUnlocked ? t('image.dragEnabled') : t('image.dragEnable')}</span>
                     </button>
 
                     <button
@@ -790,20 +792,20 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
                       onClick={() => toggleImagePin(img)}
                       title={
                         isSubScoped
-                          ? 'Terikat pada sub-elemen (hilang bila tukar tab). Klik untuk lekat kekal pada slaid.'
-                          : 'Lekat kekal pada slaid. Klik untuk ikut sub-elemen berhampiran.'
+                          ? t('image.followTab')
+                          : t('image.pinToSlide')
                       }
                       className={`flex items-center gap-1 px-1.5 py-0.5 rounded cursor-pointer ${
                         isSubScoped ? 'bg-amber-600/90 text-white' : 'bg-stone-700 text-stone-100'
                       }`}
                     >
                       <Pin className="w-3 h-3" />
-                      <span>{isSubScoped ? 'Sub-Elemen' : 'Slaid'}</span>
+                      <span>{isSubScoped ? t('image.tab') : t('image.slide')}</span>
                     </button>
 
                     <button
                       type="button"
-                      aria-label="Padam gambar"
+                      aria-label={t('image.delete')}
                       onClick={() => {
                         onDeleteImage(img.id);
                         setSelectedImageId(null);
@@ -827,6 +829,9 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
                     <div
                       key={corner}
                       data-testid={`resize-handle-${corner}`}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={t('image.resize', { corner })}
                       onPointerDown={(e) => startImageResize(e, img, corner)}
                       className={`absolute w-3.5 h-3.5 bg-white border-2 border-blue-600 rounded-sm shadow ${cls}`}
                     />

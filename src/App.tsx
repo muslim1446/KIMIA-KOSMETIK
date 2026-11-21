@@ -3,6 +3,7 @@ import { AudienceStage } from './components/AudienceStage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useCollaborativeBoard } from './hooks/useCollaborativeBoard';
 import { SyncedPresentationState, usePresentationSync } from './hooks/usePresentationSync';
+import { useUiLanguage } from './utils/uiLanguage';
 
 export default function App() {
   const pushRemoteRef = useRef<((next: SyncedPresentationState) => void) | null>(null);
@@ -33,6 +34,16 @@ export default function App() {
       void board.pushPresentationStateToFirebase(next);
     };
   }, [board]);
+
+  const uiLanguage = useUiLanguage();
+
+  useEffect(() => {
+    document.documentElement.lang = uiLanguage === 'zh' ? 'zh-Hans' : 'ms';
+    document.title =
+      uiLanguage === 'zh'
+        ? '5.4 药物与化妆品 — 中五化学演示'
+        : '5.4 Ubat-ubatan dan Bahan Kosmetik — Pembentangan Kimia KSSM';
+  }, [uiLanguage]);
 
   // Global keyboard shortcuts for crisp presentation control
   useEffect(() => {

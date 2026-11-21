@@ -24,6 +24,7 @@ import {
   clampFloatingFrameRect,
   FloatingFrameRect,
 } from '../utils/presentationContext';
+import { useUiLanguage, useUiText } from '../utils/uiLanguage';
 
 export type GoogleFrameMode = 'google' | 'google-ai';
 
@@ -44,8 +45,10 @@ interface GoogleBrowserFrameProps {
 
 type ResizeCorner = 'nw' | 'ne' | 'sw' | 'se';
 
-const GOOGLE_HOME_URL = 'https://www.google.com/webhp?igu=1&hl=ms&gl=my';
-const GEMINI_URL = 'https://gemini.google.com/app';
+const googleHomeUrl = (language: 'ms' | 'zh') =>
+  `https://www.google.com/webhp?igu=1&hl=${language === 'zh' ? 'zh-CN' : 'ms'}&gl=my`;
+const geminiUrl = (language: 'ms' | 'zh') =>
+  `https://gemini.google.com/app?hl=${language === 'zh' ? 'zh-CN' : 'ms'}`;
 
 /**
  * Authentic Google 4-Color 'G' Icon Component
@@ -112,6 +115,8 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
   slideTexts = [],
   onShowToast,
 }) => {
+  const language = useUiLanguage();
+  const t = useUiText();
   const [frameRect, setFrameRect] = useState<FloatingFrameRect>(() => {
     const vw = typeof window !== 'undefined' ? window.innerWidth : 1280;
     const vh = typeof window !== 'undefined' ? window.innerHeight : 720;
@@ -132,7 +137,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
   const [minimized, setMinimized] = useState(false);
   const [isInteracting, setIsInteracting] = useState(false);
   const [urlInput, setUrlInput] = useState('');
-  const [currentUrl, setCurrentUrl] = useState(GOOGLE_HOME_URL);
+  const [currentUrl, setCurrentUrl] = useState(() => googleHomeUrl(language));
   const [iframeKey, setIframeKey] = useState(0);
 
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
@@ -178,7 +183,8 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
     async (options?: { silent?: boolean }) => {
       const visibleText = readVisibleSlideText();
       const { query, prompt } = buildGoogleSlideAiPrompt(digestRef.current, visibleText);
-      const searchUrl = `https://www.google.com/search?igu=1&hl=ms&gl=my&udm=50&q=${encodeURIComponent(query)}`;
+      const googleLocale = language === 'zh' ? 'zh-CN' : 'ms';
+      const searchUrl = `https://www.google.com/search?igu=1&hl=${googleLocale}&gl=my&udm=50&q=${encodeURIComponent(query)}`;
       setCurrentUrl(searchUrl);
       setUrlInput('');
       setIframeKey((k) => k + 1);
@@ -187,12 +193,12 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
       if (!options?.silent) {
         onShowToastRef.current?.(
           copied
-            ? '📋 Prompt slaid disalin + Google AI dibuka dengan konteks slaid semasa. Anda juga boleh tampal ke Gemini (Ctrl+V).'
-            : 'Google AI dibuka dengan konteks slaid. Papan klip tidak dibenarkan — salin manual jika perlu.',
+            ? t('google.copySuccess')
+            : t('google.copyFailed'),
         );
       }
     },
-    [readVisibleSlideText],
+    [language, readVisibleSlideText, t],
   );
 
   // Configure the real Google website whenever the frame opens, switches mode, or
@@ -212,11 +218,11 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
     if (mode === 'google-ai') {
       void runSlideAiSearch();
     } else if (justOpened || modeChanged) {
-      setCurrentUrl(GOOGLE_HOME_URL);
+      setCurrentUrl(googleHomeUrl(language));
       setUrlInput('');
       setIframeKey((k) => k + 1);
     }
-  }, [open, mode, slideIndex, runSlideAiSearch]);
+  }, [open, mode, slideIndex, language, runSlideAiSearch]);
 
   // Keep frame inside viewport on window resize
   useEffect(() => {
@@ -323,7 +329,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
       setCurrentUrl(q);
     } else {
       setCurrentUrl(
-        `https://www.google.com/search?igu=1&hl=ms&gl=my&q=${encodeURIComponent(q)}`,
+        `https://www.google.com/search?igu=1&hl=${language === 'zh' ? 'zh-CN' : 'ms'}&gl=my&q=${encodeURIComponent(q)}`,
       );
     }
     setIframeKey((k) => k + 1);
@@ -333,15 +339,11 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
     const visibleText = readVisibleSlideText();
     const { prompt } = buildGoogleSlideAiPrompt(digestRef.current, visibleText);
     const ok = await copyPlainText(prompt);
-    onShowToastRef.current?.(
-      ok
-        ? '📋 Konteks & prompt slaid disalin ke papan klip. Tampal ke Google AI atau Gemini.'
-        : 'Papan klip tidak dibenarkan oleh pelayar ini.',
-    );
+    onShowToastRef.current?.(ok ? t('google.copySuccess') : t('google.copyFailed'));
   };
 
   const goHome = () => {
-    setCurrentUrl(GOOGLE_HOME_URL);
+    setCurrentUrl(googleHomeUrl(language));
     setUrlInput('');
     setIframeKey((k) => k + 1);
   };
@@ -367,7 +369,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
         data-testid="google-drag-handle"
         onPointerDown={startDrag}
         onDoubleClick={() => setMinimized((m) => !m)}
-        title="Seret untuk alihkan bingkai Google"
+        title={t('google.frameDrag')}
         className="flex items-center justify-between gap-1.5 px-3 py-2 border-b border-stone-200 dark:border-stone-800 bg-[#FBF9F5] dark:bg-stone-950 cursor-grab active:cursor-grabbing shrink-0"
       >
         <div className="flex items-center gap-2 min-w-0">
@@ -375,7 +377,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
           <GoogleLogoIcon className="w-4 h-4 shrink-0" />
           {isAiMode && <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />}
           <span className="text-xs font-bold truncate">
-            {isAiMode ? 'Google AI · Slaid Semasa' : 'Google'}
+            {isAiMode ? t('google.aiTitle') : t('google.title')}
           </span>
           <span className="hidden sm:inline-block text-[10px] text-stone-500 dark:text-stone-400 truncate">
             · Slaid {digest.currentSlideNumber} ({digest.currentSlideTitle.slice(0, 24)})
@@ -387,11 +389,11 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
             <button
               type="button"
               onClick={() => void runSlideAiSearch()}
-              title="Jana semula carian AI dengan konteks slaid terkini & salin prompt"
+              title={t('google.refreshContext')}
               className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 cursor-pointer"
             >
               <Sparkles className="w-3 h-3" />
-              <span className="hidden sm:inline">Konteks Terkini</span>
+              <span className="hidden sm:inline">{t('google.refreshContext')}</span>
             </button>
           )}
 
@@ -399,7 +401,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
             <button
               type="button"
               onClick={() => void copyPromptAgain()}
-              title="Salin prompt penuh + konteks slaid ke papan klip"
+              title={t('google.copyPrompt')}
               className="p-1 rounded-lg text-stone-500 hover:bg-stone-200/70 dark:hover:bg-stone-800 cursor-pointer"
             >
               <Copy className="w-3.5 h-3.5" />
@@ -410,7 +412,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
             href={currentUrl}
             target="_blank"
             rel="noreferrer"
-            title="Buka halaman Google ini di tab pelayar baharu"
+            title={t('google.openNewTab')}
             className="p-1 rounded-lg text-stone-500 hover:bg-stone-200/70 dark:hover:bg-stone-800 cursor-pointer inline-flex items-center"
           >
             <ExternalLink className="w-3.5 h-3.5" />
@@ -418,10 +420,10 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
 
           {isAiMode && (
             <a
-              href={GEMINI_URL}
+              href={geminiUrl(language)}
               target="_blank"
               rel="noreferrer"
-              title="Gemini tidak boleh dibenamkan. Prompt slaid telah disalin — buka Gemini dan tekan Ctrl+V."
+              title={t('google.openGemini')}
               className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-bold hover:opacity-90 cursor-pointer shrink-0"
             >
               <Sparkles className="w-3 h-3" />
@@ -431,7 +433,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
 
           <button
             type="button"
-            aria-label={minimized ? 'Besarkan bingkai' : 'Kecilkan bingkai'}
+            aria-label={minimized ? t('google.expand') : t('google.minimize')}
             onClick={() => setMinimized((m) => !m)}
             className="p-1 rounded-lg text-stone-500 hover:bg-stone-200/70 dark:hover:bg-stone-800 cursor-pointer"
           >
@@ -440,7 +442,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
 
           <button
             type="button"
-            aria-label="Tutup bingkai Google"
+            aria-label={t('google.close')}
             onClick={onClose}
             className="p-1 rounded-lg text-stone-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 cursor-pointer"
           >
@@ -455,7 +457,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
           <div className="flex items-center gap-1 px-2.5 py-1.5 border-b border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900/90 text-xs shrink-0">
             <button
               type="button"
-              title="Kembali ke Laman Utama Google"
+              title={t('google.home')}
               onClick={goHome}
               className="p-1 rounded-lg text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-800 cursor-pointer"
             >
@@ -464,7 +466,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
 
             <button
               type="button"
-              title="Muat semula laman Google"
+              title={t('google.reload')}
               onClick={() => setIframeKey((k) => k + 1)}
               className="p-1 rounded-lg text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-800 cursor-pointer"
             >
@@ -478,14 +480,14 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
                   type="text"
                   value={urlInput}
                   onChange={(e) => setUrlInput(e.target.value)}
-                  placeholder="Cari di Google atau taip URL..."
+                  placeholder={t('google.searchPlaceholder')}
                   className="w-full pl-7 pr-12 py-1 rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 text-xs text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-blue-500 select-text"
                 />
                 <button
                   type="submit"
                   className="absolute right-1 px-1.5 py-0.5 rounded bg-blue-600 text-white text-[10px] font-bold hover:bg-blue-700 cursor-pointer"
                 >
-                  Cari
+                  {t('common.search')}
                 </button>
               </div>
             </form>
@@ -493,7 +495,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
             {isAiMode && (
               <span className="hidden md:inline-flex items-center gap-1 px-1.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold shrink-0">
                 <Globe className="w-3 h-3" />
-                Google AI
+                {t('google.aiBadge')}
               </span>
             )}
           </div>
@@ -509,7 +511,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
               ref={iframeRef}
               key={iframeKey}
               src={currentUrl}
-              title="Google"
+              title={t('google.title')}
               className="w-full h-full border-0 bg-white"
               allow="clipboard-read; clipboard-write; microphone; camera; geolocation; fullscreen"
               referrerPolicy="no-referrer-when-downgrade"
@@ -519,7 +521,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
           {/* ── 4-Corner Resize Handles ────────────────────────────────────── */}
           <div
             onPointerDown={(e) => startResize('se', e)}
-            title="Tarik untuk ubah saiz bingkai"
+            title={t('google.resize')}
             className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize z-30"
           >
             <div className="absolute bottom-1 right-1 w-2.5 h-2.5 border-r-2 border-b-2 border-stone-400/80 rounded-br-sm" />

@@ -30,6 +30,7 @@ import {
   clampFloatingFrameRect,
   FloatingFrameRect,
 } from '../utils/presentationContext';
+import { useUiText } from '../utils/uiLanguage';
 
 interface ReferenceImageItem {
   title: string;
@@ -232,6 +233,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
   slideImages,
   onAddImage,
 }) => {
+  const t = useUiText();
   const [frameRect, setFrameRect] = useState<FloatingFrameRect>(() => {
     if (typeof window === 'undefined') {
       return { x: 820, y: 120, width: 390, height: 470 };
@@ -424,6 +426,11 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
     setPastingUrl(refItem.proxyUrl);
     try {
       await pasteDataUrlToSlide(refItem.proxyUrl);
+    } catch {
+      setMessages((previous) => [
+        ...previous,
+        { id: `err-${Date.now().toString(36)}`, role: 'model', text: t('error.generic'), error: true },
+      ]);
     } finally {
       setPastingUrl(null);
     }
@@ -557,13 +564,13 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
           },
         ]);
       } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Gagal menghubungi Gemini.';
+        console.error('Gemini request failed', err);
         setMessages((prev) => [
           ...prev,
           {
             id: `err-${Date.now().toString(36)}`,
             role: 'model',
-            text: msg,
+            text: t('error.generic'),
             error: true,
           },
         ]);
@@ -584,6 +591,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
       slideIndex,
       tempStrokes,
       textEdits,
+      t,
     ],
   );
 
@@ -622,7 +630,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
   return (
     <section
       data-testid="gemini-floating-frame"
-      aria-label="Bingkai Pembantu Gemini AI"
+      aria-label={t('gemini.title')}
       style={{
         left: `${frameRect.x}px`,
         top: `${frameRect.y}px`,
@@ -636,7 +644,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
         data-testid="gemini-drag-handle"
         onPointerDown={startDrag}
         onDoubleClick={startDrag}
-        title="Seret untuk alihkan bingkai Gemini"
+        title={t('gemini.drag')}
         className="flex items-center justify-between gap-2 px-3 py-2 border-b border-stone-200 dark:border-stone-800 bg-[#FBF9F5] dark:bg-stone-950 rounded-t-2xl cursor-grab active:cursor-grabbing select-none"
       >
         <div className="flex items-center gap-2 min-w-0">
@@ -644,7 +652,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
           <Sparkles className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" />
           <div className="min-w-0">
             <div className="text-xs font-extrabold tracking-tight truncate">
-              Pembantu Gemini AI
+              {t('gemini.title')}
             </div>
             <div className="text-[10px] text-stone-500 dark:text-stone-400 truncate">
               Slaid {digest.currentSlideNumber}/{digest.totalSlides} · {digest.currentSubElementLabel}
@@ -658,7 +666,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
             type="button"
             data-testid="gemini-prove-toggle"
             aria-pressed={proveMode}
-            title="Mod Bukti: papar gambar & pautan rujukan di dalam bingkai ini tanpa tampal ke slaid"
+            title={t('gemini.proofMode')}
             onClick={() => setProveMode((p) => !p)}
             className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold transition-colors cursor-pointer ${
               proveMode
@@ -667,12 +675,12 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
             }`}
           >
             <BookCheck className="w-3.5 h-3.5" />
-            <span>Mod Bukti</span>
+            <span>{t('gemini.proof')}</span>
           </button>
 
           <button
             type="button"
-            aria-label={minimized ? 'Besarkan bingkai Gemini' : 'Kecilkan bingkai Gemini'}
+            aria-label={minimized ? t('google.expand') : t('google.minimize')}
             onClick={() => setMinimized((m) => !m)}
             className="p-1 rounded-lg hover:bg-stone-200/70 dark:hover:bg-stone-800 text-stone-500 cursor-pointer"
           >
@@ -681,7 +689,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
 
           <button
             type="button"
-            aria-label="Tutup bingkai Gemini"
+            aria-label={t('google.close')}
             onClick={onClose}
             className="p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/50 text-stone-500 hover:text-red-600 cursor-pointer"
           >
@@ -699,12 +707,12 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
               disabled={loading}
               onClick={() =>
                 void submitQuestion(
-                  'Terangkan konsep kimia pada slaid, tab aktif, serta lukisan atau suntingan saya sekarang.',
+                  t('gemini.explainPrompt'),
                 )
               }
               className="px-2 py-1 rounded-lg bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-[11px] font-semibold hover:border-emerald-500 hover:text-emerald-800 dark:hover:text-emerald-300 disabled:opacity-50 cursor-pointer"
             >
-              Terangkan bahagian ini
+              {t('gemini.explainAction')}
             </button>
 
             <button
@@ -713,13 +721,13 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
               onClick={() => {
                 setProveMode(true);
                 void submitQuestion(
-                  'Buktikan dan beri gambar rujukan saintifik untuk topik slaid serta sub-elemen semasa.',
+                  t('gemini.proofPrompt'),
                   { forceProve: true },
                 );
               }}
               className="px-2 py-1 rounded-lg bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-[11px] font-semibold hover:border-amber-500 hover:text-amber-800 dark:hover:text-amber-300 disabled:opacity-50 cursor-pointer"
             >
-              Buktikan + Rujukan
+              {t('gemini.proofAction')}
             </button>
 
             <button
@@ -727,19 +735,19 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
               disabled={loading}
               onClick={() =>
                 void submitQuestion(
-                  'Cari dan tampal satu gambar rujukan saintifik yang sesuai terus ke slaid semasa.',
+                  t('gemini.pasteImagePrompt'),
                   { wantsImagePaste: true },
                 )
               }
               className="px-2 py-1 rounded-lg bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-[11px] font-semibold hover:border-blue-500 hover:text-blue-800 dark:hover:text-blue-300 disabled:opacity-50 cursor-pointer"
             >
-              Cari & Tampal Gambar
+              {t('gemini.pasteImageAction')}
             </button>
 
             {messages.length > 0 && (
               <button
                 type="button"
-                aria-label="Kosongkan perbualan Gemini"
+                aria-label={t('gemini.clear')}
                 onClick={() => {
                   setMessages([]);
                   setPreviewRefImage(null);
@@ -759,12 +767,10 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
             {messages.length === 0 && (
               <div className="rounded-xl border border-dashed border-stone-200 dark:border-stone-700 p-3 space-y-1.5 text-stone-600 dark:text-stone-400 bg-[#FBF9F5]/60 dark:bg-stone-950/40">
                 <div className="font-bold text-stone-800 dark:text-stone-200">
-                  Sedia membaca slaid, tab, lukisan pen &amp; gambar anda
+                  {t('gemini.readyTitle')}
                 </div>
                 <p className="leading-relaxed">
-                  Tanya apa sahaja tentang Bab 5.4, minta Gemini menerangkan lakaran anda, aktifkan{' '}
-                  <strong>Mod Bukti</strong> untuk rujukan bergambar dalam bingkai ini, atau suruh{' '}
-                  <em>&ldquo;tampal gambar...&rdquo;</em> terus ke slaid.
+                  {t('gemini.readyBody')}
                 </p>
               </div>
             )}
@@ -787,9 +793,9 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
                 >
                   {msg.role === 'model' && !msg.error && (
                     <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-stone-500 dark:text-stone-400">
-                      <span>{msg.proveMode ? 'Mod Bukti' : 'Gemini 4'}</span>
+                      <span>{msg.proveMode ? t('gemini.proof') : 'Gemini'}</span>
                       {msg.fromCache && (
-                        <span className="text-emerald-700 dark:text-emerald-400">· Jimat API (Cache)</span>
+                        <span className="text-emerald-700 dark:text-emerald-400">· {t('gemini.cached')}</span>
                       )}
                     </div>
                   )}
@@ -802,7 +808,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
                       className="flex items-center gap-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-2 py-1 text-[11px] font-semibold text-emerald-800 dark:text-emerald-300"
                     >
                       <ImagePlus className="w-3.5 h-3.5 shrink-0" />
-                      <span>Ditampal ke slaid: {msg.pastedTitle}</span>
+                        <span>{t('gemini.copiedToSlide', { title: msg.pastedTitle })}</span>
                     </div>
                   )}
 
@@ -813,7 +819,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
                       className="pt-1.5 border-t border-stone-200/80 dark:border-stone-700 space-y-1.5"
                     >
                       <div className="text-[10px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300">
-                        Gambar Rujukan ({msg.referenceImages.length}) — Dalam Bingkai Sahaja
+                        {t('gemini.referenceGallery', { count: msg.referenceImages.length })}
                       </div>
                       <div className="grid grid-cols-2 gap-1.5">
                         {msg.referenceImages.map((refImg, idx) => (
@@ -825,7 +831,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
                               type="button"
                               onClick={() => setPreviewRefImage(refImg)}
                               className="relative h-20 w-full bg-stone-100 dark:bg-stone-950 overflow-hidden cursor-pointer"
-                              title="Klik untuk lihat lebih besar di dalam bingkai"
+                              title={t('google.openNewTab')}
                             >
                               <img
                                 src={refImg.proxyUrl}
@@ -844,7 +850,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
                                   rel="noreferrer"
                                   className="inline-flex items-center gap-0.5 text-[10px] text-blue-700 dark:text-blue-400 hover:underline"
                                 >
-                                  <span>Sumber</span>
+                                  <span>{t('common.source')}</span>
                                   <ExternalLink className="w-2.5 h-2.5" />
                                 </a>
                                 <button
@@ -855,7 +861,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
                                   className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 text-[10px] font-bold hover:opacity-90 cursor-pointer"
                                 >
                                   <ImagePlus className="w-2.5 h-2.5" />
-                                  <span>{pastingUrl === refImg.proxyUrl ? '...' : 'Tampal'}</span>
+                                  <span>{pastingUrl === refImg.proxyUrl ? '…' : t('image.paste')}</span>
                                 </button>
                               </div>
                             </div>
@@ -869,7 +875,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
                   {msg.sources && msg.sources.length > 0 && (
                     <div className="pt-1.5 border-t border-stone-200/80 dark:border-stone-700 space-y-1">
                       <div className="text-[10px] font-bold uppercase tracking-wider text-stone-500">
-                        Sumber Web
+                        {t('common.source')}
                       </div>
                       <div className="flex flex-wrap gap-1.5">
                         {msg.sources.map((src, sIdx) => (
@@ -894,7 +900,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
             {loading && (
               <div className="flex items-center gap-2 text-xs text-stone-500 px-1">
                 <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-700" />
-                <span>Gemini sedang menganalisis slaid &amp; konteks...</span>
+                <span>{t('gemini.loading')}</span>
               </div>
             )}
           </div>
@@ -907,7 +913,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
                 <button
                   type="button"
                   onClick={() => setPreviewRefImage(null)}
-                  aria-label="Tutup pratonton gambar"
+                  aria-label={t('gemini.closePreview')}
                   className="p-0.5 text-stone-500 hover:text-stone-900 cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -945,8 +951,8 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
               }}
               placeholder={
                 proveMode
-                  ? 'Tanya untuk bukti bergambar dalam bingkai...'
-                  : 'Tanya Gemini tentang slaid, lukisan, atau "tampal gambar..."'
+                  ? t('gemini.inputProof')
+                  : t('gemini.input')
               }
               className="flex-1 rounded-xl border border-stone-300 dark:border-stone-700 bg-[#FBF9F5] dark:bg-stone-950 px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600 resize-none"
             />
@@ -954,7 +960,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
               type="submit"
               data-testid="gemini-send-button"
               disabled={loading || !input.trim()}
-              aria-label="Hantar soalan kepada Gemini"
+              aria-label={t('gemini.send')}
               className="shrink-0 w-9 h-9 rounded-xl bg-emerald-700 hover:bg-emerald-800 disabled:opacity-40 text-white flex items-center justify-center shadow-sm cursor-pointer"
             >
               <Send className="w-4 h-4" />

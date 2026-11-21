@@ -10,6 +10,7 @@ import {
   TEXT_BACKGROUNDS,
   TEXT_COLORS,
 } from '../utils/annotationEngine';
+import { useUiText } from '../utils/uiLanguage';
 
 interface SlideTextLayerProps {
   slideIndex: number;
@@ -50,6 +51,7 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
   focusTextId = null,
   focusToken = 0,
 }) => {
+  const t = useUiText();
   const [slideRect, setSlideRect] = useState<LogicalRect>({
     left: 0,
     top: 0,
@@ -427,7 +429,7 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
                     commitEditing(item.id);
                   }
                 }}
-                placeholder="Taip teks di sini..."
+                placeholder={t('text.newPlaceholder')}
                 style={{
                   ...fontStyle,
                   background:
@@ -465,7 +467,7 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
                   <button
                     type="button"
                     data-testid="slide-text-edit-button"
-                    title="Sunting teks (atau klik dua kali kotak)"
+                    title={t('text.editTitle')}
                     onClick={() => beginEditing(item)}
                     className="p-1 rounded hover:bg-stone-700 cursor-pointer"
                   >
@@ -476,7 +478,7 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
 
                   <button
                     type="button"
-                    title="Kecilkan saiz fon"
+                    title={t('text.smaller')}
                     onClick={() =>
                       onUpdateSlideText(
                         item.id,
@@ -496,7 +498,7 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
                   </span>
                   <button
                     type="button"
-                    title="Besarkan saiz fon"
+                    title={t('text.larger')}
                     onClick={() =>
                       onUpdateSlideText(
                         item.id,
@@ -511,7 +513,7 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
 
                   <button
                     type="button"
-                    title={item.isBold ? 'Nyahtebal' : 'Tebalkan'}
+                    title={item.isBold ? t('text.unbold') : t('text.bold')}
                     onClick={() =>
                       onUpdateSlideText(item.id, { isBold: !item.isBold }, true)
                     }
@@ -524,7 +526,7 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
 
                   <button
                     type="button"
-                    title="Tukar warna teks (klik berulang)"
+                    title={t('text.color')}
                     onClick={() =>
                       onUpdateSlideText(
                         item.id,
@@ -545,7 +547,7 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
 
                   <button
                     type="button"
-                    title="Tukar latar kotak (klik berulang)"
+                    title={t('text.background')}
                     onClick={() =>
                       onUpdateSlideText(
                         item.id,
@@ -562,8 +564,8 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
 
                   <button
                     type="button"
-                    aria-label="Padam kotak teks"
-                    title="Padam kotak teks"
+                    aria-label={t('text.delete')}
+                    title={t('text.delete')}
                     onClick={() => {
                       onDeleteSlideText(item.id);
                       setSelectedId(null);
@@ -587,6 +589,9 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
                   <div
                     key={corner}
                     data-testid={`slide-text-resize-${corner}`}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={t('text.resize', { corner })}
                     onPointerDown={(e) => startResize(e, item, corner)}
                     className={`absolute w-3.5 h-3.5 bg-white border-2 border-blue-600 rounded-sm shadow ${cls}`}
                   />

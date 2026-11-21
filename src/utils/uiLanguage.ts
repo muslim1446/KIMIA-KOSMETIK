@@ -1,0 +1,208 @@
+import { useCallback, useSyncExternalStore } from 'react';
+
+export type UiLanguage = 'ms' | 'zh';
+
+const messages = {
+  'common.close': ['Tutup', '关闭'],
+  'common.cancel': ['Batal', '取消'],
+  'common.save': ['Simpan', '保存'],
+  'common.confirm': ['Sahkan', '确认'],
+  'common.reset': ['Pulihkan', '恢复'],
+  'common.delete': ['Padam', '删除'],
+  'common.search': ['Cari', '搜索'],
+  'common.source': ['Sumber', '来源'],
+  'island.show': ['Tunjukkan bar kawalan', '显示控制栏'],
+  'island.showTitle': ['Tekan untuk tunjukkan kawalan', '点击显示控制栏'],
+  'island.prev': ['Slaid sebelumnya', '上一张幻灯片'],
+  'island.next': ['Slaid seterusnya', '下一张幻灯片'],
+  'island.pointer': ['Kursor dan gerak', '光标与移动'],
+  'island.pointerTitle': ['Pilih, sunting dan gerakkan paparan', '选择、编辑并移动画面'],
+  'island.pen': ['Alat lukis', '画笔'],
+  'island.penTitle': ['Lukis kekal atau sementara', '绘制永久或临时笔迹'],
+  'island.eraser': ['Pemadam', '橡皮擦'],
+  'island.image': ['Tambah gambar', '添加图片'],
+  'island.imageTitle': ['Pilih gambar atau tampal imej', '选择图片或粘贴图片'],
+  'island.addText': ['Tambah kotak teks', '添加文字框'],
+  'island.addTextTitle': ['Tambah nota yang boleh dialih dan diubah saiz', '添加可移动、可调整大小的文字框'],
+  'island.editText': ['Sunting teks slaid', '编辑幻灯片文字'],
+  'island.editTextTitle': ['Klik kanan teks, atau pilih alat ini dan ketik teks', '右键点击文字，或选择此工具后点击文字'],
+  'island.laser': ['Penunjuk laser', '激光指示器'],
+  'island.laserTitle': ['Tunjuk bahagian slaid tanpa melukis', '指示幻灯片内容，不会留下笔迹'],
+  'island.google': ['Buka Google', '打开 Google'],
+  'island.googleTitle': ['Buka halaman Google dalam tetingkap', '在窗口中打开 Google 页面'],
+  'island.googleAi': ['Cari dengan konteks slaid', '根据幻灯片内容搜索'],
+  'island.googleAiTitle': ['Cari topik slaid dan salin konteks', '搜索幻灯片主题并复制相关内容'],
+  'island.aiBadge': ['Pintar', '智能'],
+  'island.zoomOut': ['Zum keluar', '缩小'],
+  'island.zoomIn': ['Zum masuk', '放大'],
+  'island.zoomReset': ['Pulihkan zum dan kedudukan asal', '恢复缩放与原始位置'],
+  'island.sync': ['Bilik pasukan dan perkongsian langsung', '团队房间与实时共享'],
+  'island.dark': ['Tukar tema gelap atau cerah', '切换深色或浅色主题'],
+  'island.fullscreen': ['Skrin penuh (F)', '全屏（F）'],
+  'island.hide': ['Sembunyikan bar kawalan', '隐藏控制栏'],
+  'island.hideTitle': ['Sembunyikan kawalan; titik kecil kekal', '隐藏控制栏；保留小圆点'],
+  'pen.settings': ['Tetapan alat lukis', '画笔设置'],
+  'pen.permanent': ['Kekal', '永久'],
+  'pen.temporary': ['Sementara', '临时'],
+  'pen.fade': ['Pudar selepas:', '自动淡出：'],
+  'pen.color': ['Warna dakwat', '笔迹颜色'],
+  'pen.color.blue': ['Biru dakwat', '墨蓝色'],
+  'pen.color.red': ['Merah penanda', '标记红'],
+  'pen.color.emerald': ['Hijau zamrud', '祖母绿'],
+  'pen.color.amber': ['Jingga ambar', '琥珀橙'],
+  'pen.color.violet': ['Ungu molekul', '分子紫'],
+  'pen.color.ink': ['Hitam arang', '炭黑色'],
+  'pen.color.chalk': ['Putih kapur', '粉笔白'],
+  'pen.size': ['Ketebalan', '粗细'],
+  'pen.tabHint': ['Lukisan dalam tab akan ikut tab itu', '在标签页内的笔迹会随该标签页显示'],
+  'pen.clearSlide': ['Padam lukisan slaid ini', '清除此幻灯片的笔迹'],
+  'sync.title': ['Perkongsian langsung', '实时共享'],
+  'sync.connected': ['Bersambung secara langsung', '已实时连接'],
+  'sync.connecting': ['Sedang menyambung…', '正在连接…'],
+  'sync.error': ['Sambungan terputus', '连接中断'],
+  'sync.openGuest': ['Bilik terbuka · tanpa log masuk', '开放房间 · 无需登录'],
+  'sync.guestConnected': ['Bersambung. Ahli pasukan berkongsi perubahan.', '已连接。团队成员可共享更改。'],
+  'sync.guestConnecting': ['Sedang menyambung ke bilik…', '正在连接房间…'],
+  'sync.guestError': ['Tidak dapat menyambung ke bilik', '无法连接房间'],
+  'sync.enableGuest': ['Akses tanpa log masuk belum dihidupkan. Hidupkannya dalam tetapan Firebase, atau gunakan log masuk Google.', '尚未启用免登录访问。请在 Firebase 设置中启用，或使用 Google 登录。'],
+  'sync.autoConnect': ['Sedang menyambung ke bilik terbuka, atau log masuk dengan Google:', '正在连接开放房间，或使用 Google 登录：'],
+  'sync.optionalGoogle': ['Log masuk Google (pilihan)', '使用 Google 登录（可选）'],
+  'sync.googleSignIn': ['Log masuk dengan Google', '使用 Google 登录'],
+  'sync.signOut': ['Log keluar', '退出登录'],
+  'sync.roomId': ['ID bilik', '房间编号'],
+  'sync.joinCode': ['Kod masuk', '加入码'],
+  'sync.joinRoom': ['Masuk / tukar bilik', '加入 / 切换房间'],
+  'sync.copied': ['Pautan disalin', '链接已复制'],
+  'sync.copyLink': ['Salin pautan', '复制链接'],
+  'sync.roomHelp': ['Cara menyediakan perkongsian', '共享设置说明'],
+  'sync.firebaseGuest': ['Akses tanpa log masuk: hidupkan log masuk tetamu dalam tetapan Firebase.', '免登录访问：在 Firebase 设置中启用访客登录。'],
+  'sync.firebaseGoogle': ['Log masuk Google: benarkan domain laman ini dalam tetapan Firebase.', 'Google 登录：在 Firebase 设置中允许此网站域名。'],
+  'sync.roomError': ['Ralat perkongsian', '共享错误'],
+  'text.edit': ['Sunting teks', '编辑文字'],
+  'text.original': ['Asal', '原文'],
+  'text.restoreTitle': ['Pulihkan teks asal', '恢复原始文字'],
+  'text.existing': ['Sunting teks sedia ada', '编辑现有文字'],
+  'text.inputPlaceholder': ['Masukkan teks', '输入文字'],
+  'text.confirmEdit': ['Sahkan perubahan teks', '确认文字更改'],
+  'text.newPlaceholder': ['Taip nota di sini', '在此输入备注'],
+  'text.editTitle': ['Sunting teks. Ketik dua kali kotak untuk membuka.', '编辑文字。双击文字框即可打开。'],
+  'text.smaller': ['Kecilkan tulisan', '缩小字号'],
+  'text.larger': ['Besarkan tulisan', '放大字号'],
+  'text.unbold': ['Buang tebal', '取消粗体'],
+  'text.bold': ['Jadikan tebal', '加粗'],
+  'text.color': ['Tukar warna tulisan', '更改文字颜色'],
+  'text.background': ['Tukar latar kotak', '更改文字框背景'],
+  'text.delete': ['Padam kotak teks', '删除文字框'],
+  'text.resize': ['Ubah saiz kotak teks, penjuru {corner}', '调整文字框大小，{corner}角'],
+  'image.alt': ['Gambar pada slaid', '幻灯片图片'],
+  'image.dragEnabled': ['Seretan dibuka', '已启用拖动'],
+  'image.dragEnable': ['Klik dua kali untuk mengalih gambar', '双击即可移动图片'],
+  'image.pinToSlide': ['Kekalkan pada slaid. Tekan untuk ikut tab berhampiran.', '固定在幻灯片上。点击可关联附近标签页。'],
+  'image.followTab': ['Ikut tab ini. Tekan untuk kekalkan pada slaid.', '跟随此标签页。点击可固定在幻灯片上。'],
+  'image.tab': ['Ikut tab', '跟随标签页'],
+  'image.slide': ['Kekal pada slaid', '固定在幻灯片'],
+  'image.delete': ['Padam gambar', '删除图片'],
+  'image.resize': ['Ubah saiz gambar, penjuru {corner}', '调整图片大小，{corner}角'],
+  'image.paste': ['Tampal gambar', '粘贴图片'],
+  'guide.help': ['Buka panduan ciri', '打开功能指南'],
+  'guide.helpTitle': ['Panduan ciri', '功能指南'],
+  'guide.close': ['Tutup panduan buat sementara', '暂时关闭指南'],
+  'guide.closeTitle': ['Panduan akan muncul semula sehingga selesai', '完成指南前，它会再次出现'],
+  'guide.section': ['Langkah {current} daripada {total}', '第 {current} 步，共 {total} 步'],
+  'guide.previous': ['Langkah sebelumnya', '上一步'],
+  'guide.next': ['Langkah seterusnya', '下一步'],
+  'guide.finish': ['Selesai', '完成'],
+  'guide.pause': ['Tutup dahulu', '稍后再看'],
+  'guide.progress': ['Kemajuan panduan', '指南进度'],
+  'guide.reopen': ['Panduan boleh dibuka semula melalui butang bantuan.', '可随时通过帮助按钮重新打开指南。'],
+  'guide.spotlight': ['Inilah kawalan sebenar yang digunakan.', '这就是实际使用的控件。'],
+  'guide.noTarget': ['Kawalan ini berada di bar bawah.', '此控件位于底部控制栏。'],
+  'toast.imageAdded': ['Gambar ditambah. Ketik dua kali untuk mengalih; tarik penjuru untuk ubah saiz.', '图片已添加。双击可移动，拖动角落可调整大小。'],
+  'toast.imageFailed': ['Gambar tidak dapat dimuat naik.', '无法添加图片。'],
+  'toast.textAdded': ['Kotak teks ditambah. Taip sekarang; seret untuk mengalih dan tarik penjuru untuk ubah saiz.', '文字框已添加。现在输入；拖动可移动，拖动角落可调整大小。'],
+  'toast.pastedImage': ['Gambar daripada pautan telah ditampal. Ketik dua kali untuk mengalih.', '已粘贴链接中的图片。双击可移动。'],
+  'toast.imageLinkFailed': ['Gambar daripada pautan itu tidak dapat dibuka.', '无法打开该图片链接。'],
+  'toast.laser': ['Penunjuk laser aktif. Gerakkan tetikus; lepaskan L untuk berhenti.', '激光指示器已开启。移动鼠标；松开 L 键即可停止。'],
+  'error.title': ['Paparan tergendala', '页面暂时无法显示'],
+  'error.fallback': ['Aplikasi mengalami ralat.', '应用发生错误。'],
+  'error.retry': ['Cuba lagi', '重试'],
+  'error.generic': ['Tindakan ini tidak berjaya. Cuba sekali lagi.', '操作未成功，请重试。'],
+  'stage.blackout': ['Skrin digelapkan sementara', '屏幕已暂时关闭'],
+  'google.title': ['Google', 'Google'],
+  'google.aiTitle': ['Google · konteks slaid', 'Google · 幻灯片内容'],
+  'google.refreshContext': ['Kemas kini konteks slaid', '更新幻灯片内容'],
+  'google.copyPrompt': ['Salin konteks slaid', '复制幻灯片内容'],
+  'google.openNewTab': ['Buka halaman ini dalam tab baharu', '在新标签页中打开此页面'],
+  'google.openGemini': ['Buka Gemini. Konteks slaid telah disalin; tampal selepas dibuka.', '打开 Gemini。幻灯片内容已复制；打开后即可粘贴。'],
+  'google.expand': ['Besarkan tetingkap', '放大窗口'],
+  'google.minimize': ['Kecilkan tetingkap', '缩小窗口'],
+  'google.close': ['Tutup tetingkap Google', '关闭 Google 窗口'],
+  'google.home': ['Kembali ke halaman utama Google', '返回 Google 首页'],
+  'google.reload': ['Muat semula halaman', '刷新页面'],
+  'google.searchPlaceholder': ['Cari di Google atau masukkan alamat laman', '在 Google 搜索或输入网址'],
+  'google.resize': ['Tarik untuk ubah saiz tetingkap', '拖动以调整窗口大小'],
+  'google.copySuccess': ['Konteks slaid telah disalin. Tampal ke Google AI atau Gemini.', '幻灯片内容已复制。可粘贴到 Google AI 或 Gemini。'],
+  'google.copyFailed': ['Papan klip tidak dibenarkan. Salin teks secara manual.', '无法访问剪贴板。请手动复制文字。'],
+  'google.frameDrag': ['Tarik untuk mengalih tetingkap Google', '拖动以移动 Google 窗口'],
+  'google.aiBadge': ['Carian AI', '人工智能搜索'],
+  'gemini.title': ['Pembantu Gemini', 'Gemini 助手'],
+  'gemini.drag': ['Tarik untuk mengalih tetingkap Gemini', '拖动以移动 Gemini 窗口'],
+  'gemini.proofMode': ['Mod rujukan: paparkan sumber dan gambar tanpa menampalnya pada slaid', '参考模式：显示来源和图片，但不粘贴到幻灯片'],
+  'gemini.proof': ['Rujukan', '参考资料'],
+  'gemini.clear': ['Kosongkan perbualan', '清空对话'],
+  'gemini.readyTitle': ['Saya boleh membantu memahami slaid ini', '我可以帮助理解这张幻灯片'],
+  'gemini.readyBody': ['Tanya tentang topik atau lakaran. Aktifkan mod rujukan untuk melihat sumber, atau minta gambar ditambah pada slaid.', '可询问主题或笔迹。开启参考模式查看来源，或让图片添加到幻灯片。'],
+  'gemini.cached': ['Jawapan disimpan', '已保存的回答'],
+  'gemini.loading': ['Sedang membaca slaid dan konteks…', '正在读取幻灯片内容…'],
+  'gemini.inputProof': ['Tanya dan minta sumber bergambar', '提问并请求图片来源'],
+  'gemini.input': ['Tanya tentang slaid, lakaran atau gambar', '询问幻灯片、笔迹或图片'],
+  'gemini.send': ['Hantar soalan', '发送问题'],
+  'gemini.closePreview': ['Tutup pratonton gambar', '关闭图片预览'],
+  'gemini.explainAction': ['Terangkan kandungan slaid ini', '讲解这张幻灯片'],
+  'gemini.proofAction': ['Cari sumber dan gambar rujukan', '查找来源和参考图片'],
+  'gemini.pasteImageAction': ['Cari gambar dan tambah pada slaid', '查找图片并添加到幻灯片'],
+  'gemini.explainPrompt': ['Terangkan konsep kimia pada slaid, tab aktif, serta lukisan atau suntingan saya sekarang.', '请讲解幻灯片和当前标签页中的化学概念，以及我的笔迹或编辑内容。'],
+  'gemini.proofPrompt': ['Cari sumber dan gambar rujukan saintifik untuk topik dan bahagian slaid ini.', '请为此幻灯片的主题和部分查找科学来源与参考图片。'],
+  'gemini.pasteImagePrompt': ['Cari satu gambar rujukan saintifik yang sesuai dan tambahkannya pada slaid ini.', '请查找一张合适的科学参考图片并添加到此幻灯片。'],
+  'gemini.referenceGallery': ['Gambar rujukan ({count}) · dipaparkan di sini sahaja', '参考图片（{count}）· 仅在此处显示'],
+  'gemini.copiedToSlide': ['Ditambah pada slaid: {title}', '已添加到幻灯片：{title}'],
+} as const;
+
+export type UiMessageKey = keyof typeof messages;
+
+export function getUiLanguage(): UiLanguage {
+  if (typeof navigator === 'undefined') return 'ms';
+  const locale = navigator.language || navigator.languages?.[0] || '';
+  return /^zh(?:-|$)/i.test(locale) ? 'zh' : 'ms';
+}
+
+function subscribe(callback: () => void) {
+  if (typeof window === 'undefined') return () => undefined;
+  window.addEventListener('languagechange', callback);
+  return () => window.removeEventListener('languagechange', callback);
+}
+
+export function useUiLanguage(): UiLanguage {
+  return useSyncExternalStore(subscribe, getUiLanguage, () => 'ms');
+}
+
+export function uiText(
+  language: UiLanguage,
+  key: UiMessageKey,
+  values?: Record<string, string | number>,
+): string {
+  let value: string = messages[key][language === 'zh' ? 1 : 0];
+  for (const [name, replacement] of Object.entries(values ?? {})) {
+    value = value.replaceAll(`{${name}}`, String(replacement));
+  }
+  return value;
+}
+
+export function useUiText() {
+  const language = useUiLanguage();
+  return useCallback(
+    (key: UiMessageKey, values?: Record<string, string | number>) =>
+      uiText(language, key, values),
+    [language],
+  );
+}

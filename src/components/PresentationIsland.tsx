@@ -36,6 +36,7 @@ import {
   TempDurationSeconds,
 } from '../utils/annotationEngine';
 import { BoardSyncStatus } from '../hooks/useCollaborativeBoard';
+import { useUiText } from '../utils/uiLanguage';
 
 interface PresentationIslandProps {
   slideIndex: number;
@@ -117,6 +118,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
   onJoinRoom,
   closePopoverSignal = 0,
 }) => {
+  const t = useUiText();
   const [openPopover, setOpenPopover] = useState<IslandPopover>('none');
   const [roomInput, setRoomInput] = useState(roomId);
   const [codeInput, setCodeInput] = useState(joinCode);
@@ -169,8 +171,8 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
       <button
         type="button"
         data-presentation-island="true"
-        aria-label="Tunjuk bar kawalan pembentangan"
-        title="Klik untuk papar semula bar kawalan"
+        aria-label={t('island.show')}
+        title={t('island.showTitle')}
         onClick={() => setIslandHidden(false)}
         className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-5 h-5 rounded-full bg-white/90 border border-stone-400/70 shadow-md hover:scale-125 transition-transform pointer-events-auto"
       />
@@ -190,14 +192,14 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">
-              Tetapan Pen
+              {t('pen.settings')}
             </span>
             <button
               type="button"
               onClick={() => setOpenPopover('none')}
               className="text-xs font-semibold text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 cursor-pointer"
             >
-              Tutup
+              {t('common.close')}
             </button>
           </div>
 
@@ -213,7 +215,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
                   : 'text-stone-700 dark:text-stone-300 hover:bg-stone-200/70'
               }`}
             >
-              Pen Kekal
+              {t('pen.permanent')}
             </button>
             <button
               type="button"
@@ -225,7 +227,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
                   : 'text-stone-700 dark:text-stone-300 hover:bg-stone-200/70'
               }`}
             >
-              Pen Sementara
+              {t('pen.temporary')}
             </button>
           </div>
 
@@ -233,7 +235,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
           {penMode === 'temporary' && (
             <div className="flex items-center justify-between gap-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl px-2.5 py-2">
               <span className="text-xs font-semibold text-amber-900 dark:text-amber-300">
-                Pudar automatik:
+                {t('pen.fade')}
               </span>
               <div className="flex items-center gap-1">
                 {TEMP_DURATIONS.map((sec) => (
@@ -257,7 +259,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
 
           {/* Colors */}
           <div className="space-y-1.5">
-            <div className="text-[11px] font-bold text-stone-500">Warna Dakwat</div>
+            <div className="text-[11px] font-bold text-stone-500">{t('pen.color')}</div>
             <div className="flex items-center justify-between gap-1.5">
               {PEN_COLORS.map((c) => {
                 const selected = penColor === c.value;
@@ -265,7 +267,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
                   <button
                     key={c.id}
                     type="button"
-                    aria-label={c.label}
+                    aria-label={t(`pen.color.${c.id}` as 'pen.color.blue' | 'pen.color.red' | 'pen.color.emerald' | 'pen.color.amber' | 'pen.color.violet' | 'pen.color.ink' | 'pen.color.chalk')}
                     onClick={() => onPenColorChange(c.value)}
                     style={{ backgroundColor: c.value }}
                     className={`w-7 h-7 rounded-full border cursor-pointer transition-transform ${
@@ -280,7 +282,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
           {/* Stroke Size */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-[11px] font-bold text-stone-500">
-              <span>Saiz Pen</span>
+              <span>{t('pen.size')}</span>
               <span className="tabular-nums-clean text-stone-800 dark:text-stone-200">
                 {penSize}px
               </span>
@@ -290,7 +292,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
                 <button
                   key={sz}
                   type="button"
-                  aria-label={`Saiz ${sz}px`}
+                  aria-label={`${t('pen.size')} ${sz}px`}
                   onClick={() => onPenSizeChange(sz)}
                   className={`flex-1 h-8 rounded-lg border flex items-center justify-center cursor-pointer ${
                     penSize === sz
@@ -313,7 +315,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
           {/* Clear current slide root ink */}
           <div className="pt-1 border-t border-stone-200 dark:border-stone-800 flex items-center justify-between">
             <span className="text-[11px] text-stone-500">
-              Lukisan di atas tab ikut tab tersebut
+              {t('pen.tabHint')}
             </span>
             <button
               type="button"
@@ -321,7 +323,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
               className="flex items-center gap-1 text-xs font-bold text-red-600 hover:text-red-700 px-2 py-1 rounded-lg hover:bg-red-50 cursor-pointer"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              <span>Padam Slaid Ini</span>
+              <span>{t('pen.clearSlide')}</span>
             </button>
           </div>
         </div>
@@ -345,7 +347,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
                 }`}
               />
               <span className="text-xs font-bold uppercase tracking-wider text-stone-600 dark:text-stone-300">
-                Firebase Live Sync (Percuma)
+                {t('sync.title')}
               </span>
             </div>
             <button
@@ -353,7 +355,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
               onClick={() => setOpenPopover('none')}
               className="text-xs font-semibold text-stone-500 hover:text-stone-900 cursor-pointer"
             >
-              Tutup
+              {t('common.close')}
             </button>
           </div>
 
@@ -364,10 +366,10 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
                   <div className="font-bold truncate">{user.displayName || user.email}</div>
                   <div className="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold">
                     {syncStatus === 'synced'
-                      ? 'Terhubung secara langsung (Live)'
+                      ? t('sync.connected')
                       : syncStatus === 'connecting'
-                      ? 'Menyambung ke bilik...'
-                      : 'Ralat sambungan'}
+                      ? t('sync.connecting')
+                      : t('sync.error')}
                   </div>
                 </div>
                 <button
@@ -376,7 +378,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
                   className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-stone-300 dark:border-stone-700 text-xs font-bold hover:bg-stone-100 cursor-pointer"
                 >
                   <LogOut className="w-3.5 h-3.5" />
-                  <span>Keluar</span>
+                  <span>{t('sync.signOut')}</span>
                 </button>
               </div>
             ) : user && user.isAnonymous ? (
@@ -384,14 +386,14 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
                     <div className="font-bold text-stone-900 dark:text-stone-100">
-                      Mod Terbuka (Tanpa Log Masuk)
+                      {t('sync.openGuest')}
                     </div>
                     <div className="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold">
                       {syncStatus === 'synced'
-                        ? 'Aktif Live — Semua ahli pasukan terus sync automatik'
+                        ? t('sync.guestConnected')
                         : syncStatus === 'connecting'
-                        ? 'Menyambung secara automatik...'
-                        : 'Ralat sambungan bilik'}
+                        ? t('sync.guestConnecting')
+                        : t('sync.guestError')}
                     </div>
                   </div>
                 </div>
@@ -402,15 +404,15 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
                   className="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-xl border border-stone-300 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 text-xs font-bold cursor-pointer"
                 >
                   <LogIn className="w-3.5 h-3.5" />
-                  <span>Log Masuk Google (Pilihan)</span>
+                  <span>{t('sync.optionalGoogle')}</span>
                 </button>
               </div>
             ) : (
               <div className="space-y-2">
                 <p className="text-stone-600 dark:text-stone-400 leading-snug">
                   {anonBlocked
-                    ? 'Mod Tanpa Log Masuk (Anonymous) belum diaktifkan di Firebase Console. Anda boleh aktifkannya atau log masuk dengan Google di bawah:'
-                    : 'Menyambung mod terbuka secara automatik, atau log masuk Google:'}
+                    ? t('sync.enableGuest')
+                    : t('sync.autoConnect')}
                 </p>
                 <button
                   type="button"
@@ -419,7 +421,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
                   className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold cursor-pointer"
                 >
                   <LogIn className="w-3.5 h-3.5" />
-                  <span>Log Masuk Google</span>
+                  <span>{t('sync.googleSignIn')}</span>
                 </button>
               </div>
             )}
@@ -429,7 +431,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label htmlFor="sync-room-id" className="block text-[11px] font-bold text-stone-500 mb-1">
-                ID Bilik Pasukan
+                {t('sync.roomId')}
               </label>
               <input
                 id="sync-room-id"
@@ -441,7 +443,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
             </div>
             <div>
               <label htmlFor="sync-join-code" className="block text-[11px] font-bold text-stone-500 mb-1">
-                Kod Sertai
+                {t('sync.joinCode')}
               </label>
               <input
                 id="sync-join-code"
@@ -459,7 +461,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
               onClick={() => onJoinRoom(roomInput, codeInput)}
               className="flex-1 py-1.5 px-3 rounded-xl bg-blue-800 hover:bg-blue-900 text-white text-xs font-bold cursor-pointer"
             >
-              Sertai / Tukar Bilik
+              {t('sync.joinRoom')}
             </button>
             <button
               type="button"
@@ -467,31 +469,29 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
               className="flex items-center gap-1 py-1.5 px-3 rounded-xl border border-stone-300 dark:border-stone-700 text-xs font-bold hover:bg-stone-100 cursor-pointer"
             >
               {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copiedLink ? 'Disalin' : 'Pautan'}</span>
+              <span>{copiedLink ? t('sync.copied') : t('sync.copyLink')}</span>
             </button>
           </div>
 
           {syncError && (
             <div className="rounded-xl border border-red-200 bg-red-50 p-2.5 text-[11px] font-semibold text-red-800 leading-snug">
-              {syncError}
+              {t('sync.roomError')}
             </div>
           )}
 
           <details className="text-[11px] text-stone-600 dark:text-stone-400">
             <summary className="font-bold cursor-pointer text-stone-700 dark:text-stone-300">
-              Panduan Cloudflare Pages (beijing-xinjiang.pages.dev)
+              {t('sync.roomHelp')}
             </summary>
             <ol className="mt-1.5 list-decimal pl-4 space-y-1 leading-relaxed">
               <li>
-                <strong>Sync Tanpa Log Masuk:</strong> Dalam Firebase Console &rarr; Authentication &rarr; Sign-in method, aktifkan{' '}
-                <strong>Anonymous</strong> (Enable) supaya semua rakan terus berhubung tanpa perlu log masuk.
+                {t('sync.firebaseGuest')}
               </li>
               <li>
-                <strong>Pilihan Google Sign-In:</strong> Tambah domain{' '}
+                {t('sync.firebaseGoogle')}{' '}
                 <code className="px-1 py-0.5 bg-stone-100 dark:bg-stone-800 rounded">
                   beijing-xinjiang.pages.dev
-                </code>{' '}
-                di Authentication &rarr; Settings &rarr; Authorized domains.
+                </code>
               </li>
             </ol>
           </details>
@@ -516,7 +516,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
             type="button"
             onClick={onPrev}
             disabled={slideIndex === 0}
-            aria-label="Slaid sebelumnya"
+            aria-label={t('island.prev')}
             className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-30 cursor-pointer"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -528,7 +528,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
             type="button"
             onClick={onNext}
             disabled={slideIndex === totalSlides - 1}
-            aria-label="Slaid seterusnya"
+            aria-label={t('island.next')}
             className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-30 cursor-pointer"
           >
             <ChevronRight className="w-4 h-4" />
@@ -539,8 +539,9 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
           {/* Pointer Tool */}
           <button
             type="button"
-            aria-label="Mod kursor biasa"
-            title="Kursor Biasa"
+            data-guide-target="move"
+            aria-label={t('island.pointer')}
+            title={t('island.pointerTitle')}
             onClick={() => {
               onToolChange('pointer');
               setOpenPopover('none');
@@ -558,8 +559,8 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
           <button
             type="button"
             data-testid="island-pen-button"
-            aria-label="Alat Pen"
-            title="Pen Lukisan (Kekal / Sementara)"
+            aria-label={t('island.pen')}
+            title={t('island.penTitle')}
             onClick={handlePenClick}
             className={`relative flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
               tool === 'pen'
@@ -581,8 +582,8 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
           <button
             type="button"
             data-testid="island-eraser-button"
-            aria-label="Pemadam Pen"
-            title="Pemadam Pen"
+            aria-label={t('island.eraser')}
+            title={t('island.eraser')}
             onClick={() => {
               onToolChange(tool === 'eraser' ? 'pointer' : 'eraser');
               setOpenPopover('none');
@@ -611,8 +612,8 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
           <button
             type="button"
             data-testid="island-image-button"
-            aria-label="Tambah Gambar"
-            title="Tambah Gambar (atau tekan Ctrl+V di mana-mana)"
+            aria-label={t('island.image')}
+            title={t('island.imageTitle')}
             onClick={() => fileInputRef.current?.click()}
             className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
           >
@@ -623,8 +624,8 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
           <button
             type="button"
             data-testid="island-add-text-button"
-            aria-label="Tambah Kotak Teks"
-            title="Tambah Kotak Teks (taip, seret, ubah saiz & saiz fon — berbeza daripada Sunting Teks)"
+            aria-label={t('island.addText')}
+            title={t('island.addTextTitle')}
             onClick={() => {
               onAddTextBox();
               setOpenPopover('none');
@@ -641,8 +642,8 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
           <button
             type="button"
             data-testid="island-text-edit-button"
-            aria-label="Mod Sunting Teks"
-            title="Sunting Teks Sedia Ada (Klik kanan mana-mana teks atau aktifkan mod ini)"
+            aria-label={t('island.editText')}
+            title={t('island.editTextTitle')}
             onClick={() => {
               onToolChange(tool === 'text-edit' ? 'pointer' : 'text-edit');
               setOpenPopover('none');
@@ -660,8 +661,8 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
           <button
             type="button"
             data-testid="island-laser-button"
-            aria-label="Penunjuk Laser Kolaboratif"
-            title="Penunjuk Laser (Klik di sini atau tahan kekunci L sambil gerakkan tetikus)"
+            aria-label={t('island.laser')}
+            title={t('island.laserTitle')}
             onClick={() => {
               onToolChange(tool === 'laser' ? 'pointer' : 'laser');
               setOpenPopover('none');
@@ -680,8 +681,8 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
           <button
             type="button"
             data-testid="island-google-button"
-            aria-label="Buka Google"
-            title="Buka Google sebenar dalam bingkai (boleh seret, ubah saiz & klik apa sahaja)"
+            aria-label={t('island.google')}
+            title={t('island.googleTitle')}
             onClick={() => {
               onToggleGoogle('google');
               setOpenPopover('none');
@@ -700,8 +701,9 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
           <button
             type="button"
             data-testid="island-google-ai-button"
-            aria-label="Buka Google AI dengan konteks slaid"
-            title="Google AI (Gemini): auto-cari slaid semasa + salin prompt tersembunyi ke papan klip"
+            data-guide-target="ai"
+            aria-label={t('island.googleAi')}
+            title={t('island.googleAiTitle')}
             onClick={() => {
               onToggleGoogle('google-ai');
               setOpenPopover('none');
@@ -716,7 +718,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
               <GoogleLogoIcon className="w-4 h-4" />
               <Sparkles className="absolute -top-1.5 -right-1.5 w-2.5 h-2.5 text-emerald-600 dark:text-emerald-300" />
             </span>
-            <span className="hidden sm:inline text-[11px]">AI</span>
+            <span className="hidden sm:inline text-[11px]">{t('island.aiBadge')}</span>
           </button>
         </div>
 
@@ -730,8 +732,8 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
           <button
             type="button"
             data-testid="island-zoom-out"
-            aria-label="Zum keluar"
-            title="Zum Keluar"
+            aria-label={t('island.zoomOut')}
+            title={t('island.zoomOut')}
             onClick={() => onZoomChange(Math.max(0.3, Math.round((zoomScale - 0.15) * 100) / 100))}
             className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
           >
@@ -740,8 +742,9 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
           <button
             type="button"
             data-testid="island-zoom-reset"
-            aria-label="Set semula zum"
-            title="Klik untuk set semula zum 100% dan kedudukan asal tengah"
+            data-guide-target="zoom"
+            aria-label={t('island.zoomReset')}
+            title={t('island.zoomReset')}
             onClick={() => onZoomChange(1)}
             className="tabular-nums-clean text-[11px] font-bold px-1.5 py-1 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
           >
@@ -750,8 +753,8 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
           <button
             type="button"
             data-testid="island-zoom-in"
-            aria-label="Zum masuk"
-            title="Zum Masuk"
+            aria-label={t('island.zoomIn')}
+            title={t('island.zoomIn')}
             onClick={() => onZoomChange(Math.min(4.0, Math.round((zoomScale + 0.15) * 100) / 100))}
             className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
           >
@@ -764,8 +767,9 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
           <button
             type="button"
             data-testid="island-sync-button"
-            aria-label="Status Firebase Live Sync"
-            title="Firebase Live Sync & Bilik Pasukan"
+            data-guide-target="sync"
+            aria-label={t('island.sync')}
+            title={t('island.sync')}
             onClick={() => setOpenPopover((p) => (p === 'sync' ? 'none' : 'sync'))}
             className={`flex items-center gap-1.5 px-2 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
               syncStatus === 'synced'
@@ -781,7 +785,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
               <CloudOff className="w-4 h-4 text-stone-500" />
             )}
             <span className="hidden sm:inline">
-              {syncStatus === 'synced' ? 'Live' : syncStatus === 'connecting' ? '...' : 'Sync'}
+              {syncStatus === 'synced' ? t('sync.connected') : syncStatus === 'connecting' ? '…' : t('island.sync')}
             </span>
           </button>
 
@@ -789,8 +793,8 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
           <button
             type="button"
             onClick={onToggleDark}
-            aria-label="Tukar tema gelap"
-            title="Tema Gelap / Cerah"
+            aria-label={t('island.dark')}
+            title={t('island.dark')}
             className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
           >
             {projectorDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -798,8 +802,8 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
           <button
             type="button"
             onClick={onToggleFullscreen}
-            aria-label="Skrin penuh"
-            title="Skrin Penuh (F)"
+            aria-label={t('island.fullscreen')}
+            title={t('island.fullscreen')}
             className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
           >
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -809,8 +813,8 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
           <button
             type="button"
             onClick={() => setIslandHidden(true)}
-            aria-label="Sembunyikan bar kawalan"
-            title="Sembunyikan bar kawalan (akan tinggal titik kecil)"
+            aria-label={t('island.hide')}
+            title={t('island.hideTitle')}
             className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer text-stone-400 hover:text-stone-700 dark:hover:text-stone-200"
           >
             {/* Simple ⊙ hide icon */}

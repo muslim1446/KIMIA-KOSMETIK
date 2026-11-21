@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Check, Pencil, RotateCcw, X } from 'lucide-react';
 import { AnnotationTool, getRootSlideScope } from '../utils/annotationEngine';
+import { useUiText } from '../utils/uiLanguage';
 
 interface InvisibleTextEditorProps {
   slideIndex: number;
@@ -128,6 +129,7 @@ export const InvisibleTextEditor: React.FC<InvisibleTextEditorProps> = ({
   onSaveTextEdit,
   isRemoteProjector = false,
 }) => {
+  const t = useUiText();
   const [active, setActive] = useState<ActiveTextMenu | null>(null);
   const [draftValue, setDraftValue] = useState('');
   const originalTextsRef = useRef<Map<string, string>>(new Map());
@@ -282,18 +284,18 @@ export const InvisibleTextEditor: React.FC<InvisibleTextEditorProps> = ({
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold text-stone-900 dark:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
           >
             <Pencil className="w-3.5 h-3.5 text-blue-700 dark:text-blue-400" />
-            <span>Edit Teks</span>
+            <span>{t('text.edit')}</span>
           </button>
 
           {active.hasOverride && (
             <button
               type="button"
               onClick={resetEdit}
-              title="Pulih teks asal"
+              title={t('text.restoreTitle')}
               className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-semibold text-amber-700 hover:bg-amber-50 cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>Asal</span>
+              <span>{t('text.original')}</span>
             </button>
           )}
         </div>
@@ -304,7 +306,7 @@ export const InvisibleTextEditor: React.FC<InvisibleTextEditorProps> = ({
             <button
               type="button"
               onClick={() => setActive(null)}
-              aria-label="Batal suntingan"
+              aria-label={t('common.cancel')}
               className="p-0.5 text-stone-400 hover:text-stone-700 cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
@@ -329,7 +331,7 @@ export const InvisibleTextEditor: React.FC<InvisibleTextEditorProps> = ({
             <button
               type="button"
               data-testid="text-edit-confirm"
-              aria-label="Sahkan suntingan teks"
+              aria-label={t('text.confirmEdit')}
               onClick={confirmEdit}
               className="shrink-0 w-9 h-9 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center shadow-sm cursor-pointer"
             >

@@ -46,6 +46,12 @@
   animation: guide-enter 220ms ease-out both;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .guide-enter {
+    animation: none;
+  }
+}
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }

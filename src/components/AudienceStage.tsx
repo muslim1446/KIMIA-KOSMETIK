@@ -1002,6 +1002,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
           presenceDisplayName={presenceDisplayName}
           onUpdatePresenceDisplayName={onUpdatePresenceDisplayName}
           onRefreshPresenceLocation={() => void onRefreshPresenceLocation()}
+          currentAuthorId={currentAuthorId}
           user={user}
           anonBlocked={anonBlocked}
           roomId={roomId}

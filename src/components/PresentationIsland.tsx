@@ -81,6 +81,7 @@ interface PresentationIslandProps {
   presenceDisplayName: string;
   onUpdatePresenceDisplayName: (name: string) => void;
   onRefreshPresenceLocation: () => void;
+  currentAuthorId: string;
   // Firebase / Live Sync props
   user: User | null;
   anonBlocked?: boolean;
@@ -129,6 +130,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
   presenceDisplayName,
   onUpdatePresenceDisplayName,
   onRefreshPresenceLocation,
+  currentAuthorId,
   user,
   anonBlocked = false,
   roomId,
@@ -596,7 +598,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
             ) : (
               <div className="max-h-[260px] overflow-y-auto space-y-1.5 pr-0.5">
                 {presenceUsers.map((entry) => {
-                  const isSelf = entry.uid === user?.uid;
+                  const isSelf = entry.uid === currentAuthorId;
                   const initial =
                     entry.displayName.trim().charAt(0).toUpperCase() || '?';
                   const locationLabel = entry.location?.label || '';

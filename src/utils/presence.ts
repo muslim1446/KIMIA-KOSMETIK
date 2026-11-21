@@ -30,6 +30,7 @@ export const PRESENCE_LOCATION_MAX_AGE_MS = 6 * 60 * 60 * 1000;
 
 export const PRESENCE_LOCAL_STORAGE_KEY = 'kimia-5-4-presence-location';
 export const PRESENCE_NAME_STORAGE_KEY = 'kimia-5-4-presence-name';
+export const PRESENCE_AUTHOR_ID_STORAGE_KEY = 'kimia-5-4-presence-author-id';
 
 const EMPTY_LOCATION: PresenceLocation = {
   source: 'none',
@@ -123,6 +124,26 @@ export function cachePresenceLocation(location: PresenceLocation): void {
     window.localStorage.setItem(PRESENCE_LOCAL_STORAGE_KEY, JSON.stringify(location));
   } catch {
     // Ignore storage quota/privacy failures
+  }
+}
+
+/**
+ * A per-tab author id that survives page reloads (kept in sessionStorage) but
+ * is never shared with other tabs. This stops a reload from leaving an
+ * orphaned "still online" ghost in the presence list, while each tab keeps its
+ * own identity. Falls back to a random id when storage is unavailable.
+ */
+export function loadOrCreateLocalAuthorId(): string {
+  const random = `local-${Math.random().toString(36).slice(2, 8)}`;
+  if (typeof window === 'undefined') return random;
+  try {
+    const existing = window.sessionStorage.getItem(PRESENCE_AUTHOR_ID_STORAGE_KEY);
+    if (existing && /^[A-Za-z0-9_-]{4,64}$/.test(existing)) return existing;
+    const created = `${random}${Date.now().toString(36).slice(-4)}`;
+    window.sessionStorage.setItem(PRESENCE_AUTHOR_ID_STORAGE_KEY, created);
+    return created;
+  } catch {
+    return random;
   }
 }
 

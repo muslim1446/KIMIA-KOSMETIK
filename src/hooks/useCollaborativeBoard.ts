@@ -37,13 +37,12 @@ import {
 } from '../utils/annotationEngine';
 import {
   PRESENCE_HEARTBEAT_MS,
-  PRESENCE_LOCATION_MAX_AGE_MS,
   PRESENCE_ONLINE_WINDOW_MS,
   PresenceLocation,
   PresenceUser,
-  buildLocationLabel,
   cachePresenceLocation,
   loadCachedPresenceLocation,
+  loadOrCreateLocalAuthorId,
   loadPresenceDisplayName,
   normalizePresenceLocation,
   savePresenceDisplayName,
@@ -274,9 +273,7 @@ export function useCollaborativeBoard({
   const [presenceLocationError, setPresenceLocationError] = useState<string | null>(null);
   const [presenceName, setPresenceName] = useState<string>(() => loadPresenceDisplayName());
 
-  const localAuthorIdRef = useRef<string>(
-    `local-${Math.random().toString(36).slice(2, 8)}`,
-  );
+  const localAuthorIdRef = useRef<string>(loadOrCreateLocalAuthorId());
   const anonAttemptedRef = useRef(false);
   const bcRef = useRef<BroadcastChannel | null>(null);
   const roomImageIdsRef = useRef<string[]>([]);
@@ -494,133 +491,124 @@ export function useCollaborativeBoard({
           window.setTimeout(() => reject(new Error('FIRESTORE_TIMEOUT')), 7000),
         );
 
-        const memberSnap = await Promise.race([
-          getDoc(memberRef).catch((err) => {
-            if (err?.code === 'permission-denied') return null;
-            throw err;
-          }),
-          timeoutPromise,
-        ]);
+        // Open rules allow reads without auth, so check whether the room exists directly.
+        const roomSnap = await Promise.race([getDoc(roomRef), timeoutPromise]);
 
         if (cancelled) return;
 
-        if (!memberSnap || !memberSnap.exists()) {
-          // Try joining an existing room as editor first
-          let joinedExisting = false;
-          try {
-            await setDoc(memberRef, {
+        if (roomSnap.exists()) {
+          // Room already exists — register/refresh this visitor's membership card.
+          // Membership is cosmetic; live sync never depends on it.
+          await setDoc(
+            memberRef,
+            {
               uid: authorId,
               displayName: memberDisplayName,
               role: 'editor',
               joinCode: safeJoinCode,
               joinedAt: serverTimestamp(),
-            });
-            joinedExisting = true;
-          } catch (joinErr: unknown) {
-            const code = (joinErr as { code?: string })?.code ?? '';
-            if (code !== 'permission-denied') {
-              throw joinErr;
-            }
-          }
+            },
+            { merge: true },
+          ).catch(() => {
+            // Ignored — board data flows through its own collections.
+          });
+        } else {
+          // First-ever join: create the room shell + owner membership atomically,
+          // then seed any offline-local boards/images/texts so nothing is lost.
+          const createBatch = writeBatch(db);
+          const ps = presentationStateRef.current;
 
-          if (!joinedExisting) {
-            // Room likely doesn't exist yet (allow get on non-existent room throws permission-denied).
-            // Create room + owner membership atomically first, then seed any offline local boards/images.
-            const createBatch = writeBatch(db);
-            const ps = presentationStateRef.current;
+          createBatch.set(roomRef, {
+            ownerId: authorId,
+            title: 'Pembentangan Kimia 5.4',
+            joinCode: safeJoinCode,
+            slideIndex: ps.slideIndex,
+            blackout: ps.blackout,
+            projectorDark: ps.projectorDark,
+            laser: ps.laser,
+            interactions: ps.interactions,
+            imageIds: [],
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
+          createBatch.set(memberRef, {
+            uid: authorId,
+            displayName: memberDisplayName,
+            role: 'owner',
+            joinCode: safeJoinCode,
+            joinedAt: serverTimestamp(),
+          });
+          await createBatch.commit();
 
-            createBatch.set(roomRef, {
-              ownerId: authorId,
-              title: 'Pembentangan Kimia 5.4',
-              joinCode: safeJoinCode,
-              slideIndex: ps.slideIndex,
-              blackout: ps.blackout,
-              projectorDark: ps.projectorDark,
-              laser: ps.laser,
-              interactions: ps.interactions,
-              imageIds: [],
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp(),
-            });
-            createBatch.set(memberRef, {
-              uid: authorId,
-              displayName: memberDisplayName,
-              role: 'owner',
-              joinCode: safeJoinCode,
-              joinedAt: serverTimestamp(),
-            });
-            await createBatch.commit();
-
-            // Now that membership exists, seed any local offline strokes/edits/images/texts
-            const localImgs = imagesRef.current.slice(-50);
-            const localTexts = textsRef.current.slice(-60);
-            const hasLocalSlides = Array.from({ length: 9 }).some(
-              (_, i) =>
-                (strokesRef.current[i]?.length ?? 0) > 0 ||
-                Object.keys(textEditsRef.current[i] ?? {}).length > 0,
-            );
-            if (hasLocalSlides || localImgs.length > 0 || localTexts.length > 0) {
-              const seedBatch = writeBatch(db);
-              for (let i = 0; i < 9; i++) {
-                const localStrokes = (strokesRef.current[i] ?? []).slice(-400);
-                const localEdits = Object.fromEntries(
-                  Object.entries(textEditsRef.current[i] ?? {}).slice(-200),
-                );
-                if (localStrokes.length > 0 || Object.keys(localEdits).length > 0) {
-                  seedBatch.set(doc(db, 'rooms', safeRoomId, 'slides', `slide_${i}`), {
-                    roomId: safeRoomId,
-                    slideIndex: i,
-                    strokes: localStrokes,
-                    textEdits: localEdits,
-                    updatedAt: serverTimestamp(),
-                    updatedBy: authorId,
-                  });
-                }
-              }
-              if (localImgs.length > 0) {
-                for (const img of localImgs) {
-                  seedBatch.set(doc(db, 'rooms', safeRoomId, 'images', img.id), {
-                    id: img.id,
-                    roomId: safeRoomId,
-                    slideIndex: img.slideIndex,
-                    scopeKey: img.scopeKey.slice(0, 160),
-                    x: Math.round(img.x),
-                    y: Math.round(img.y),
-                    width: Math.max(24, Math.min(1600, Math.round(img.width))),
-                    height: Math.max(24, Math.min(1200, Math.round(img.height))),
-                    dataUrl: img.dataUrl.slice(0, 360_000),
-                    authorId: authorId,
-                    createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp(),
-                  });
-                }
-                seedBatch.update(roomRef, {
-                  imageIds: localImgs.map((img) => img.id),
+          // Seed any local offline strokes/edits/images/texts so nothing is lost.
+          const localImgs = imagesRef.current.slice(-50);
+          const localTexts = textsRef.current.slice(-60);
+          const hasLocalSlides = Array.from({ length: 9 }).some(
+            (_, i) =>
+              (strokesRef.current[i]?.length ?? 0) > 0 ||
+              Object.keys(textEditsRef.current[i] ?? {}).length > 0,
+          );
+          if (hasLocalSlides || localImgs.length > 0 || localTexts.length > 0) {
+            const seedBatch = writeBatch(db);
+            for (let i = 0; i < 9; i++) {
+              const localStrokes = (strokesRef.current[i] ?? []).slice(-400);
+              const localEdits = Object.fromEntries(
+                Object.entries(textEditsRef.current[i] ?? {}).slice(-200),
+              );
+              if (localStrokes.length > 0 || Object.keys(localEdits).length > 0) {
+                seedBatch.set(doc(db, 'rooms', safeRoomId, 'slides', `slide_${i}`), {
+                  roomId: safeRoomId,
+                  slideIndex: i,
+                  strokes: localStrokes,
+                  textEdits: localEdits,
                   updatedAt: serverTimestamp(),
+                  updatedBy: authorId,
                 });
               }
-              for (const text of localTexts) {
-                seedBatch.set(doc(db, 'rooms', safeRoomId, 'texts', text.id), {
-                  id: text.id,
+            }
+            if (localImgs.length > 0) {
+              for (const img of localImgs) {
+                seedBatch.set(doc(db, 'rooms', safeRoomId, 'images', img.id), {
+                  id: img.id,
                   roomId: safeRoomId,
-                  slideIndex: Math.max(0, Math.min(8, Math.trunc(text.slideIndex))),
-                  scopeKey: text.scopeKey.slice(0, 160),
-                  x: Math.round(text.x),
-                  y: Math.round(text.y),
-                  width: Math.max(120, Math.min(1280, Math.round(text.width))),
-                  height: Math.max(48, Math.min(720, Math.round(text.height))),
-                  text: text.text.replace(/\r\n/g, '\n').slice(0, 2000),
-                  fontSize: Math.max(8, Math.min(160, Math.round(text.fontSize))),
-                  color: text.color.slice(0, 32),
-                  isBold: Boolean(text.isBold),
-                  bgColor: (text.bgColor ?? 'transparent').slice(0, 32),
+                  slideIndex: img.slideIndex,
+                  scopeKey: img.scopeKey.slice(0, 160),
+                  x: Math.round(img.x),
+                  y: Math.round(img.y),
+                  width: Math.max(24, Math.min(1600, Math.round(img.width))),
+                  height: Math.max(24, Math.min(1200, Math.round(img.height))),
+                  dataUrl: img.dataUrl.slice(0, 360_000),
                   authorId: authorId,
                   createdAt: serverTimestamp(),
                   updatedAt: serverTimestamp(),
                 });
               }
-              await seedBatch.commit();
+              seedBatch.update(roomRef, {
+                imageIds: localImgs.map((img) => img.id),
+                updatedAt: serverTimestamp(),
+              });
             }
+            for (const text of localTexts) {
+              seedBatch.set(doc(db, 'rooms', safeRoomId, 'texts', text.id), {
+                id: text.id,
+                roomId: safeRoomId,
+                slideIndex: Math.max(0, Math.min(8, Math.trunc(text.slideIndex))),
+                scopeKey: text.scopeKey.slice(0, 160),
+                x: Math.round(text.x),
+                y: Math.round(text.y),
+                width: Math.max(120, Math.min(1280, Math.round(text.width))),
+                height: Math.max(48, Math.min(720, Math.round(text.height))),
+                text: text.text.replace(/\r\n/g, '\n').slice(0, 2000),
+                fontSize: Math.max(8, Math.min(160, Math.round(text.fontSize))),
+                color: text.color.slice(0, 32),
+                isBold: Boolean(text.isBold),
+                bgColor: (text.bgColor ?? 'transparent').slice(0, 32),
+                authorId: authorId,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+              });
+            }
+            await seedBatch.commit();
           }
         }
 
@@ -971,23 +959,29 @@ export function useCollaborativeBoard({
       if (!isFirebaseActive) return;
       const path = `rooms/${roomId}`;
       try {
-        await updateDoc(doc(db, 'rooms', roomId), {
-          slideIndex: next.slideIndex,
-          blackout: next.blackout,
-          projectorDark: next.projectorDark,
-          laser: {
-            active: Boolean(next.laser?.active),
-            x: Number((next.laser?.x ?? 50).toFixed(2)),
-            y: Number((next.laser?.y ?? 50).toFixed(2)),
+        // setDoc(merge) instead of updateDoc: never fails with "document not found"
+        // if this device writes a split second before the room shell is committed.
+        await setDoc(
+          doc(db, 'rooms', roomId),
+          {
+            slideIndex: next.slideIndex,
+            blackout: next.blackout,
+            projectorDark: next.projectorDark,
+            laser: {
+              active: Boolean(next.laser?.active),
+              x: Number((next.laser?.x ?? 50).toFixed(2)),
+              y: Number((next.laser?.y ?? 50).toFixed(2)),
+            },
+            interactions: next.interactions,
+            updatedAt: serverTimestamp(),
           },
-          interactions: next.interactions,
-          updatedAt: serverTimestamp(),
-        });
+          { merge: true },
+        );
       } catch (err) {
         handleFirestoreError(err, OperationType.UPDATE, path);
       }
     },
-    [isFirebaseActive, user, roomId],
+    [isFirebaseActive, roomId],
   );
 
   // Throttled real-time laser coordinate broadcast (immediate on start/stop, ~120ms while moving)
@@ -1811,31 +1805,9 @@ export function useCollaborativeBoard({
     return () => window.clearInterval(timer);
   }, []);
 
-  // Silent IP-based location so partners still see an approximate place when
-  // device GPS is disabled or permission is denied.
-  const ipPresenceLookupRef = useRef(false);
-  useEffect(() => {
-    if (ipPresenceLookupRef.current) return;
-    const cached = loadCachedPresenceLocation();
-    if (cached) {
-      setPresenceLocation(cached);
-      return;
-    }
-    ipPresenceLookupRef.current = true;
-    void fetch('/api/geo', { headers: { Accept: 'application/json' } })
-      .then((res) => (res.ok ? (res.json() as Promise<Record<string, unknown>>) : null))
-      .then((raw) => {
-        if (!raw) return;
-        const location = normalizePresenceLocation({ ...raw, updatedAt: Date.now() });
-        if (location.source === 'none') return;
-        setPresenceLocation(location);
-        cachePresenceLocation(location);
-      })
-      .catch(() => {
-        // Approximation is optional; GPS refresh remains available.
-      });
-  }, []);
-
+  // Approximate location purely from the network address. This works even
+  // when device GPS is switched off, and it NEVER triggers a browser
+  // permission prompt — the visitor is never asked to enable anything.
   const pushPresenceHeartbeat = useCallback(
     async (locationOverride?: PresenceLocation | null) => {
       if (!isFirebaseActive) return;
@@ -1924,13 +1896,22 @@ export function useCollaborativeBoard({
     const onVisibility = () => {
       if (document.visibilityState === 'visible') void pushPresenceHeartbeat();
     };
-    document.addEventListener('visibilitychange', onVisibility);
-    return () => {
-      window.clearInterval(timer);
-      document.removeEventListener('visibilitychange', onVisibility);
+    // Remove this tab's presence the moment it closes or reloads so a departed
+    // visitor never lingers as a phantom "online" entry for other people.
+    const markOffline = () => {
       void deleteDoc(doc(db, 'rooms', roomId, 'presence', currentAuthorId)).catch(() => {
         // Best-effort departure marker; stale heartbeats are filtered anyway.
       });
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', markOffline);
+    window.addEventListener('beforeunload', markOffline);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pagehide', markOffline);
+      window.removeEventListener('beforeunload', markOffline);
+      markOffline();
     };
   }, [currentAuthorId, isFirebaseActive, pushPresenceHeartbeat, roomId]);
 
@@ -1940,61 +1921,42 @@ export function useCollaborativeBoard({
     void pushPresenceHeartbeat();
   }, [isFirebaseActive, presenceLocation, presenceName, pushPresenceHeartbeat]);
 
+  // Approximate location from the network address only. No GPS, so the
+  // browser never asks the visitor to grant a location permission. If the
+  // lookup fails we silently keep whatever label is already shown.
   const refreshPresenceLocation = useCallback(async () => {
-    if (typeof navigator === 'undefined' || !('geolocation' in navigator)) {
-      setPresenceLocationError(
-        'Peranti ini tidak menyokong GPS. Lokasi anggaran internet masih dipaparkan.',
-      );
-      return;
-    }
     setPresenceLocationBusy(true);
     setPresenceLocationError(null);
     try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 12_000,
-          maximumAge: 30_000,
-        });
+      const res = await fetch('/api/geo', {
+        headers: { Accept: 'application/json' },
+        cache: 'no-store',
       });
-      const { latitude, longitude, accuracy } = position.coords;
-      let details: Record<string, unknown> = {};
-      try {
-        const res = await fetch(
-          `/api/geo/reverse?lat=${latitude.toFixed(6)}&lng=${longitude.toFixed(6)}`,
-          { headers: { Accept: 'application/json' } },
-        );
-        if (res.ok) details = (await res.json()) as Record<string, unknown>;
-      } catch {
-        // Coordinates are still useful without a reverse-geocoded label.
-      }
-      const city = typeof details.city === 'string' ? details.city : '';
-      const region = typeof details.region === 'string' ? details.region : '';
-      const country = typeof details.country === 'string' ? details.country : '';
-      const location = normalizePresenceLocation({
-        ...details,
-        source: 'gps',
-        latitude,
-        longitude,
-        accuracy,
-        label: buildLocationLabel(city, region, country),
-        updatedAt: Date.now(),
-      });
+      if (!res.ok) throw new Error(`geo ${res.status}`);
+      const raw = (await res.json()) as Record<string, unknown>;
+      const location = normalizePresenceLocation({ ...raw, updatedAt: Date.now() });
+      if (location.source === 'none' || !location.label) throw new Error('geo-unavailable');
       setPresenceLocation(location);
       presenceLocationRef.current = location;
       cachePresenceLocation(location);
       await pushPresenceHeartbeat(location);
-    } catch (err) {
-      const code = (err as { code?: number })?.code;
-      setPresenceLocationError(
-        code === 1
-          ? 'Kebenaran lokasi ditolak. Lokasi anggaran internet masih dipaparkan kepada rakan pasukan.'
-          : 'Lokasi tepat tidak dapat diperoleh. Lokasi anggaran internet masih digunakan.',
-      );
+    } catch {
+      // Network approximation unavailable — keep the current label and stay
+      // silent. We never nag the visitor to enable GPS or grant permissions.
+      setPresenceLocationError(null);
     } finally {
       setPresenceLocationBusy(false);
     }
   }, [pushPresenceHeartbeat]);
+
+  // Force a fresh approximate location on every load. The cached value (if any)
+  // already renders instantly, so this only upgrades it in the background.
+  const geoRefreshOnLoadRef = useRef(false);
+  useEffect(() => {
+    if (geoRefreshOnLoadRef.current) return;
+    geoRefreshOnLoadRef.current = true;
+    void refreshPresenceLocation();
+  }, [refreshPresenceLocation]);
 
   const updatePresenceDisplayName = useCallback((next: string) => {
     const clean = next.trim().slice(0, 80);

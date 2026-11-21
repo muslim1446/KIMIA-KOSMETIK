@@ -53,19 +53,27 @@ const steps: GuideStep[] = [
     },
   },
   {
+    target: '[data-testid="island-eraser-button"]',
+    title: { ms: 'Padam lakaran', zh: '擦除笔迹' },
+    instruction: {
+      ms: 'Pilih pemadam, kemudian sapu pada garisan. Untuk padam semua lukisan slaid, buka tetapan alat lukis.',
+      zh: '选择橡皮擦，然后擦过笔迹。若要清除此幻灯片的所有笔迹，请打开画笔设置。',
+    },
+  },
+  {
     target: '[data-testid="island-image-button"]',
     title: { ms: 'Tambah gambar', zh: '添加图片' },
     instruction: {
-      ms: 'Pilih gambar daripada peranti. Selepas ditambah, pilih gambar untuk mengalih, ubah saiz, atau padam.',
-      zh: '从设备选择图片。添加后，选中图片即可移动、调整大小或删除。',
+      ms: 'Pilih gambar daripada peranti atau tampal dengan Ctrl+V. Ketik gambar untuk pilih; ketik dua kali dengan cepat untuk mula mengalih. Tarik penjuru untuk ubah saiz.',
+      zh: '从设备选择图片，或按 Ctrl+V 粘贴。点击图片可选中；快速双击可开始移动。拖动角落可调整大小。',
     },
   },
   {
     target: '[data-testid="island-laser-button"]',
     title: { ms: 'Tunjuk dengan laser', zh: '使用激光指示' },
     instruction: {
-      ms: 'Pilih penunjuk laser, kemudian gerakkan jari atau tetikus pada slaid. Ia tidak meninggalkan lukisan.',
-      zh: '选择激光指示器，然后在幻灯片上移动手指或鼠标。它不会留下笔迹。',
+      ms: 'Pilih penunjuk laser, kemudian gerakkan jari atau tetikus pada slaid. Pada komputer, tahan L sambil menggerakkan tetikus.',
+      zh: '选择激光指示器，然后在幻灯片上移动手指或鼠标。电脑上可按住 L 键并移动鼠标。',
     },
   },
   {
@@ -80,8 +88,8 @@ const steps: GuideStep[] = [
     target: '[data-testid="island-google-ai-button"]',
     title: { ms: 'Cari dengan konteks slaid', zh: '结合幻灯片内容搜索' },
     instruction: {
-      ms: 'Carian ini menggunakan konteks slaid semasa. Tetingkap Google boleh dialih dengan menyeret pengepalanya.',
-      zh: '此搜索会使用当前幻灯片内容。拖动 Google 窗口顶部即可移动窗口。',
+      ms: 'Butang Google membuka carian. Butang AI mencari menggunakan konteks slaid semasa; tetingkap boleh dialih dengan menyeret pengepalanya.',
+      zh: 'Google 按钮可打开搜索。智能搜索会使用当前幻灯片内容；拖动窗口顶部即可移动窗口。',
     },
   },
   {
@@ -95,12 +103,12 @@ const steps: GuideStep[] = [
 ];
 
 function hasCompletedGuide() {
-  return document.cookie.split(';').some((item) => item.trim().startsWith(`${GUIDE_COOKIE}=v1`));
+  return document.cookie.split(';').some((item) => item.trim().startsWith(`${GUIDE_COOKIE}=v2`));
 }
 
 function markGuideComplete() {
   const secure = window.location.protocol === 'https:' ? '; Secure' : '';
-  document.cookie = `${GUIDE_COOKIE}=v1; Max-Age=${GUIDE_COOKIE_AGE}; Path=/; SameSite=Lax${secure}`;
+  document.cookie = `${GUIDE_COOKIE}=v2; Max-Age=${GUIDE_COOKIE_AGE}; Path=/; SameSite=Lax${secure}`;
 }
 
 function getTargetRect(selector: string) {
@@ -257,7 +265,7 @@ export const FirstVisitGuide: React.FC<{
                 <p className="mb-1 text-xs font-bold text-emerald-800">
                   {t('guide.section', { current: stepIndex + 1, total: steps.length })}
                 </p>
-                <h1 id="guide-title" aria-live="polite" className="font-display text-xl font-extrabold leading-snug sm:text-2xl">
+                <h1 id="guide-title" aria-live="polite" className="font-sans text-xl font-bold leading-relaxed sm:text-2xl">
                   {current.title[language]}
                 </h1>
               </div>

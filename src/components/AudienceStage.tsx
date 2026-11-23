@@ -270,7 +270,9 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
           tool !== 'pen' &&
           tool !== 'eraser' &&
           Boolean(stage?.contains(target)) &&
-          !target?.closest('button, input, textarea, select, [role="button"], [data-testid*="popover"]');
+          !target?.closest(
+            'button, input, textarea, select, [role="button"], [data-testid*="popover"], [data-testid="google-browser-frame"], [data-testid="gemini-assistant-frame"], [data-presentation-island]',
+          );
         const [point] = pts.values();
         prevSingleX = point.x;
         prevSingleY = point.y;
@@ -377,7 +379,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
       const target = e.target as HTMLElement | null;
       if (
         target?.closest(
-          'input, textarea, select, [data-testid="pen-settings-popover"], [data-testid="sync-settings-popover"]',
+          'input, textarea, select, [data-testid="pen-settings-popover"], [data-testid="sync-settings-popover"], [data-testid="presence-popover"], [data-testid="google-browser-frame"], [data-testid="gemini-assistant-frame"]',
         )
       ) {
         return;

@@ -215,6 +215,10 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
     wasOpenRef.current = true;
     lastModeRef.current = mode;
 
+    if (justOpened) {
+      setMinimized(false);
+    }
+
     if (mode === 'google-ai') {
       void runSlideAiSearch();
     } else if (justOpened || modeChanged) {
@@ -362,7 +366,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
         width: `${frameRect.width}px`,
         height: minimized ? 'auto' : `${frameRect.height}px`,
       }}
-      className="apple-ui apple-sheet apple-squircle fixed z-40 flex flex-col rounded-[26px] text-[var(--apple-label)] select-none overflow-hidden"
+      className="apple-ui apple-sheet apple-squircle fixed z-[45] flex flex-col rounded-[26px] text-[var(--apple-label)] select-none overflow-hidden"
     >
       {/* ── macOS Tahoe Titlebar & Controls ───────────────────────────────── */}
       <div

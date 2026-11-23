@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { AudienceStage } from './components/AudienceStage';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { LiquidGlassFilterDefs } from './components/LiquidGlassFilterDefs';
 import { useCollaborativeBoard } from './hooks/useCollaborativeBoard';
 import { SyncedPresentationState, usePresentationSync } from './hooks/usePresentationSync';
 import { useUiLanguage } from './utils/uiLanguage';
@@ -116,6 +117,7 @@ export default function App() {
 
   return (
     <ErrorBoundary>
+      <LiquidGlassFilterDefs />
       <AudienceStage
         isRemoteProjector={mode === 'audiens'}
         slideIndex={state.slideIndex}

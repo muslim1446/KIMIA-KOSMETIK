@@ -6,8 +6,10 @@ import {
   APPLE_DECELERATION_RATES,
   APPLE_SPRINGS,
   APPLE_TOUCH_FROST_ENVELOPE,
+  APPLE_TOUCH_SLOP_PX,
   appleRubberBand,
   appleRubberBandInverse,
+  applyTouchSlop,
   buildContinuousRoundedRectPath,
   circleBevelProfile,
   concentricRadius,
@@ -20,6 +22,7 @@ import {
   inwardRimMirrorOffset,
   lipBevelProfile,
   metaballAlphaThreshold,
+  physicalHairlinePx,
   projectScrollEndpoint,
   sdfEdgeAlpha,
   smoothMin,
@@ -254,4 +257,25 @@ test('Stage 4-7 preBlurSaturate, Light/Dark dynamic range compression, tracksLum
   assert.equal(evaluateOutsideShadowAlpha(0, 20), 0);
   assert.equal(evaluateOutsideShadowAlpha(-4, 20), 0);
   assert.ok(evaluateOutsideShadowAlpha(4, 20, 0.24, 0.8) > evaluateOutsideShadowAlpha(24, 20, 0.24, 0));
+});
+
+test('UIKit 10pt touch-slop hysteresis and physical Retina 1px hairlines match spec', () => {
+  assert.equal(APPLE_TOUCH_SLOP_PX, 10);
+
+  const subSlop = applyTouchSlop(6, 7);
+  assert.equal(subSlop.locked, false);
+  assert.equal(subSlop.dx, 0);
+  assert.equal(subSlop.dy, 0);
+
+  const exactThreshold = applyTouchSlop(10, 0);
+  assert.equal(exactThreshold.locked, true);
+  assert.equal(exactThreshold.dx, 0);
+
+  const overSlop = applyTouchSlop(15, 0);
+  assert.equal(overSlop.locked, true);
+  assert.ok(Math.abs(overSlop.dx - 5) < 1e-6);
+
+  assert.equal(physicalHairlinePx(1), 1);
+  assert.equal(physicalHairlinePx(2), 0.5);
+  assert.equal(physicalHairlinePx(3), 0.333);
 });

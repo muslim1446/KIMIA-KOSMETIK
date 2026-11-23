@@ -1,0 +1,448 @@
+Liquid Glass is only one layer of Apple’s rendering stack. What actually
+separates native Apple interfaces from third-party lookalikes is a coordinated
+system of ~11 additional optical, geometric, typographic, display, and physics
+subsystems running across QuartzCore, CoreGraphics, RenderBox, CoreBrightness,
+CoreHaptics, and BackBoard / WindowServer.
+
+Below is the complete OSINT engineering catalog—the internals, exact equations,
+constants, conditions, and recipes—for everything besides Liquid Glass.
+
+1. Legacy Material Engine (NSVisualEffectView / UIVisualEffectView & CoreUI)
+
+Even in apps using traditional blur materials (and in every control inside
+sheets/sidebars before iOS 26), copycats just apply Gaussian blur + alpha tint.
+Reverse-engineering of NSVisualEffectView and .car (CoreUI) asset catalogs shows
+Apple’s exact recipe:
+
+Internal Layer Tree & CABackdropLayer Settings
+
+VisualEffectView.layer
+└─ container (CALayer, masksToBounds = true)
+   ├─ backdrop (CABackdropLayer)
+   └─ tint (CALayer, compositingFilter = blendMode)
+
+  - Performance & Artifact Prevention:
+      - backdrop.scale = 0.25 (quarter-resolution downsampling prior to blur)
+      - backdrop.bleedAmount = 10.0 (extends sampling 10pt beyond clipped bounds
+        so edge blur kernels don't darken/clamp at borders)
+      - backdrop.allowsInPlaceFiltering = false (prevents stale/laggy buffer
+        reuse)
+      - backdrop.groupName = sharedUUID (syncs adjacent materials so seams don't
+        appear)
+      - blur.setValue(true, forKey: "inputNormalizeEdges")
+  - WindowServer Anti-Flattening (macOS behind-window blending):
+      - WindowServer flattens layer trees into static bitmaps after ~1s of idle
+        or during Spaces/Mission Control swipes, killing live blur. Apple
+        bypasses this with:
+          - shouldAutoFlattenLayerTree = false
+          - CGSSetWindowTags(..., kCGSNeverFlattenSurfacesDuringSwipesTagBit) (1
+            << 16, re-applied on windowDidEndLiveResize)
+          - backdrop.allowsSubstituteColor = true (substitutes neutral color
+            over DRM/secure fields instead of black)
+
+Exact Filter Order & Math (CoreUI)
+
+Strict pipeline order: ColorSaturate \to GaussianBlur \to ColorBrightness \to
+Tint (CompositingFilter).
+
+  - Standard Recipe Anchor (e.g., sidebar / Control Center base): blurRadius
+    = 30.0, saturation = 1.8, brightness = 0.02.
+  - Light Mode Blend: Base lift + darkenBlendMode (min(backdrop, tint)) or
+    "plusD" (Plus Darker) to prevent white blowouts.
+  - Dark Mode Blend: Base clamp + lightenBlendMode (max(backdrop, tint)) or
+    "plusL" (Plus Lighter) to prevent black holes.
+  - Vibrancy (UIVibrancyEffect / vibrantLight / vibrantDark /
+    vibrantColorMatrix): Text/icons over blurred glass do not use flat alpha
+    opacity. They run CAFilter("vibrantColorMatrix") with inputBackdropAware =
+    true (4×5 RGBA matrix + hue-preserving clamp inputClampPreserveHue) so
+    foreground glyphs selectively invert/amplify relative to the filtered
+    backdrop.
+
+2. Continuous Corners (kCACornerCurveContinuous) & Hardware Concentricity
+
+CSS border-radius creates a G^1 circular arc where curvature \kappa jumps
+instantaneously from 0 \to 1/r at the tangent point, causing highlights and
+shadows to look "bolted on".
+
+A. QuartzCore's Real Shader (supercircle_sdf) vs. CGPath
+
+  - Screen Shader (QuartzCore supercircle_sdf): Does not use a global
+    superellipse |x|^n+|y|^n=1. Instead, it takes a quarter-circle around the
+    45^\circ diagonal whose curvature tapers smoothly to zero along a quartic
+    ratio in the corner box, meeting the straight edge at 1.528665 \cdot r from
+    the geometric corner.
+      - Short-side / Pill Fallback: When a side length L is too short for both
+        corners (L < 2 \times 1.528665\,r), Core Animation smoothly blends the
+        curve back toward a true quarter-circle using a clamp factor derived
+        from L / r_{\text{mean}} (so a circle/capsule degenerates cleanly into
+        circular arcs).
+      - Shader Anti-Aliasing: Edge coverage is computed analytically via
+        gradient magnitude:
+        \alpha = \text{clamp}(0.5 - d / (|\partial_x d| + |\partial_y d|), 0, 1).
+  - Exact 3-Bézier CGPath Normalized Constants (Zero-Pixel-Error Replica for 1
+    corner, scaled by r): Starting on top edge at (1.528665\,r,\; 0) moving into
+    the corner (0,0):
+    1.  Cubic 1: c1 = (1.08849296, 0), c2 = (0.86840694, 0), end =
+        (0.63149379, 0.07491139) (scaled by r)
+    2.  Central / Transitional Cubic(s) & Mirror: using the extracted normalized
+        constants
+        [1.528665, 1.08849296, 0.86840694, 0.63149379, 0.07491139, 0.37282383, 0.16905956, 0.0].
+        (Tip: For custom SDF renderers free of Apple's tiny legacy asymmetry
+        artifact, use a Walton–Meek clothoid spline or L_4 superellipse
+        |x/a|^4 + |y/b|^4 = 1 with \kappa(\pm a, 0) = 0.)
+
+B. Concentricity (ConcentricRectangle / _displayCornerRadius)
+
+Sheets, widgets, notifications, and cards nest concentrically with the physical
+display bezel (UIScreen._displayCornerRadius, e.g., ~55pt on Pro iPhones):
+r_{\text{inner}, i} = \max\!\big(r_{\text{container}, i} - d_{\text{corner}, i},\;\; r_{\min}\big)
+where d_{\text{corner}, i} is the offset from corner i of the child frame to
+corner i of the enclosing containerShape / hardware screen.
+
+  - Condition: When d_{\text{corner}, i} \ge r_{\text{container}, i} (e.g., the
+    top corners of a bottom sheet far from the top bezel), the calculated
+    concentric radius collapses to 0 unless explicitly overridden with a fixed
+    top radius.
+
+3. Physics Engine: Springs, Scroll Deceleration, Rubber-Banding & Retargeting
+
+Almost every clone feels "janky" or "webby" because developers animate with CSS
+ease-in-out or reset position/velocity when interrupted.
+
+A. Apple’s Exact Spring(duration:bounce:) \leftrightarrow ODE Mapping
+
+Apple models all UI motion as a second-order spring-mass-damper
+(m \ddot{x} + c \dot{x} + k x = 0) with m = 1:
+\omega_0 = \frac{2\pi}{\text{duration}}, \qquad k = \omega_0^2 = \left(\frac{2\pi}{\text{duration}}\right)^2
+\zeta = \begin{cases} 1 - \text{bounce} & \text{if } \text{bounce} \ge 0 \quad (\text{underdamped / critical}) \\ \dfrac{1}{1 + \text{bounce}} & \text{if } \text{bounce} < 0 \quad (\text{overdamped}) \end{cases}
+c = 2\zeta \sqrt{k} = 2\zeta\,\omega_0 (Note: \text{duration} is perceptual
+duration, not settling time! Wait for both |x - x_{\text{target}}| < \epsilon_x
+and |\dot{x}| < \epsilon_v before snapping to rest.)
+
+  - Built-in System Regimes:
+      - Default SwiftUI Spring: response = 0.50, dampingFraction = 0.825
+        (\zeta = 0.825)
+      - .smooth: \text{bounce} = 0 (\zeta = 1.0, critically damped—zero
+        overshoot for navigation pushes)
+      - .snappy: small positive bounce (e.g. duration = 0.28, bounce = 0.12 for
+        toggles/controls)
+      - .bouncy: higher positive bounce (\text{bounce} \approx 0.30)
+  - Two Interruption Rules (Critical!):
+    1.  Velocity-Preserving Merge (Springs): When target x_{\text{target}}
+        changes mid-flight, do not start a new curve from v=0. Mutate
+        target/parameters on the live ODE keeping (x, \dot{x}) continuous
+        (shouldMerge = true).
+    2.  Additive Composition (Timing Curves): Non-mergeable curves add relative
+        delta animations (oldTarget -> newTarget) onto the presentation layer
+        (iOS 8+ additive Core Animation).
+    3.  Gesture-to-Spring Handoff: Drive drag updates via .interactiveSpring
+        (very short response) and on finger-up merge directly into the resting
+        spring—velocity transfers automatically without noisy finite-difference
+        estimates.
+
+B. UIScrollView Exact Scroll & Rubber-Band Equations
+
+Reverse-engineered and confirmed bit-for-bit against UIKit:
+
+  - Deceleration Velocity Curve (t in milliseconds):
+    v(t) = v_0 \cdot r^{t_{\text{ms}}}, \qquad r_{\text{normal}} = 0.998\text{/ms}, \quad r_{\text{fast}} = 0.990\text{/ms}
+  - Fling Snap Projection (WWDC18 803):
+    x_{\text{projected}} = x_{\text{release}} + \frac{v_0}{1000} \cdot \frac{r}{1 - r}
+    (At v_0 = 1000\text{ pt/s} and r = 0.998, scroll projects
+    \approx 499\text{ pt}; at r = 0.990, \approx 99\text{ pt}. Snap
+    pagers/carousels using x_{\text{projected}}, never x_{\text{release}}!)
+  - Rubber-Band Resistance:
+    b(x) = \left(1 - \frac{1}{\frac{x \cdot c}{d} + 1}\right) \cdot d, \qquad c = 0.55
+    where x is linear finger overscroll past boundary and d is viewport
+    dimension (e.g., on an 844\text{pt} screen, 100\text{pt} overdrag
+    \to 51.6\text{pt} visual displacement; 400\text{pt} \to 174.5\text{pt}).
+  - Swipe Hysteresis: \approx 10\text{ pt} touch slop before locking scroll
+    direction.
+
+4. ProMotion Frame Pacing, targetPresentationTimestamp & RenderServer Split
+
+A. Discrete VRR Frequency Grid (Not Arbitrary Continuous Hz)
+
+LTPO ProMotion displays on Apple devices step strictly along a 4.17\text{ ms}
+scanout grid using exact discrete rates:
+\{120,\; 80,\; 60,\; 48,\; 40,\; 30,\; 24,\; 20,\; 16,\; 15,\; 12,\; 10,\; 1\}\text{ Hz}
+(Notice: No 90 Hz or 100 Hz bucket exists. Rendering at ~118 fps oscillates
+between 8.33 ms and 12.5 ms buckets, looking worse than holding a steady 80 Hz
+(12.5 ms).)
+
+  - Scroll Velocity Step-Down: As a flick decelerates, iOS dynamically steps 120
+    Hz -> 80 Hz -> 60 Hz -> 48 Hz -> 40 Hz ... -> 10 Hz (and 1 Hz on Always-On
+    Display).
+  - Golden Pacing Rules:
+      - Require CADisableMinimumFrameDurationOnPhone = true on iOS.
+      - Advance physics/shaders by targetPresentationTimestamp -
+        previousPresentationTimestamp (CAMetalDisplayLink), never wall-clock
+        callback time.
+      - On macOS VRR, use presentAfterMinimumDuration / presentAtTime rather
+        than drawable back-pressure.
+      - Whenever GPU content moves alongside native OS chrome/glass, swap
+        IOSurface contents or set CAMetalLayer.presentsWithTransaction = true
+        inside the same CATransaction so Metal and CA never drift by 1 frame.
+
+B. Out-of-Process Immunity (backboardd / WindowServer)
+
+Core Animation commits layer trees across Mach IPC to an independent render
+server process. Built-in SwiftUI animations evaluate springs off the main thread
+directly into presentation layers—even if app layout code stalls for 200ms,
+running motion stays locked at 120 Hz.
+
+5. Variable / Progressive Blur & Scroll Edge Effects (CAVariableBlur)
+
+Hard clipping scrolled content under a navbar or status bar instantly exposes a
+third-party app. Apple uses graduated/variable blur + alpha feathering:
+
+  - Native Primitive (CAFilter("variableBlur")): Inputs: inputMaskImage (alpha
+    value per pixel scales local blur radius
+    r(x,y) = \alpha_{\text{mask}}(x,y)\cdot R_{\max}), inputRadius,
+    inputNormalizeEdges, inputNormalizeEdgesTransparent, inputFade, inputDither,
+    inputSourceSublayerName.
+  - Implementation Math (Fast Dual-Pyramid Interpolation): Since spatially
+    varying Gaussian kernels are O(N^2) per pixel, build a mip/Gaussian pyramid
+    L_0, L_1, L_2, \dots, L_k (at radii 0, 2, 4, 8, 16, 32\text{ px}), compute
+    continuous mip level
+    \lambda(\mathbf{p}) = \log_2(1 + \alpha_{\text{mask}}(\mathbf{p}) \cdot R_{\max}),
+    and trilinearly interpolate between \lfloor\lambda\rfloor and
+    \lceil\lambda\rceil + apply subtle blue-noise/IGN dithering (inputDither =
+    true) to kill gradient banding.
+  - iOS 26+ .scrollEdgeEffectStyle(.soft): Combines a progressive variableBlur
+    fade mask over ~24–48pt above/below toolbars with subtle lensing so
+    scrolling text dissolves into the bar instead of slicing against a line.
+
+6. Typography: Optical Sizing, Tracking Curve, Stem Darkening & Linear Alpha Blending
+
+Most clones load Inter or SF Pro at a fixed size/tracking and blend glyph
+coverage in gamma-encoded sRGB space—producing thin, spindly white text on dark
+backgrounds and muddy halos on colored backgrounds.
+
+A. SF Pro Optical Sizing & Tracking Ladder
+
+  - Continuous opsz Cutover: System font dynamically interpolates letterform
+    geometry (wider apertures, taller x-height, looser spacing below 20pt;
+    tighter proportions above): SF Pro Text \le 19\text{pt}, SF Pro Display
+    \ge 20\text{pt}.
+  - Optical Tracking Curve (iOS/iPadOS points):
+      - 6pt: +0.24pt (+41/1000 em), 8pt: +0.21pt, 10pt: +0.12pt, 12pt: 0.00pt
+      - Tightens to minimum around 17–20pt (-0.43pt at 17pt, ~ -0.45pt at
+        19–20pt)
+      - Rebounds positive around 24–34pt (+0.40pt at 29–34pt) before decaying
+        back toward zero at giant hero sizes.
+  - Dynamic Type Nonlinearity: Body scales 17pt -> 53pt (3.1x from L to AX5),
+    whereas Footnote/Caption clamp at 11–12pt on the low end (xS–M) and grow
+    aggressively at AX1–AX5. Never use weights below Regular in UI chrome.
+
+B. Stem Darkening + Gamma-Correct Linear Glyph Blending
+
+This is the hidden reason macOS/iOS text looks razor-sharp yet rich:
+
+1.  The Problem: If you blend anti-aliased coverage \alpha \in [0, 1] directly
+    in gamma-encoded sRGB (\gamma \approx 2.2), mid-grey coverage edges come out
+    too dark on light backgrounds (making black text look heavier/fuzzier) and
+    too thin on dark backgrounds. Conversely, if you blend physically accurately
+    in linear light, thin stems visually thin out ("frail" glyphs).
+2.  Apple's Two-Part Solution (CoreGraphics / CFF Rasterizer):
+      - Step 1 (Pre-Rasterization Stem Darkening): At small pixel-per-em sizes,
+        the rasterizer algorithmically dilates/emboldens glyph outlines by a
+        small pixel fraction inversely proportional to ppem, increasing pixel
+        coverage on fine stems. (FreeType’s CFF engine ported Adobe/Apple’s
+        exact stem-darkening parameters for this.)
+      - Step 2 (Linear-Light Blending + Re-Encoding): Convert foreground text
+        color and backdrop pixel to linear light, alpha-composite in linear
+        space
+        (\mathbf{C}_{\text{lin}} = \alpha\,\mathbf{F}_{\text{lin}} + (1 - \alpha)\mathbf{B}_{\text{lin}}),
+        then re-encode with display gamma.
+      - Dark Mode Irradiation Compensation: White text on dark backgrounds
+        blooms perceptually on OLEDs (irradiation illusion). Apple compensates
+        via CGFont / variable font grade/dilation tuning and by avoiding #FFFFFF
+        on pure #000000 for body copy where elevated dark surfaces (#1C1C1E) are
+        used.
+
+7. Display Color Pipeline: EDR Headroom, OLED Protection & True Tone (CoreBrightness)
+
+A. Extended Dynamic Range (EDR) UI & Highlights
+
+Apple UI elements (Apple Intelligence glows, Photos HDR thumbnails, Siri bursts,
+specular highlights) exceed 1.0 SDR white:
+
+  - Pipeline Setup: CAMetalLayer.wantsExtendedDynamicRangeContent = true,
+    pixelFormat = .rgba16Float, colorspace = .extendedLinearDisplayP3 (or
+    .itur_2020).
+  - Headroom Math:
+    \text{Headroom} = \frac{L_{\text{peak\_display}}}{L_{\text{current\_SDR\_white}}}
+    Query NSScreen.maximumExtendedDynamicRangeColorComponentValue
+    (currentEDRHeadroom) per frame (potentialEDRHeadroom on iOS when probing max
+    capability). Scale bright glow emissive RGB by [1.0 ... currentEDRHeadroom],
+    and remember iOS throttles currentEDRHeadroom -> 1.0 over 20–40 min under
+    thermal load.
+  - QuartzCore Built-in Display Filters:
+      - CAFilter("edrGain") / CAFilter("edrGainMultiply") (inputScale,
+        inputAdaptive, inputAllowsGroup)
+      - CAFilter("sdrNormalize") (inputClamp, inputClampPreserveHue)
+      - CAFilter("limitAveragePixelLuminance") (inputAmount, inputScale,
+        inputUseP3Space, inputDisplayInvertAware) — Apple's hardware-friendly
+        OLED Average Pixel Luminance (ABL) limiter to prevent abrupt screen
+        dimming and burn-in.
+
+B. True Tone White-Point Adaptation (CoreBrightness)
+
+True Tone prevents white glass/paper UI from looking shockingly blue under warm
+indoor bulbs:
+
+1.  Multi-channel ambient light sensor measures incident spectrum \to estimates
+    ambient CIE xy / CCT + D_{uv}.
+2.  Applies a Bradford Linear Chromatic Adaptation Transform (CAT) (improved von
+    Kries cone-response matrix M_{\text{BFD}}) converting scene D65 linear XYZ
+    to target ambient white point \text{XYZ}_{\text{amb}}:
+    M_{\text{CAT}} = M_{\text{BFD}}^{-1} \cdot \text{diag}\!\left(\frac{L_{\text{dst}}}{L_{\text{src}}},\; \frac{M_{\text{dst}}}{M_{\text{src}}},\; \frac{S_{\text{dst}}}{S_{\text{src}}}\right) \cdot M_{\text{BFD}}
+    Notice Apple uses mixed adaptation (partial adaptation factor \alpha < 1,
+    typically ~40–60% toward ambient white rather than 100%, because eyes adapt
+    simultaneously to room light and the screen).
+
+8. MeshGradient Bicubic Coons Patches & Fragment Color Evaluation
+
+Reverse-engineering of RenderBox binaries on iOS 18–26 (KHMeshGradient Metal
+research) revealed why Apple's MeshGradient looks silky smooth at 120 Hz without
+triangle faceting:
+
+1.  Separated Position & Color Surfaces: Each (u,v) \in [0,1]^2 patch builds two
+    independent 16-control bicubic nets:
+      - Position Net (positionNet[16]): Constructed as a Coons patch from the 4
+        cubic boundary Béziers (leading, top, trailing, bottom handles) minus
+        the bilinear corner blend so corners aren't double-counted.
+      - Color Net (colorNet[16]): Derived via Catmull-Rom / finite-difference
+        cubic tangents across neighboring vertex colors in premultiplied alpha
+        (smoothsColors = true).
+2.  Vertex Stage (Coarse Adaptive Grid) vs. Fragment Stage (Exact Color):
+      - Tessellation density per patch axis is chosen on CPU as a power of two
+        (n \in \{1, 4, 8, 16, \dots\}) from screen-space second differences
+        (bound > targetPx * n^2)—a flat 4-corner mesh uses just 2 triangles (n
+        = 1)!
+      - Color is evaluated per-pixel in the fragment shader (never
+        vertex-interpolated!), using FMA power-basis along v (fma(fma(fma(c12,
+        v, c8), v, c4), v, c0)) to cut ALU instructions and Bernstein basis
+        along u ((1-u)^3, 3(1-u)^2u, 3(1-u)u^2, u^3) to avoid floating-point
+        cancellation—using half4 for opaque sRGB pipelines.
+      - Anti-Banding: Add 1\text{ LSB} triangular-PDF dither before 8-bit
+        quantization.
+
+9. Apple Intelligence / Siri Edge Glow (SiriSharedUI)
+
+Inspections of SiriUI / SiriSharedUI and Metal reproductions (Aurora, VP0)
+identify how the edge illumination behaves:
+
+1.  Concentric Screen-Corner Mask: Uses the device hardware corner radius
+    (_displayCornerRadius) with an inverted/hollowed SDF mask or stacked
+    variable-width strokes (core tight stroke + mid bloom blur + wide soft
+    wash).
+2.  Fluid Chromatic Motion: Animated control points or smooth 2D Simplex/Worley
+    noise warping UV phase inside an extended Display-P3 / EDR-boosted palette
+    (wantsExtendedDynamicRangeContent).
+3.  4-State Envelope Machine:
+      - Appear / Hot Mic: fast inward bloom burst (dramatic intro) + audio RMS
+        amplitude modulation on glow thickness/EDR gain.
+      - Thinking: slows angular/noise drift speed, drops peak luminance.
+      - Idle / Exit: smooth alpha fade out.
+      - Reduce Motion: freezes coordinate warp and converts to slow opacity
+        breathing only.
+
+10. Elevation, Shadows, Hairlines & Dark Mode Hierarchy (Content Layer Rules)
+
+Copycats fail in the opaque content layer because they use web CSS defaults:
+
+1.  Two-Layer Physical Shadow Formula (Never One Dirty Blur):
+      - Key Shadow: Offset downward (y > 0, e.g., y = 4..12pt), moderate blur (r
+        = 12..30pt), low alpha (0.08..0.14).
+      - Ambient / Contact Occlusion Shadow: Centered (y = 0..1pt), tight blur (r
+        = 1..3pt), crisp grounding edge (alpha 0.04..0.08).
+      - Colored Shadow Glow (Album art / Hero cards): Sample downscaled blurred
+        image underneath (scale = 0.1, saturation = 1.6, opacity = 0.25..0.40,
+        offsetY = 8..16pt) instead of black mud.
+2.  Physical 1px Hairlines (separator): Never 1pt borders (2px or 3px
+    physical!). Draw 1.0 / contentsScale (0.5pt @2x, 0.33pt @3x) at ~12% opacity
+    (rgba(60,60,67,0.29) light / rgba(84,84,88,0.6) dark), inset past leading
+    list icons.
+3.  Grouped Canvas Inversion & Dark Mode Stepping:
+      - Light Grouped: Grey canvas (#F2F2F7) behind crisp white cards (#FFFFFF)
+        — the inverse of typical flat white web pages.
+      - Dark Mode: Never invert colors or flatten everything to #000000. Apple
+        uses semantic elevation stepping: Base (#000000 / #1C1C1E), Elevated 1
+        (#1C1C1E / #2C2C2E), Elevated 2 (#2C2C2E / #3A3A3C), so modals, sheets,
+        and grouped cards naturally brighten as they come closer to the user.
+
+11. Pointer Magnetism, Dynamic Island & CoreHaptics Coupling
+
+A. UIPointerInteraction Cursor Morphing & Parallax Tilt
+
+On iPadOS/visionOS, a dumb arrow cursor breaks immersion:
+
+  - .highlight Mode: Pointer disappears/morphs into the control’s squircle
+    platter behind the glyph, adding a directional specular light gradient
+    tracked directly to cursor offset
+    (\mathbf{p}_{\text{cursor}} - \mathbf{p}_{\text{center}}).
+  - .lift Mode: Pointer slides underneath (z-drop), view scales up
+    (~1.04–1.08×), gains a soft elevated shadow, and translates/tilts with
+    damped magnetic lag (e.g., offset = 0.15 * (cursorPos - center)).
+
+B. Dynamic Island (SBSystemAperture)
+
+  - Pure #000000 OLED Blending: Because the true cutout is dead black, the
+    island renders pure #000000 (alpha = 1.0) so sensor glass vanishes
+    seamlessly; separation comes strictly from a 0.5pt ultra-subtle dark-grey
+    contour ring (white α0.08–0.12) when expanding over dark wallpapers.
+  - Metaball Split (smin): Splitting a secondary live activity bubble out of the
+    main island uses the exact polynomial smin SDF union (Stage 1 of Liquid
+    Glass) paired with a slightly underdamped spring (bounce ~0.18–0.25) so the
+    two pills stretch a fluid black meniscus before snapping apart.
+
+C. CoreHaptics + Micro-Audio Synchronization
+
+Visual springs feel "hollow" without tactile coincidence (< 10 ms latency
+tolerance):
+
+  - CHHapticEvent Taxonomy:
+      - Transient (hapticTransient): Short crisp impulse parameterized by
+        hapticIntensity ∈ [0,1] and hapticSharpness ∈ [0,1].
+      - Continuous (hapticContinuous): Texture drag / slider resistance
+        modulated dynamically by velocity.
+  - Trigger Timing Rule: Fire transients at physical contact or spring
+    zero-crossing/snap events (e.g., the instant a detent snaps, a toggle passes
+    0.5, or a pull-to-refresh crosses threshold)—never randomly at touchUpInside
+    after an animation already finished. Pair crisp high-sharpness ticks
+    (sharpness = 0.8–1.0, intensity = 0.4–0.6) with soft low-sharpness thuds
+    (sharpness = 0.1–0.3) when heavy sheets land.
+
+Summary Master Checklist (For Building a Zero-Corner-Cut Apple-Grade Engine)
+
+If you want your UI stack to feel indistinguishable from native Apple hardware
+without wondering "what next?", ensure all 10 boxes are implemented in lockstep:
+
+1.  CABackdropLayer + Saturation-First Material: Quarter-res sampling (0.25),
+    10pt bleed, saturate -> blur -> floor/ceiling blend (darkenBlendMode /
+    lightenBlendMode) + vibrantColorMatrix for overlays.
+2.  True Continuous Corners (supercircle_sdf / 1.528665r): G^2 curvature
+    continuity with short-side pill fallback + hardware concentric radius
+    subtraction.
+3.  ODE Spring Substrate: duration/bounce \to (k, c, \zeta) with live
+    velocity-preserving retargeting and gesture-to-spring merge.
+4.  Exact Scroll Math: 0.998/ms decay, 0.55 rubber-band formula, and v/1000 *
+    r/(1-r) fling snap projection.
+5.  VRR Presentation Pacing: Lock onto discrete 4.17ms ProMotion buckets
+    (120/80/60/48/40/30/24...), advance via targetPresentationTimestamp, commit
+    GPU presents atomically with layer transactions.
+6.  Graduated Edge Blur: Mip-interpolated + dithered variableBlur under every
+    scrollable top/bottom bar.
+7.  Gamma-Correct Stem-Darkened Type: opsz continuous axis (20pt cutover),
+    size-dependent tracking curve, CFF stem darkening + linear-space alpha
+    blending.
+8.  Color & Display Pipeline: Display P3 + float16 EDR headroom
+    ([1..currentEDRHeadroom]), Bradford mixed chromatic adaptation, OLED
+    average-luminance limiter (limitAveragePixelLuminance).
+9.  Coons Bicubic Fragment Gradients: Per-pixel FMA/Bernstein evaluation over
+    coarse adaptive triangle patches.
+10. Physical Details: 1px (0.33–0.5pt) inset hairlines, dual-layer (ambient +
+    key) shadows, dark-mode elevation luminance steps, magnetic hover light, and
+    <10ms transient haptics synced to physics thresholds.

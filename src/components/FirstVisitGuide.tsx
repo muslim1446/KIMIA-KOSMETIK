@@ -276,7 +276,7 @@ export const FirstVisitGuide: React.FC<{
               </h1>
             </div>
 
-            <p className="mb-4 text-[15px] leading-relaxed text-[var(--apple-secondary-label)]">
+            <p className="apple-readable-width mb-4 text-[15px] leading-relaxed text-[var(--apple-secondary-label)]">
               {current.instruction[language]}
             </p>
             <div className="mb-4 flex items-center justify-between gap-2" aria-label={t('guide.progress')}>
@@ -299,7 +299,7 @@ export const FirstVisitGuide: React.FC<{
               </p>
             </div>
 
-            <div className="flex items-center justify-end gap-2.5 border-t border-[var(--apple-separator)] pt-3.5">
+            <div className="flex items-center justify-end gap-2.5 apple-hairline-t pt-3.5">
               <button
                 type="button"
                 aria-label={t('guide.previous')}
@@ -307,7 +307,7 @@ export const FirstVisitGuide: React.FC<{
                 onClick={() => setStepIndex((index) => Math.max(0, index - 1))}
                 className="apple-pressable flex h-11 w-11 items-center justify-center rounded-[12px] bg-[var(--apple-fill)] hover:bg-[var(--apple-fill-hover)] text-[var(--apple-label)] disabled:opacity-35 cursor-pointer"
               >
-                <ChevronLeft className="h-5 w-5" />
+                <ChevronLeft className="h-5 w-5 -translate-x-[0.5px]" />
               </button>
               <button
                 type="button"
@@ -316,7 +316,7 @@ export const FirstVisitGuide: React.FC<{
                 className="apple-pressable flex min-h-11 items-center gap-2 rounded-[12px] bg-[var(--apple-blue)] px-5 text-[14px] font-semibold text-white whitespace-nowrap cursor-pointer"
               >
                 <span>{isLast ? t('guide.finish') : t('guide.next')}</span>
-                {isLast ? <Check className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                {isLast ? <Check className="h-4 w-4" /> : <ChevronRight className="h-4 w-4 translate-x-[0.5px]" />}
               </button>
             </div>
             <p className="sr-only">{sectionName}</p>

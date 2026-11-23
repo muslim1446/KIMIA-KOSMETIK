@@ -84,14 +84,50 @@ export function LiquidGlassFilterDefs() {
       });
     };
 
+    const supportsFineHover =
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+    let hoverRaf = 0;
+    let pendingHoverEvent: PointerEvent | null = null;
+    const onPointerMove = (e: PointerEvent) => {
+      if (e.pointerType !== 'mouse' && e.pointerType !== 'pen') return;
+      pendingHoverEvent = e;
+      if (hoverRaf !== 0) return;
+      hoverRaf = window.requestAnimationFrame(() => {
+        hoverRaf = 0;
+        const ev = pendingHoverEvent;
+        pendingHoverEvent = null;
+        if (!ev) return;
+        const target = ev.target as HTMLElement | null;
+        const pressable = target?.closest?.('.apple-pressable') as HTMLElement | null;
+        if (!pressable || (pressable as HTMLButtonElement).disabled) return;
+        const rect = pressable.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          const x = Math.round(Math.max(0, Math.min(rect.width, ev.clientX - rect.left)));
+          const y = Math.round(Math.max(0, Math.min(rect.height, ev.clientY - rect.top)));
+          pressable.style.setProperty('--hover-x', `${x}px`);
+          pressable.style.setProperty('--hover-y', `${y}px`);
+        }
+      });
+    };
+
     document.addEventListener('pointerdown', onPointerDown, { passive: true });
     document.addEventListener('pointerup', onPointerRelease, { passive: true });
     document.addEventListener('pointercancel', onPointerRelease, { passive: true });
+    if (supportsFineHover) {
+      document.addEventListener('pointermove', onPointerMove, { passive: true });
+    }
 
     return () => {
       document.removeEventListener('pointerdown', onPointerDown);
       document.removeEventListener('pointerup', onPointerRelease);
       document.removeEventListener('pointercancel', onPointerRelease);
+      if (supportsFineHover) {
+        document.removeEventListener('pointermove', onPointerMove);
+      }
+      if (hoverRaf !== 0) window.cancelAnimationFrame(hoverRaf);
       activeElements.forEach((el) => {
         const id = timers.get(el);
         if (id !== undefined) window.clearTimeout(id);

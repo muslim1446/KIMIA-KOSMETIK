@@ -30,7 +30,7 @@ export class ErrorBoundary extends React.Component<
             <h1 className="text-[19px] font-semibold tracking-tight text-[var(--apple-red-fg)]">
               {uiText(getUiLanguage(), 'error.title')}
             </h1>
-            <p className="text-[14px] text-[var(--apple-secondary-label)] leading-relaxed break-words">
+            <p className="apple-readable-width text-[14px] text-[var(--apple-secondary-label)] leading-relaxed break-words">
               {uiText(getUiLanguage(), 'error.generic')}
             </p>
             <button

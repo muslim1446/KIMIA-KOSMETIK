@@ -7,6 +7,12 @@
   initial-value: 0;
 }
 
+@property --apple-hover-glow {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
 @layer base {
   :root {
     --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
@@ -26,9 +32,14 @@
     --apple-label: rgba(0, 0, 0, 0.92);
     --apple-secondary-label: rgba(60, 60, 67, 0.68);
     --apple-tertiary-label: rgba(60, 60, 67, 0.45);
-    --apple-separator: rgba(60, 60, 67, 0.14);
+    --apple-separator: rgba(60, 60, 67, 0.16);
+    --apple-hairline: 1px;
     --apple-fill: rgba(120, 120, 128, 0.11);
     --apple-fill-hover: rgba(120, 120, 128, 0.18);
+    --apple-bg-base: #FFFFFF;
+    --apple-bg-elevated-1: #F2F2F7;
+    --apple-bg-elevated-2: #FFFFFF;
+    --apple-bg-elevated-3: #E5E5EA;
     --apple-bg-secondary: #F2F2F7;
     --apple-bg-tertiary: #FFFFFF;
 
@@ -74,12 +85,17 @@
     --apple-orange: #FF9F0A;
     --apple-orange-fg: #FFB340;
 
-    --apple-label: rgba(255, 255, 255, 0.94);
+    /* Dark-mode irradiation compensation (avoid pure #FFFFFF glare) + 3-step elevation luminance */
+    --apple-label: rgba(245, 245, 247, 0.92);
     --apple-secondary-label: rgba(235, 235, 245, 0.65);
-    --apple-tertiary-label: rgba(235, 235, 245, 0.4);
-    --apple-separator: rgba(84, 84, 88, 0.52);
+    --apple-tertiary-label: rgba(235, 235, 245, 0.42);
+    --apple-separator: rgba(84, 84, 88, 0.56);
     --apple-fill: rgba(120, 120, 128, 0.24);
     --apple-fill-hover: rgba(120, 120, 128, 0.34);
+    --apple-bg-base: #000000;
+    --apple-bg-elevated-1: #1C1C1E;
+    --apple-bg-elevated-2: #2C2C2E;
+    --apple-bg-elevated-3: #3A3A3C;
     --apple-bg-secondary: #1C1C1E;
     --apple-bg-tertiary: #2C2C2E;
 
@@ -95,6 +111,19 @@
     --apple-sheet-shadow: 0 1px 8px rgba(0, 0, 0, 0.52), 0 24px 60px -6px rgba(0, 0, 0, 0.52);
     --apple-glass-backdrop: saturate(1.85) blur(14px) contrast(0.84) brightness(0.68);
     --apple-sheet-backdrop: saturate(1.8) blur(16px) contrast(0.86) brightness(0.72);
+  }
+
+  /* Subsystem 10: Physical 1px Retina hairlines (1.0 / contentsScale) */
+  @media (min-resolution: 2dppx) {
+    :root {
+      --apple-hairline: 0.5px;
+    }
+  }
+
+  @media (min-resolution: 3dppx) {
+    :root {
+      --apple-hairline: 0.333px;
+    }
   }
 
   html,
@@ -212,9 +241,11 @@
 
   .apple-pressable {
     --apple-touch-glow: 0;
+    --apple-hover-glow: 0;
     transition:
       transform 720ms var(--apple-spring-gel),
       --apple-touch-glow 230ms var(--apple-ease-settle),
+      --apple-hover-glow 160ms var(--apple-ease-settle),
       background-color 150ms ease,
       color 150ms ease,
       border-color 150ms ease,
@@ -222,11 +253,17 @@
   }
 
   .apple-pressable:not(.apple-glass):not(.apple-sheet):not(.apple-hud-glass) {
-    background-image: radial-gradient(
-      circle 56px at var(--touch-x, 50%) var(--touch-y, 50%),
-      rgba(255, 255, 255, var(--apple-touch-glow)),
-      transparent 75%
-    );
+    background-image:
+      radial-gradient(
+        circle 56px at var(--touch-x, 50%) var(--touch-y, 50%),
+        rgba(255, 255, 255, var(--apple-touch-glow)),
+        transparent 75%
+      ),
+      radial-gradient(
+        circle 64px at var(--hover-x, 50%) var(--hover-y, 50%),
+        rgba(255, 255, 255, var(--apple-hover-glow)),
+        transparent 75%
+      );
   }
 
   .apple-glass.apple-pressable {
@@ -283,6 +320,62 @@
     -webkit-backdrop-filter: saturate(1.8) blur(18px);
     -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.72) 62%, transparent 100%);
     mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.72) 62%, transparent 100%);
+  }
+
+  /* Graduated edge fade mask for scrollable lists/chats inside glass sheets */
+  .apple-scroll-fade {
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 10px, #000 calc(100% - 10px), transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 10px, #000 calc(100% - 10px), transparent 100%);
+  }
+
+  /* Physical 1px Retina hairline dividers */
+  .apple-hairline-b {
+    border-bottom: var(--apple-hairline) solid var(--apple-separator);
+  }
+  .apple-hairline-t {
+    border-top: var(--apple-hairline) solid var(--apple-separator);
+  }
+  .apple-hairline-v {
+    width: var(--apple-hairline);
+    background-color: var(--apple-separator);
+  }
+  .apple-hairline-h {
+    height: var(--apple-hairline);
+    background-color: var(--apple-separator);
+  }
+  .apple-hairline-divide > * + * {
+    border-top: var(--apple-hairline) solid var(--apple-separator);
+  }
+
+  /* Readable Content Guide (672pt line-length ceiling for prose inside UI sheets) */
+  .apple-readable-width {
+    max-width: 672px;
+  }
+}
+
+/* Subsystem 11: Fine-pointer UIPointerInteraction (.highlight) directional hover sheen */
+@media (hover: hover) and (pointer: fine) {
+  .apple-pressable:hover:not(:disabled):not(:active):not([data-frost="active"]) {
+    --apple-hover-glow: 0.11;
+  }
+  .dark .apple-pressable:hover:not(:disabled):not(:active):not([data-frost="active"]) {
+    --apple-hover-glow: 0.09;
+  }
+}
+
+/* Ergonomic 44x44pt touch target floor on coarse touchscreens */
+@media (pointer: coarse) {
+  .apple-tap-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .apple-touch-halo {
+    position: relative;
+  }
+  .apple-touch-halo::after {
+    content: "";
+    position: absolute;
+    inset: -14px;
   }
 }
 
@@ -342,12 +435,25 @@
   }
 }
 
+@keyframes guide-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .guide-enter {
-    animation: none;
+    animation: guide-fade-in 200ms ease both;
   }
   .apple-pressable {
-    transition: none;
+    transition:
+      opacity 200ms ease,
+      background-color 200ms ease,
+      color 200ms ease,
+      border-color 200ms ease;
   }
   .apple-pressable:active:not(:disabled) {
     transform: none;

@@ -374,19 +374,22 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
         onPointerDown={startDrag}
         onDoubleClick={() => setMinimized((m) => !m)}
         title={t('google.frameDrag')}
-        className="flex items-center justify-between gap-2 px-3.5 py-2.5 border-b border-[var(--apple-separator)] cursor-grab active:cursor-grabbing shrink-0"
+        className="flex items-center justify-between gap-2 px-3.5 py-2.5 apple-hairline-b cursor-grab active:cursor-grabbing shrink-0"
       >
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-1.5 min-w-0">
           <GripHorizontal className="w-4 h-4 text-[var(--apple-tertiary-label)] shrink-0" />
           <GoogleLogoIcon className="w-4 h-4 shrink-0" />
           {isAiMode && (
             <Sparkles className="w-3.5 h-3.5 text-[var(--apple-green-fg)] shrink-0" />
           )}
-          <span className="text-[13px] font-semibold tracking-[-0.01em] truncate">
+          <span className="text-[13px] font-semibold tracking-[-0.01em] whitespace-nowrap shrink-0">
             {isAiMode ? t('google.aiTitle') : t('google.title')}
           </span>
-          <span className="hidden sm:inline-block text-[11px] text-[var(--apple-secondary-label)] truncate tabular-nums-clean">
-            · Slaid {digest.currentSlideNumber} ({digest.currentSlideTitle.slice(0, 24)})
+          <span
+            title={digest.currentSlideTitle}
+            className="hidden sm:inline-block text-[11px] text-[var(--apple-secondary-label)] truncate tabular-nums-clean"
+          >
+            · Slaid {digest.currentSlideNumber}
           </span>
         </div>
 
@@ -395,11 +398,12 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
             <button
               type="button"
               onClick={() => void runSlideAiSearch()}
+              aria-label={t('google.refreshContext')}
               title={t('google.refreshContext')}
-              className="apple-pressable flex items-center gap-1 min-h-[32px] px-2.5 py-1 rounded-full bg-[var(--apple-green)]/14 text-[11px] font-semibold text-[var(--apple-green-fg)] hover:bg-[var(--apple-green)]/22 whitespace-nowrap cursor-pointer"
+              className="apple-pressable apple-tap-target flex items-center gap-1 min-h-[32px] px-2.5 py-1 rounded-full bg-[var(--apple-green)]/14 text-[11px] font-semibold text-[var(--apple-green-fg)] hover:bg-[var(--apple-green)]/22 whitespace-nowrap cursor-pointer"
             >
-              <Sparkles className="w-3 h-3" />
-              <span className="hidden sm:inline">{t('google.refreshContext')}</span>
+              <Sparkles className="w-3 h-3 shrink-0" />
+              <span className="hidden md:inline">Konteks</span>
             </button>
           )}
 
@@ -408,7 +412,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
               type="button"
               onClick={() => void copyPromptAgain()}
               title={t('google.copyPrompt')}
-              className="apple-pressable flex items-center justify-center min-h-[32px] min-w-[32px] rounded-full text-[var(--apple-secondary-label)] hover:bg-[var(--apple-fill)] hover:text-[var(--apple-label)] cursor-pointer"
+              className="apple-pressable apple-tap-target flex items-center justify-center min-h-[32px] min-w-[32px] rounded-full text-[var(--apple-secondary-label)] hover:bg-[var(--apple-fill)] hover:text-[var(--apple-label)] cursor-pointer"
             >
               <Copy className="w-3.5 h-3.5" />
             </button>
@@ -419,7 +423,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
             target="_blank"
             rel="noreferrer"
             title={t('google.openNewTab')}
-            className="apple-pressable flex items-center justify-center min-h-[32px] min-w-[32px] rounded-full text-[var(--apple-secondary-label)] hover:bg-[var(--apple-fill)] hover:text-[var(--apple-label)] cursor-pointer"
+            className="apple-pressable apple-tap-target flex items-center justify-center min-h-[32px] min-w-[32px] rounded-full text-[var(--apple-secondary-label)] hover:bg-[var(--apple-fill)] hover:text-[var(--apple-label)] cursor-pointer"
           >
             <ExternalLink className="w-3.5 h-3.5" />
           </a>
@@ -441,7 +445,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
             type="button"
             aria-label={minimized ? t('google.expand') : t('google.minimize')}
             onClick={() => setMinimized((m) => !m)}
-            className="apple-pressable flex items-center justify-center min-h-[32px] min-w-[32px] rounded-full text-[var(--apple-secondary-label)] hover:bg-[var(--apple-fill)] hover:text-[var(--apple-label)] cursor-pointer"
+            className="apple-pressable apple-tap-target flex items-center justify-center min-h-[32px] min-w-[32px] rounded-full text-[var(--apple-secondary-label)] hover:bg-[var(--apple-fill)] hover:text-[var(--apple-label)] cursor-pointer"
           >
             {minimized ? <Maximize2 className="w-3.5 h-3.5" /> : <Minimize2 className="w-3.5 h-3.5" />}
           </button>
@@ -450,7 +454,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
             type="button"
             aria-label={t('google.close')}
             onClick={onClose}
-            className="apple-pressable flex items-center justify-center min-h-[32px] min-w-[32px] rounded-full text-[var(--apple-secondary-label)] hover:text-[var(--apple-red-fg)] hover:bg-[var(--apple-red)]/14 cursor-pointer"
+            className="apple-pressable apple-tap-target flex items-center justify-center min-h-[32px] min-w-[32px] rounded-full text-[var(--apple-secondary-label)] hover:text-[var(--apple-red-fg)] hover:bg-[var(--apple-red)]/14 cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -460,12 +464,12 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
       {!minimized && (
         <>
           {/* ── Safari-style Unified Address / Search Bar ──────────────────── */}
-          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-[var(--apple-separator)] text-xs shrink-0">
+          <div className="flex items-center gap-1.5 px-3 py-2 apple-hairline-b text-xs shrink-0">
             <button
               type="button"
               title={t('google.home')}
               onClick={goHome}
-              className="apple-pressable flex items-center justify-center min-h-[34px] min-w-[34px] rounded-full text-[var(--apple-secondary-label)] hover:bg-[var(--apple-fill)] hover:text-[var(--apple-label)] cursor-pointer"
+              className="apple-pressable apple-tap-target flex items-center justify-center min-h-[34px] min-w-[34px] rounded-full text-[var(--apple-secondary-label)] hover:bg-[var(--apple-fill)] hover:text-[var(--apple-label)] cursor-pointer"
             >
               <Home className="w-3.5 h-3.5" />
             </button>
@@ -474,7 +478,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
               type="button"
               title={t('google.reload')}
               onClick={() => setIframeKey((k) => k + 1)}
-              className="apple-pressable flex items-center justify-center min-h-[34px] min-w-[34px] rounded-full text-[var(--apple-secondary-label)] hover:bg-[var(--apple-fill)] hover:text-[var(--apple-label)] cursor-pointer"
+              className="apple-pressable apple-tap-target flex items-center justify-center min-h-[34px] min-w-[34px] rounded-full text-[var(--apple-secondary-label)] hover:bg-[var(--apple-fill)] hover:text-[var(--apple-label)] cursor-pointer"
             >
               <RotateCw className="w-3.5 h-3.5" />
             </button>
@@ -527,21 +531,21 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
           <div
             onPointerDown={(e) => startResize('se', e)}
             title={t('google.resize')}
-            className="absolute bottom-0 right-0 w-5 h-5 cursor-se-resize z-30"
+            className="apple-touch-halo absolute bottom-0 right-0 w-5 h-5 cursor-se-resize z-30"
           >
             <div className="absolute bottom-2 right-2 w-2.5 h-2.5 border-r-2 border-b-2 border-[var(--apple-secondary-label)] rounded-br-[18px]" />
           </div>
           <div
             onPointerDown={(e) => startResize('sw', e)}
-            className="absolute bottom-0 left-0 w-4 h-4 cursor-sw-resize z-30"
+            className="apple-touch-halo absolute bottom-0 left-0 w-4 h-4 cursor-sw-resize z-30"
           />
           <div
             onPointerDown={(e) => startResize('ne', e)}
-            className="absolute top-0 right-0 w-4 h-4 cursor-ne-resize z-30"
+            className="apple-touch-halo absolute top-0 right-0 w-4 h-4 cursor-ne-resize z-30"
           />
           <div
             onPointerDown={(e) => startResize('nw', e)}
-            className="absolute top-0 left-0 w-4 h-4 cursor-nw-resize z-30"
+            className="apple-touch-halo absolute top-0 left-0 w-4 h-4 cursor-nw-resize z-30"
           />
         </>
       )}

@@ -301,8 +301,8 @@ export const PdfFrameDialog: React.FC<PdfFrameDialogProps> = ({
             transition={APPLE_SPRINGS.sheet}
             className="apple-sheet apple-squircle w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-[28px] text-[var(--apple-label)]"
           >
-            {/* Sticky Frosted Sheet Header */}
-            <div className="sticky top-0 z-10 backdrop-blur-md bg-[var(--apple-glass-sheet-bg)] flex items-center justify-between gap-3 border-b border-[var(--apple-separator)] px-5 py-4">
+            {/* Sticky Frosted Sheet Header + Progressive Variable Edge Feather */}
+            <div className="sticky top-0 z-10 backdrop-blur-md bg-[var(--apple-glass-sheet-bg)] flex items-center justify-between gap-3 apple-hairline-b px-5 py-4">
               <div className="flex items-center gap-3 min-w-0">
                 <span className="flex items-center justify-center w-10 h-10 rounded-[12px] bg-[var(--apple-red)]/12 text-[var(--apple-red-fg)] shrink-0">
                   <FileText className="w-5 h-5" />
@@ -324,11 +324,12 @@ export const PdfFrameDialog: React.FC<PdfFrameDialogProps> = ({
                 aria-label={t('common.close')}
                 onClick={onClose}
                 disabled={busy}
-                className="apple-pressable flex h-9 w-9 min-h-[40px] min-w-[40px] items-center justify-center rounded-full bg-[var(--apple-fill)] hover:bg-[var(--apple-fill-hover)] text-[var(--apple-secondary-label)] hover:text-[var(--apple-label)] disabled:opacity-40 cursor-pointer shrink-0"
+                className="apple-pressable apple-tap-target flex h-9 w-9 min-h-[40px] min-w-[40px] items-center justify-center rounded-full bg-[var(--apple-fill)] hover:bg-[var(--apple-fill-hover)] text-[var(--apple-secondary-label)] hover:text-[var(--apple-label)] disabled:opacity-40 cursor-pointer shrink-0"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
+            <div aria-hidden="true" className="apple-variable-blur-top pointer-events-none sticky top-[73px] z-[9] h-3 -mb-3 w-full" />
 
             {!source ? (
               libraryFile ? (
@@ -342,9 +343,9 @@ export const PdfFrameDialog: React.FC<PdfFrameDialogProps> = ({
                         setError(null);
                       }}
                       disabled={busy}
-                      className="apple-pressable min-h-[40px] flex items-center gap-1.5 rounded-[12px] bg-[var(--apple-fill)] hover:bg-[var(--apple-fill-hover)] px-3 py-1.5 text-[12px] font-semibold text-[var(--apple-label)] disabled:opacity-50 whitespace-nowrap cursor-pointer"
+                      className="apple-pressable apple-tap-target min-h-[40px] flex items-center gap-1.5 rounded-[12px] bg-[var(--apple-fill)] hover:bg-[var(--apple-fill-hover)] px-3 py-1.5 text-[12px] font-semibold text-[var(--apple-label)] disabled:opacity-50 whitespace-nowrap cursor-pointer"
                     >
-                      <ArrowLeft className="w-4 h-4" />
+                      <ArrowLeft className="w-4 h-4 -translate-x-[0.5px]" />
                       <span>{t('pdf.backToFiles')}</span>
                     </button>
                     <span className="min-w-0 truncate text-[12px] font-semibold text-[var(--apple-secondary-label)]">
@@ -352,11 +353,11 @@ export const PdfFrameDialog: React.FC<PdfFrameDialogProps> = ({
                     </span>
                   </div>
 
-                  <p className="rounded-[14px] bg-[var(--apple-green)]/12 px-3.5 py-2.5 text-[12px] font-medium text-[var(--apple-green-fg)]">
+                  <p className="apple-readable-width rounded-[14px] bg-[var(--apple-green)]/12 px-3.5 py-2.5 text-[12px] font-medium text-[var(--apple-green-fg)]">
                     {t('pdf.pickPageHint')}
                   </p>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-[52vh] overflow-y-auto pr-0.5">
+                  <div className="apple-scroll-fade grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-[52vh] overflow-y-auto pr-0.5 py-1">
                     {libraryFile.pages.map((page) => (
                       <button
                         key={page.pageNumber}
@@ -428,7 +429,7 @@ export const PdfFrameDialog: React.FC<PdfFrameDialogProps> = ({
                       <FileUp className="w-8 h-8 text-[var(--apple-blue-fg)]" />
                     )}
                     <span className="text-[14px] font-semibold">{t('pdf.upload')}</span>
-                    <span className="text-[12px] text-[var(--apple-secondary-label)] text-center max-w-md">
+                    <span className="apple-readable-width text-[12px] text-[var(--apple-secondary-label)] text-center max-w-md">
                       {t('pdf.uploadHint')}
                     </span>
                   </button>
@@ -442,7 +443,7 @@ export const PdfFrameDialog: React.FC<PdfFrameDialogProps> = ({
                       <button
                         type="button"
                         onClick={() => void refreshRecent()}
-                        className="apple-pressable min-h-[32px] flex items-center gap-1.5 px-2 rounded-[8px] text-[12px] font-semibold text-[var(--apple-blue-fg)] hover:bg-[var(--apple-fill)] cursor-pointer"
+                        className="apple-pressable apple-tap-target min-h-[32px] flex items-center gap-1.5 px-2 rounded-[8px] text-[12px] font-semibold text-[var(--apple-blue-fg)] hover:bg-[var(--apple-fill)] cursor-pointer"
                       >
                         <RefreshCw className="w-3.5 h-3.5" />
                         <span>{t('pdf.refreshList')}</span>
@@ -472,7 +473,7 @@ export const PdfFrameDialog: React.FC<PdfFrameDialogProps> = ({
                                 {t('pdf.pageCount', { count: meta.pageCount })}
                               </span>
                             </span>
-                            <ChevronRight className="w-4 h-4 shrink-0 text-[var(--apple-tertiary-label)]" />
+                            <ChevronRight className="w-4 h-4 shrink-0 text-[var(--apple-tertiary-label)] translate-x-[0.5px]" />
                           </button>
                         ))}
                       </div>
@@ -518,7 +519,7 @@ export const PdfFrameDialog: React.FC<PdfFrameDialogProps> = ({
                             {busy ? (
                               <Loader2 className="w-4 h-4 shrink-0 text-[var(--apple-tertiary-label)] animate-spin" />
                             ) : (
-                              <ChevronRight className="w-4 h-4 shrink-0 text-[var(--apple-tertiary-label)]" />
+                              <ChevronRight className="w-4 h-4 shrink-0 text-[var(--apple-tertiary-label)] translate-x-[0.5px]" />
                             )}
                           </button>
                         ))}
@@ -573,9 +574,9 @@ export const PdfFrameDialog: React.FC<PdfFrameDialogProps> = ({
                           aria-label={t('pdf.prevPage')}
                           onClick={() => changePage(pageNumber - 1)}
                           disabled={pageNumber <= 1}
-                          className="apple-pressable min-h-[40px] min-w-[40px] flex items-center justify-center rounded-[10px] bg-[var(--apple-bg-tertiary)] border border-[var(--apple-separator)] hover:bg-[var(--apple-fill-hover)] disabled:opacity-30 cursor-pointer"
+                          className="apple-pressable apple-tap-target min-h-[40px] min-w-[40px] flex items-center justify-center rounded-[10px] bg-[var(--apple-bg-tertiary)] border border-[var(--apple-separator)] hover:bg-[var(--apple-fill-hover)] disabled:opacity-30 cursor-pointer"
                         >
-                          <ChevronLeft className="w-4 h-4" />
+                          <ChevronLeft className="w-4 h-4 -translate-x-[0.5px]" />
                         </button>
                         <input
                           data-testid="pdf-page-input"
@@ -599,9 +600,9 @@ export const PdfFrameDialog: React.FC<PdfFrameDialogProps> = ({
                           aria-label={t('pdf.nextPage')}
                           onClick={() => changePage(pageNumber + 1)}
                           disabled={pageNumber >= pageCount}
-                          className="apple-pressable min-h-[40px] min-w-[40px] flex items-center justify-center rounded-[10px] bg-[var(--apple-bg-tertiary)] border border-[var(--apple-separator)] hover:bg-[var(--apple-fill-hover)] disabled:opacity-30 cursor-pointer"
+                          className="apple-pressable apple-tap-target min-h-[40px] min-w-[40px] flex items-center justify-center rounded-[10px] bg-[var(--apple-bg-tertiary)] border border-[var(--apple-separator)] hover:bg-[var(--apple-fill-hover)] disabled:opacity-30 cursor-pointer"
                         >
-                          <ChevronRight className="w-4 h-4" />
+                          <ChevronRight className="w-4 h-4 translate-x-[0.5px]" />
                         </button>
                       </div>
                       <div className="text-center text-[12px] font-medium text-[var(--apple-secondary-label)] tabular-nums-clean">

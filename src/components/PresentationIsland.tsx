@@ -1,7 +1,9 @@
 import React, { useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
+  AlertCircle,
   Check,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Cloud,
@@ -238,7 +240,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
   return (
     <div
       data-presentation-island="true"
-      className="apple-ui fixed bottom-[max(12px,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-2.5 pointer-events-auto"
+      className="apple-ui fixed bottom-[max(12px,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-40 flex w-max max-w-[96vw] flex-col items-center gap-2.5 pointer-events-auto"
     >
       {/* ── Animated Liquid Glass Popovers ── */}
       <AnimatePresence mode="wait">
@@ -259,7 +261,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
               <button
                 type="button"
                 onClick={() => setOpenPopover('none')}
-                className="apple-pressable min-h-[32px] px-2.5 rounded-full bg-[var(--apple-fill)] hover:bg-[var(--apple-fill-hover)] text-[12px] font-semibold text-[var(--apple-blue-fg)] cursor-pointer whitespace-nowrap"
+                className="apple-pressable apple-tap-target min-h-[32px] px-2.5 rounded-full bg-[var(--apple-fill)] hover:bg-[var(--apple-fill-hover)] text-[12px] font-semibold text-[var(--apple-blue-fg)] cursor-pointer whitespace-nowrap"
               >
                 {t('common.close')}
               </button>
@@ -394,14 +396,14 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
             </div>
 
             {/* Hairline divider & Clear action */}
-            <div className="pt-2.5 border-t border-[var(--apple-separator)] flex items-center justify-between gap-2">
+            <div className="pt-2.5 apple-hairline-t flex items-center justify-between gap-2">
               <span className="text-[11px] text-[var(--apple-secondary-label)] leading-snug">
                 {t('pen.tabHint')}
               </span>
               <button
                 type="button"
                 onClick={onClearSlideRootStrokes}
-                className="apple-pressable min-h-[34px] flex items-center gap-1.5 text-[12px] font-semibold text-[var(--apple-red-fg)] px-2.5 py-1.5 rounded-[10px] hover:bg-[var(--apple-red)]/10 whitespace-nowrap shrink-0 cursor-pointer"
+                className="apple-pressable apple-tap-target min-h-[34px] flex items-center gap-1.5 text-[12px] font-semibold text-[var(--apple-red-fg)] px-2.5 py-1.5 rounded-[10px] hover:bg-[var(--apple-red)]/10 whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>{t('pen.clearSlide')}</span>
@@ -440,7 +442,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
               <button
                 type="button"
                 onClick={() => setOpenPopover('none')}
-                className="apple-pressable min-h-[32px] px-2.5 rounded-full bg-[var(--apple-fill)] hover:bg-[var(--apple-fill-hover)] text-[12px] font-semibold text-[var(--apple-blue-fg)] cursor-pointer whitespace-nowrap"
+                className="apple-pressable apple-tap-target min-h-[32px] px-2.5 rounded-full bg-[var(--apple-fill)] hover:bg-[var(--apple-fill-hover)] text-[12px] font-semibold text-[var(--apple-blue-fg)] cursor-pointer whitespace-nowrap"
               >
                 {t('common.close')}
               </button>
@@ -451,7 +453,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
                 {t('sync.openGuest')}
               </div>
               <div
-                className="text-[11px] font-medium"
+                className="flex items-center gap-1.5 text-[11px] font-medium"
                 style={{
                   color:
                     syncStatus === 'synced'
@@ -461,11 +463,20 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
                       : 'var(--apple-blue-fg)',
                 }}
               >
-                {syncStatus === 'synced'
-                  ? t('sync.guestConnected')
-                  : syncStatus === 'connecting'
-                  ? t('sync.guestConnecting')
-                  : t('sync.guestError')}
+                {syncStatus === 'synced' ? (
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                ) : syncStatus === 'connecting' ? (
+                  <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" />
+                ) : (
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                )}
+                <span>
+                  {syncStatus === 'synced'
+                    ? t('sync.guestConnected')
+                    : syncStatus === 'connecting'
+                    ? t('sync.guestConnecting')
+                    : t('sync.guestError')}
+                </span>
               </div>
             </div>
 
@@ -530,7 +541,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
               </div>
             )}
 
-            <details className="text-[11px] text-[var(--apple-secondary-label)] pt-1 border-t border-[var(--apple-separator)]">
+            <details className="text-[11px] text-[var(--apple-secondary-label)] pt-1 apple-hairline-t">
               <summary className="font-semibold cursor-pointer text-[var(--apple-label)] py-1">
                 {t('sync.roomHelp')}
               </summary>
@@ -573,7 +584,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
               <button
                 type="button"
                 onClick={() => setOpenPopover('none')}
-                className="apple-pressable min-h-[32px] px-2.5 rounded-full bg-[var(--apple-fill)] hover:bg-[var(--apple-fill-hover)] text-[12px] font-semibold text-[var(--apple-blue-fg)] cursor-pointer whitespace-nowrap shrink-0"
+                className="apple-pressable apple-tap-target min-h-[32px] px-2.5 rounded-full bg-[var(--apple-fill)] hover:bg-[var(--apple-fill-hover)] text-[12px] font-semibold text-[var(--apple-blue-fg)] cursor-pointer whitespace-nowrap shrink-0"
               >
                 {t('common.close')}
               </button>
@@ -679,7 +690,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
                   {t('presence.empty')}
                 </p>
               ) : (
-                <div className="max-h-[240px] overflow-y-auto divide-y divide-[var(--apple-separator)] rounded-[14px] bg-[var(--apple-fill)]">
+                <div className="apple-scroll-fade apple-hairline-divide max-h-[240px] overflow-y-auto rounded-[14px] bg-[var(--apple-fill)]">
                   {presenceUsers.map((entry) => {
                     const isSelf = entry.uid === currentAuthorId;
                     const initial = entry.displayName.trim().charAt(0).toUpperCase() || '?';
@@ -734,9 +745,9 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
       </AnimatePresence>
 
       {/* ── Main Liquid Glass Floating Capsule Island ── */}
-      <div className="apple-glass apple-squircle flex flex-col items-center gap-1 rounded-[26px] sm:rounded-full p-1.5 max-w-[96vw]">
+      <div className="apple-glass apple-squircle flex flex-col items-center gap-1 rounded-[26px] sm:rounded-[28px] p-1.5 max-w-full">
         {/* Row 1: Slide nav + Core creative & AI tools */}
-        <div className="flex items-center gap-0.5 flex-wrap justify-center">
+        <div className="flex items-center gap-0.5 flex-wrap md:flex-nowrap justify-center">
           {/* Slide Navigation */}
           <button
             type="button"
@@ -745,7 +756,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
             aria-label={t('island.prev')}
             className="apple-pressable flex items-center justify-center min-h-[40px] min-w-[40px] max-sm:min-h-[44px] max-sm:min-w-[44px] sm:min-h-[38px] sm:min-w-[38px] rounded-full hover:bg-[var(--apple-fill)] disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-4 h-4 -translate-x-[0.5px]" />
           </button>
           <span className="tabular-nums-clean text-[12px] font-semibold px-1.5 min-w-[40px] text-center whitespace-nowrap shrink-0">
             {slideIndex + 1}/{totalSlides}
@@ -757,10 +768,10 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
             aria-label={t('island.next')}
             className="apple-pressable flex items-center justify-center min-h-[40px] min-w-[40px] max-sm:min-h-[44px] max-sm:min-w-[44px] sm:min-h-[38px] sm:min-w-[38px] rounded-full hover:bg-[var(--apple-fill)] disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-4 h-4 translate-x-[0.5px]" />
           </button>
 
-          <div className="w-px h-5 bg-[var(--apple-separator)] mx-1 shrink-0" />
+          <div className="apple-hairline-v h-5 mx-1 shrink-0" />
 
           {/* Pointer Tool */}
           <button
@@ -994,7 +1005,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
         </div>
 
         {/* Hairline separator on narrow screens */}
-        <div className="sm:hidden w-[calc(100%-16px)] h-px bg-[var(--apple-separator)]" />
+        <div className="sm:hidden w-[calc(100%-16px)] apple-hairline-h" />
 
         {/* Row 2: Zoom, Presence, Cloud Sync, Appearance, Fullscreen, Collapse */}
         <div className="flex items-center gap-0.5 flex-wrap justify-center">
@@ -1030,7 +1041,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
             <ZoomIn className="w-4 h-4" />
           </button>
 
-          <div className="w-px h-5 bg-[var(--apple-separator)] mx-1 shrink-0" />
+          <div className="apple-hairline-v h-5 mx-1 shrink-0" />
 
           {/* Live Presence */}
           <button
@@ -1048,6 +1059,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
             <span className="relative flex items-center justify-center">
               <Users className="w-4 h-4" />
               <span
+                aria-hidden="true"
                 className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-white dark:border-stone-900"
                 style={{
                   backgroundColor:
@@ -1078,8 +1090,10 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
           >
             {syncStatus === 'synced' ? (
               <Cloud className="w-4 h-4 text-[var(--apple-green-fg)]" />
+            ) : syncStatus === 'connecting' ? (
+              <Loader2 className="w-4 h-4 animate-spin text-[var(--apple-blue-fg)]" />
             ) : (
-              <CloudOff className="w-4 h-4 text-[var(--apple-secondary-label)]" />
+              <CloudOff className="w-4 h-4 text-[var(--apple-red-fg)]" />
             )}
             <span className="hidden sm:inline">
               {syncStatus === 'synced'

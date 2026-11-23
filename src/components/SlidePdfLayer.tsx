@@ -361,7 +361,7 @@ export const SlidePdfLayer: React.FC<SlidePdfLayerProps> = ({
                   <span className="shrink-0 text-[11px] text-white/75 tabular-nums-clean">
                     · {item.pageNumber}/{item.pageCount}
                   </span>
-                  <span className="w-px h-4 bg-white/20 mx-0.5" />
+                  <span className="apple-hairline-v h-4 bg-white/25 mx-0.5" />
                   <button
                     type="button"
                     data-testid="slide-pdf-delete"
@@ -371,7 +371,7 @@ export const SlidePdfLayer: React.FC<SlidePdfLayerProps> = ({
                       onDeletePdf(item.id);
                       setSelectedId(null);
                     }}
-                    className="apple-pressable min-h-[28px] min-w-[28px] flex items-center justify-center p-1 rounded-[10px] text-[#FF6961] hover:bg-[var(--apple-red)] hover:text-white cursor-pointer"
+                    className="apple-pressable apple-tap-target min-h-[28px] min-w-[28px] flex items-center justify-center p-1 rounded-[10px] text-[#FF6961] hover:bg-[var(--apple-red)] hover:text-white cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -392,7 +392,7 @@ export const SlidePdfLayer: React.FC<SlidePdfLayerProps> = ({
                     tabIndex={0}
                     aria-label={t('pdf.resize', { corner })}
                     onPointerDown={(e) => startResize(e, item, corner)}
-                    className={`apple-pressable absolute w-3.5 h-3.5 bg-white border-2 border-[var(--apple-red)] rounded-full shadow-md ${cls}`}
+                    className={`apple-pressable apple-touch-halo absolute w-3.5 h-3.5 bg-white border-2 border-[var(--apple-red)] rounded-full shadow-md ${cls}`}
                   />
                 ))}
               </>

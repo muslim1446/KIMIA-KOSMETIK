@@ -469,12 +469,12 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
                     data-testid="slide-text-edit-button"
                     title={t('text.editTitle')}
                     onClick={() => beginEditing(item)}
-                    className="apple-pressable min-h-[28px] min-w-[28px] flex items-center justify-center p-1 rounded-[10px] hover:bg-white/15 cursor-pointer"
+                    className="apple-pressable apple-tap-target min-h-[28px] min-w-[28px] flex items-center justify-center p-1 rounded-[10px] hover:bg-white/15 cursor-pointer"
                   >
                     <Pencil className="w-3.5 h-3.5" />
                   </button>
 
-                  <span className="w-px h-4 bg-white/20 mx-0.5" />
+                  <span className="apple-hairline-v h-4 bg-white/25 mx-0.5" />
 
                   <button
                     type="button"
@@ -486,7 +486,7 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
                         true,
                       )
                     }
-                    className="apple-pressable min-h-[28px] min-w-[28px] flex items-center justify-center p-1 rounded-[10px] hover:bg-white/15 cursor-pointer"
+                    className="apple-pressable apple-tap-target min-h-[28px] min-w-[28px] flex items-center justify-center p-1 rounded-[10px] hover:bg-white/15 cursor-pointer"
                   >
                     <Minus className="w-3.5 h-3.5" />
                   </button>
@@ -506,7 +506,7 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
                         true,
                       )
                     }
-                    className="apple-pressable min-h-[28px] min-w-[28px] flex items-center justify-center p-1 rounded-[10px] hover:bg-white/15 cursor-pointer"
+                    className="apple-pressable apple-tap-target min-h-[28px] min-w-[28px] flex items-center justify-center p-1 rounded-[10px] hover:bg-white/15 cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </button>
@@ -517,7 +517,7 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
                     onClick={() =>
                       onUpdateSlideText(item.id, { isBold: !item.isBold }, true)
                     }
-                    className={`apple-pressable min-h-[28px] min-w-[28px] flex items-center justify-center p-1 rounded-[10px] cursor-pointer ${
+                    className={`apple-pressable apple-tap-target min-h-[28px] min-w-[28px] flex items-center justify-center p-1 rounded-[10px] cursor-pointer ${
                       item.isBold ? 'bg-[var(--apple-blue)] text-white' : 'hover:bg-white/15'
                     }`}
                   >
@@ -534,7 +534,7 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
                         true,
                       )
                     }
-                    className="apple-pressable min-h-[28px] min-w-[28px] flex items-center justify-center p-1 rounded-[10px] hover:bg-white/15 cursor-pointer"
+                    className="apple-pressable apple-tap-target min-h-[28px] min-w-[28px] flex items-center justify-center p-1 rounded-[10px] hover:bg-white/15 cursor-pointer"
                   >
                     <span className="relative flex items-center justify-center">
                       <Palette className="w-3.5 h-3.5" />
@@ -555,12 +555,12 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
                         true,
                       )
                     }
-                    className="apple-pressable min-h-[28px] min-w-[28px] flex items-center justify-center p-1 rounded-[10px] hover:bg-white/15 cursor-pointer"
+                    className="apple-pressable apple-tap-target min-h-[28px] min-w-[28px] flex items-center justify-center p-1 rounded-[10px] hover:bg-white/15 cursor-pointer"
                   >
                     <Highlighter className="w-3.5 h-3.5" />
                   </button>
 
-                  <span className="w-px h-4 bg-white/20 mx-0.5" />
+                  <span className="apple-hairline-v h-4 bg-white/25 mx-0.5" />
 
                   <button
                     type="button"
@@ -571,7 +571,7 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
                       setSelectedId(null);
                       setEditingId(null);
                     }}
-                    className="apple-pressable min-h-[28px] min-w-[28px] flex items-center justify-center p-1 rounded-[10px] text-[#FF6961] hover:bg-[var(--apple-red)] hover:text-white cursor-pointer"
+                    className="apple-pressable apple-tap-target min-h-[28px] min-w-[28px] flex items-center justify-center p-1 rounded-[10px] text-[#FF6961] hover:bg-[var(--apple-red)] hover:text-white cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -593,7 +593,7 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
                     tabIndex={0}
                     aria-label={t('text.resize', { corner })}
                     onPointerDown={(e) => startResize(e, item, corner)}
-                    className={`apple-pressable absolute w-3.5 h-3.5 bg-white border-2 border-[var(--apple-blue)] rounded-full shadow-md ${cls}`}
+                    className={`apple-pressable apple-touch-halo absolute w-3.5 h-3.5 bg-white border-2 border-[var(--apple-blue)] rounded-full shadow-md ${cls}`}
                   />
                 ))}
               </>

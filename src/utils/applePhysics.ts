@@ -583,3 +583,38 @@ export function inwardRimMirrorOffset(
   const target = (bezelWidthW - refractAmount) * (1 - curve) + bezelWidthW * curve;
   return inwardDepthU - target;
 }
+
+/** UIKit UIScrollView touch-slop threshold (~10pt) before locking pan/scroll direction */
+export const APPLE_TOUCH_SLOP_PX = 10;
+
+/**
+ * Evaluates swipe hysteresis against cumulative finger delta from touch-down.
+ * Once radial displacement >= slopPx, returns locked=true with the post-slop delta
+ * so touch pans begin smoothly without a sudden 10px jump.
+ */
+export function applyTouchSlop(
+  totalDx: number,
+  totalDy: number,
+  slopPx: number = APPLE_TOUCH_SLOP_PX,
+): { locked: boolean; dx: number; dy: number } {
+  const dist = Math.hypot(totalDx, totalDy);
+  if (dist < slopPx || dist <= 1e-6) {
+    return { locked: false, dx: 0, dy: 0 };
+  }
+  const scale = (dist - slopPx) / dist;
+  return {
+    locked: true,
+    dx: totalDx * scale,
+    dy: totalDy * scale,
+  };
+}
+
+/**
+ * Physical 1px Retina hairline thickness (1.0 / contentsScale):
+ * 1.0px @1x, 0.5px @2x, 0.333px @3x.
+ */
+export function physicalHairlinePx(devicePixelRatio: number): number {
+  const safeDpr = Number.isFinite(devicePixelRatio) ? Math.max(1, Math.min(4, devicePixelRatio)) : 1;
+  return Math.round((1 / safeDpr) * 1000) / 1000;
+}
+

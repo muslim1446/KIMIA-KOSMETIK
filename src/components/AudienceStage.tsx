@@ -1,7 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { User } from 'firebase/auth';
-import { APPLE_DECELERATION_RATES, APPLE_SPRINGS, uikitScrollDecelerate } from '../utils/applePhysics';
+import {
+  APPLE_DECELERATION_RATES,
+  APPLE_SPRINGS,
+  APPLE_TOUCH_SLOP_PX,
+  applyTouchSlop,
+  uikitScrollDecelerate,
+} from '../utils/applePhysics';
 import { SLIDES_META } from '../data/slidesData';
 import { LaserPoint, SharedSlideInteractions } from '../hooks/usePresentationSync';
 import { BoardSyncStatus, LiveStrokeMap } from '../hooks/useCollaborativeBoard';
@@ -253,7 +259,10 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
     let prevMidY = 0;
     let prevSingleX = 0;
     let prevSingleY = 0;
+    let singleStartX = 0;
+    let singleStartY = 0;
     let singlePanEnabled = false;
+    let singlePanLocked = false;
     let vx = 0;
     let vy = 0;
     let lastMoveTime = 0;
@@ -303,7 +312,10 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
           !target?.closest(
             'button, input, textarea, select, [role="button"], [data-testid*="popover"], [data-testid="google-browser-frame"], [data-testid="gemini-assistant-frame"], [data-presentation-island]',
           );
+        singlePanLocked = false;
         const [point] = pts.values();
+        singleStartX = point.x;
+        singleStartY = point.y;
         prevSingleX = point.x;
         prevSingleY = point.y;
         vx = 0;
@@ -311,6 +323,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
         lastMoveTime = performance.now();
       } else {
         singlePanEnabled = false;
+        singlePanLocked = false;
       }
       if (pts.size >= 2) {
         setIsPinchingOrPanning(true);
@@ -330,12 +343,22 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
       }
       if (pts.size === 1 && singlePanEnabled) {
         const [point] = pts.values();
+        let dx = point.x - prevSingleX;
+        let dy = point.y - prevSingleY;
+        if (!singlePanLocked) {
+          const slop = applyTouchSlop(point.x - singleStartX, point.y - singleStartY, APPLE_TOUCH_SLOP_PX);
+          if (!slop.locked) {
+            return;
+          }
+          singlePanLocked = true;
+          dx = slop.dx;
+          dy = slop.dy;
+          lastMoveTime = performance.now();
+        }
         e.preventDefault();
         setIsPinchingOrPanning(true);
         const now = performance.now();
         const dt = Math.max(0.004, (now - lastMoveTime) / 1000);
-        const dx = point.x - prevSingleX;
-        const dy = point.y - prevSingleY;
         // Exponentially smoothed velocity (pt/s) matching UIScrollView gesture tracker
         vx = vx * 0.4 + (dx / dt) * 0.6;
         vy = vy * 0.4 + (dy / dt) * 0.6;
@@ -384,9 +407,11 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
     const onEnd = (e: TouchEvent) => {
       for (let i = 0; i < e.changedTouches.length; i++) pts.delete(e.changedTouches[i].identifier);
       if (pts.size === 0 && singlePanEnabled) {
+        const wasLocked = singlePanLocked;
         singlePanEnabled = false;
+        singlePanLocked = false;
         const staleMs = performance.now() - lastMoveTime;
-        if (staleMs < 90) {
+        if (wasLocked && staleMs < 90) {
           startTouchMomentum(panOffsetRef.current.x, panOffsetRef.current.y, vx, vy);
         }
       }
@@ -994,7 +1019,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
             transition={APPLE_SPRINGS.toast}
             role="alert"
             data-testid="sync-warning-banner"
-            className="apple-ui apple-squircle fixed top-[max(16px,env(safe-area-inset-top))] left-1/2 -translate-x-1/2 z-[60] w-[min(720px,94vw)] rounded-[18px] border border-white/25 bg-[var(--apple-red)] text-white px-4 py-3 text-[12px] font-semibold leading-snug shadow-2xl"
+            className="apple-ui apple-squircle apple-readable-width fixed top-[max(16px,env(safe-area-inset-top))] left-1/2 -translate-x-1/2 z-[60] w-[min(672px,94vw)] rounded-[18px] border border-white/25 bg-[var(--apple-red)] text-white px-4 py-3 text-[12px] font-semibold leading-snug shadow-2xl"
           >
             {syncWarning}
           </motion.div>

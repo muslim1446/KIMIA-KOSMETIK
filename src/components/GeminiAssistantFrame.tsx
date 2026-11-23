@@ -645,7 +645,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
         onPointerDown={startDrag}
         onDoubleClick={startDrag}
         title={t('gemini.drag')}
-        className="flex items-center justify-between gap-2 px-3.5 py-2.5 border-b border-[var(--apple-separator)] rounded-t-[26px] cursor-grab active:cursor-grabbing select-none"
+        className="flex items-center justify-between gap-2 px-3.5 py-2.5 apple-hairline-b rounded-t-[26px] cursor-grab active:cursor-grabbing select-none"
       >
         <div className="flex items-center gap-2 min-w-0">
           <GripHorizontal className="w-4 h-4 text-[var(--apple-tertiary-label)] shrink-0" />
@@ -668,7 +668,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
             aria-pressed={proveMode}
             title={t('gemini.proofMode')}
             onClick={() => setProveMode((p) => !p)}
-            className={`apple-pressable flex items-center gap-1 min-h-[32px] px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap cursor-pointer ${
+            className={`apple-pressable apple-tap-target flex items-center gap-1 min-h-[32px] px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap cursor-pointer ${
               proveMode
                 ? 'bg-[var(--apple-orange)] text-white shadow-sm'
                 : 'bg-[var(--apple-fill)] text-[var(--apple-label)] hover:bg-[var(--apple-fill-hover)]'
@@ -682,7 +682,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
             type="button"
             aria-label={minimized ? t('google.expand') : t('google.minimize')}
             onClick={() => setMinimized((m) => !m)}
-            className="apple-pressable flex items-center justify-center min-h-[32px] min-w-[32px] rounded-full hover:bg-[var(--apple-fill)] text-[var(--apple-secondary-label)] cursor-pointer"
+            className="apple-pressable apple-tap-target flex items-center justify-center min-h-[32px] min-w-[32px] rounded-full hover:bg-[var(--apple-fill)] text-[var(--apple-secondary-label)] cursor-pointer"
           >
             {minimized ? <Maximize2 className="w-3.5 h-3.5" /> : <Minimize2 className="w-3.5 h-3.5" />}
           </button>
@@ -691,7 +691,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
             type="button"
             aria-label={t('google.close')}
             onClick={onClose}
-            className="apple-pressable flex items-center justify-center min-h-[32px] min-w-[32px] rounded-full hover:bg-[var(--apple-red)]/14 text-[var(--apple-secondary-label)] hover:text-[var(--apple-red-fg)] cursor-pointer"
+            className="apple-pressable apple-tap-target flex items-center justify-center min-h-[32px] min-w-[32px] rounded-full hover:bg-[var(--apple-red)]/14 text-[var(--apple-secondary-label)] hover:text-[var(--apple-red-fg)] cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -701,7 +701,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
       {!minimized && (
         <>
           {/* Quick Actions Strip */}
-          <div className="flex flex-wrap items-center gap-1.5 px-3 py-2 border-b border-[var(--apple-separator)]">
+          <div className="flex flex-wrap items-center gap-1.5 px-3 py-2 apple-hairline-b">
             <button
               type="button"
               disabled={loading}
@@ -740,7 +740,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
                   setMessages([]);
                   setPreviewRefImage(null);
                 }}
-                className="apple-pressable ml-auto flex items-center justify-center min-h-[32px] min-w-[32px] rounded-full text-[var(--apple-secondary-label)] hover:text-[var(--apple-red-fg)] hover:bg-[var(--apple-red)]/14 cursor-pointer"
+                className="apple-pressable apple-tap-target ml-auto flex items-center justify-center min-h-[32px] min-w-[32px] rounded-full text-[var(--apple-secondary-label)] hover:text-[var(--apple-red-fg)] hover:bg-[var(--apple-red)]/14 cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
@@ -750,7 +750,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
           {/* Scrollable Messages + Prove Mode In-Frame Reference Images */}
           <div
             ref={scrollRef}
-            className="flex-1 overflow-y-auto px-3 py-2.5 space-y-3 text-[13px] min-h-0"
+            className="apple-scroll-fade flex-1 overflow-y-auto px-3 py-2.5 space-y-3 text-[13px] min-h-0"
           >
             {messages.length === 0 && (
               <div className="rounded-[16px] bg-[var(--apple-fill)] p-3.5 space-y-1.5 text-[var(--apple-secondary-label)]">
@@ -803,7 +803,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
                   {msg.referenceImages && msg.referenceImages.length > 0 && (
                     <div
                       data-testid="gemini-prove-gallery"
-                      className="pt-2 border-t border-[var(--apple-separator)] space-y-2"
+                      className="pt-2 apple-hairline-t space-y-2"
                     >
                       <div className="text-[11px] font-semibold text-[var(--apple-orange-fg)]">
                         {t('gemini.referenceGallery', { count: msg.referenceImages.length })}
@@ -859,7 +859,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
                   )}
 
                   {msg.sources && msg.sources.length > 0 && (
-                    <div className="pt-2 border-t border-[var(--apple-separator)] space-y-1">
+                    <div className="pt-2 apple-hairline-t space-y-1">
                       <div className="text-[11px] font-semibold text-[var(--apple-secondary-label)]">
                         {t('common.source')}
                       </div>
@@ -922,7 +922,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
               e.preventDefault();
               void submitQuestion(input);
             }}
-            className="p-3 border-t border-[var(--apple-separator)] flex items-end gap-2 rounded-b-[26px]"
+            className="p-3 apple-hairline-t flex items-end gap-2 rounded-b-[26px]"
           >
             <textarea
               data-testid="gemini-prompt-input"
@@ -943,9 +943,9 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
               data-testid="gemini-send-button"
               disabled={loading || !input.trim()}
               aria-label={t('gemini.send')}
-              className="apple-pressable shrink-0 w-10 h-10 rounded-[14px] bg-[var(--apple-blue)] disabled:opacity-35 text-white flex items-center justify-center shadow-sm cursor-pointer"
+              className="apple-pressable apple-tap-target shrink-0 w-10 h-10 rounded-[14px] bg-[var(--apple-blue)] disabled:opacity-35 text-white flex items-center justify-center shadow-sm cursor-pointer"
             >
-              <Send className="w-4 h-4" />
+              <Send className="w-4 h-4 translate-x-[0.5px] -translate-y-[0.5px]" />
             </button>
           </form>
 
@@ -962,7 +962,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
               key={corner}
               data-testid={`gemini-resize-${corner}`}
               onPointerDown={(e) => startResize(e, corner)}
-              className={`apple-pressable absolute w-3.5 h-3.5 bg-white dark:bg-[#2C2C2E] border-2 border-[var(--apple-blue)] rounded-full shadow-md ${cls}`}
+              className={`apple-pressable apple-touch-halo absolute w-3.5 h-3.5 bg-white dark:bg-[#2C2C2E] border-2 border-[var(--apple-blue)] rounded-full shadow-md ${cls}`}
             />
           ))}
         </>

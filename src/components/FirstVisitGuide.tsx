@@ -148,9 +148,8 @@ export const FirstVisitGuide: React.FC<{
     const updateTarget = () => setTargetRect(getTargetRect(current.target));
     const frame = window.requestAnimationFrame(updateTarget);
     const target = document.querySelector<HTMLElement>(current.target);
-    const observer = target && typeof ResizeObserver !== 'undefined'
-      ? new ResizeObserver(updateTarget)
-      : null;
+    const observer =
+      target && typeof ResizeObserver !== 'undefined' ? new ResizeObserver(updateTarget) : null;
     if (target) observer?.observe(target);
     window.addEventListener('resize', updateTarget);
     window.addEventListener('scroll', updateTarget, true);
@@ -168,7 +167,9 @@ export const FirstVisitGuide: React.FC<{
       if (event.key === 'ArrowRight') setStepIndex((index) => Math.min(steps.length - 1, index + 1));
       if (event.key === 'ArrowLeft') setStepIndex((index) => Math.max(0, index - 1));
       if (event.key === 'Tab' && dialogRef.current) {
-        const buttons = Array.from(dialogRef.current.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'));
+        const buttons = Array.from(
+          dialogRef.current.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'),
+        );
         if (buttons.length === 0) return;
         const first = buttons[0];
         const last = buttons[buttons.length - 1];
@@ -210,14 +211,14 @@ export const FirstVisitGuide: React.FC<{
             setStepIndex(0);
             setOpen(true);
           }}
-          className="fixed right-3 top-3 z-[55] flex h-11 w-11 items-center justify-center rounded-full border border-white/70 bg-stone-900 text-white shadow-lg transition hover:bg-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+          className="apple-ui apple-glass apple-pressable fixed right-4 top-[max(14px,env(safe-area-inset-top))] z-[55] flex h-11 w-11 items-center justify-center rounded-full text-[var(--apple-label)] cursor-pointer"
         >
           <CircleHelp className="h-5 w-5" />
         </button>
       )}
 
       {open && !disabled && (
-        <div className="fixed inset-0 z-[70]" data-testid="first-visit-guide">
+        <div className="apple-ui fixed inset-0 z-[70]" data-testid="first-visit-guide">
           <svg aria-hidden="true" className="pointer-events-none fixed inset-0 h-full w-full">
             <defs>
               <mask id="guide-live-spotlight" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
@@ -228,49 +229,54 @@ export const FirstVisitGuide: React.FC<{
                     y={targetRect.y}
                     width={targetRect.width}
                     height={targetRect.height}
-                    rx="12"
+                    rx="18"
                     fill="black"
                   />
                 )}
               </mask>
             </defs>
-            <rect width="100%" height="100%" fill="rgba(18, 27, 24, 0.72)" mask="url(#guide-live-spotlight)" />
+            <rect width="100%" height="100%" fill="rgba(0, 0, 0, 0.56)" mask="url(#guide-live-spotlight)" />
             {targetRect && (
               <rect
                 x={targetRect.x}
                 y={targetRect.y}
                 width={targetRect.width}
                 height={targetRect.height}
-                rx="12"
+                rx="18"
                 fill="none"
-                stroke="#f2bd50"
+                stroke="#0A84FF"
                 strokeWidth="3"
               />
             )}
           </svg>
 
+          {/* Outer 28px squircle, 16px/20px padding -> 12px concentric buttons */}
           <section
             ref={dialogRef}
             aria-labelledby="guide-title"
             aria-modal="true"
             role="dialog"
-            className="guide-enter fixed left-3 right-3 z-[71] mx-auto w-auto max-w-[440px] rounded-xl border border-stone-200 bg-[#fffefa] p-5 text-stone-900 shadow-[0_20px_70px_-24px_rgba(0,0,0,0.65)] sm:left-6 sm:right-auto sm:w-[min(440px,calc(100vw-48px))]"
-            style={placeCardAboveTarget
-              ? { top: 'max(16px, env(safe-area-inset-top))' }
-              : { bottom: 'max(16px, env(safe-area-inset-bottom))' }}
+            className="guide-enter apple-sheet apple-squircle fixed left-3 right-3 z-[71] mx-auto w-auto max-w-[440px] rounded-[28px] p-4 sm:p-5 text-[var(--apple-label)] sm:left-6 sm:right-auto sm:w-[min(440px,calc(100vw-48px))]"
+            style={
+              placeCardAboveTarget
+                ? { top: 'max(16px, env(safe-area-inset-top))' }
+                : { bottom: 'max(16px, env(safe-area-inset-bottom))' }
+            }
           >
-            <div className="mb-3">
-              <div>
-                <p className="mb-1 text-xs font-bold text-emerald-800">
-                  {t('guide.section', { current: stepIndex + 1, total: steps.length })}
-                </p>
-                <h1 id="guide-title" aria-live="polite" className="font-sans text-xl font-bold leading-relaxed sm:text-2xl">
-                  {current.title[language]}
-                </h1>
-              </div>
+            <div className="mb-2.5">
+              <p className="mb-1 text-[12px] font-semibold text-[var(--apple-blue-fg)] tabular-nums-clean">
+                {t('guide.section', { current: stepIndex + 1, total: steps.length })}
+              </p>
+              <h1
+                id="guide-title"
+                aria-live="polite"
+                className="text-[20px] font-bold tracking-[-0.02em] leading-snug sm:text-[22px]"
+              >
+                {current.title[language]}
+              </h1>
             </div>
 
-            <p className="mb-4 text-base leading-7 text-stone-700">
+            <p className="mb-4 text-[15px] leading-relaxed text-[var(--apple-secondary-label)]">
               {current.instruction[language]}
             </p>
             <div className="mb-4 flex items-center justify-between gap-2" aria-label={t('guide.progress')}>
@@ -278,36 +284,40 @@ export const FirstVisitGuide: React.FC<{
                 {steps.map((step, index) => (
                   <span
                     key={step.target + index}
-                    className={`h-1.5 rounded-full transition-all ${index === stepIndex ? 'w-7 bg-emerald-700' : index < stepIndex ? 'w-3 bg-emerald-300' : 'w-1.5 bg-stone-300'}`}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      index === stepIndex
+                        ? 'w-7 bg-[var(--apple-blue)]'
+                        : index < stepIndex
+                        ? 'w-2.5 bg-[var(--apple-blue)]/45'
+                        : 'w-1.5 bg-[var(--apple-separator)]'
+                    }`}
                   />
                 ))}
               </div>
-              <p className="text-xs font-medium text-stone-500">
+              <p className="text-[11px] font-medium text-[var(--apple-secondary-label)]">
                 {targetRect ? t('guide.spotlight') : t('guide.noTarget')}
               </p>
             </div>
 
-            <div className="flex items-center justify-end gap-3 border-t border-stone-200 pt-3">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  aria-label={t('guide.previous')}
-                  disabled={stepIndex === 0}
-                  onClick={() => setStepIndex((index) => Math.max(0, index - 1))}
-                  className="flex h-11 w-11 items-center justify-center rounded-md border border-stone-300 text-stone-700 hover:bg-stone-100 disabled:opacity-40"
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </button>
-                <button
-                  type="button"
-                  data-guide-primary
-                  onClick={() => (isLast ? finish() : setStepIndex((index) => index + 1))}
-                  className="flex min-h-11 items-center gap-2 rounded-md bg-[#203b32] px-4 text-sm font-bold text-white hover:bg-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
-                >
-                  {isLast ? t('guide.finish') : t('guide.next')}
-                  {isLast ? <Check className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                </button>
-              </div>
+            <div className="flex items-center justify-end gap-2.5 border-t border-[var(--apple-separator)] pt-3.5">
+              <button
+                type="button"
+                aria-label={t('guide.previous')}
+                disabled={stepIndex === 0}
+                onClick={() => setStepIndex((index) => Math.max(0, index - 1))}
+                className="apple-pressable flex h-11 w-11 items-center justify-center rounded-[12px] bg-[var(--apple-fill)] hover:bg-[var(--apple-fill-hover)] text-[var(--apple-label)] disabled:opacity-35 cursor-pointer"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                data-guide-primary
+                onClick={() => (isLast ? finish() : setStepIndex((index) => index + 1))}
+                className="apple-pressable flex min-h-11 items-center gap-2 rounded-[12px] bg-[var(--apple-blue)] px-5 text-[14px] font-semibold text-white whitespace-nowrap cursor-pointer"
+              >
+                <span>{isLast ? t('guide.finish') : t('guide.next')}</span>
+                {isLast ? <Check className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              </button>
             </div>
             <p className="sr-only">{sectionName}</p>
           </section>

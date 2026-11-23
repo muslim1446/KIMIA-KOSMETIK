@@ -277,14 +277,14 @@ export const InvisibleTextEditor: React.FC<InvisibleTextEditorProps> = ({
       className="fixed z-50"
     >
       {active.mode === 'menu' ? (
-        <div className="flex items-center gap-1 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 px-1.5 py-1 shadow-lg">
+        <div className="apple-sheet apple-ui apple-squircle flex items-center gap-1 rounded-[18px] p-1.5">
           <button
             type="button"
             data-testid="text-edit-trigger"
             onClick={() => setActive((prev) => (prev ? { ...prev, mode: 'editing' } : null))}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold text-stone-900 dark:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
+            className="apple-pressable flex items-center gap-1.5 min-h-[36px] px-3 py-1.5 rounded-[12px] text-[12px] font-semibold text-[var(--apple-label)] hover:bg-[var(--apple-fill)] cursor-pointer"
           >
-            <Pencil className="w-3.5 h-3.5 text-blue-700 dark:text-blue-400" />
+            <Pencil className="w-3.5 h-3.5 text-[var(--apple-blue-fg)]" />
             <span>{t('text.edit')}</span>
           </button>
 
@@ -293,7 +293,7 @@ export const InvisibleTextEditor: React.FC<InvisibleTextEditorProps> = ({
               type="button"
               onClick={resetEdit}
               title={t('text.restoreTitle')}
-              className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-semibold text-amber-700 hover:bg-amber-50 cursor-pointer"
+              className="apple-pressable flex items-center gap-1.5 min-h-[36px] px-2.5 py-1.5 rounded-[12px] text-[12px] font-semibold text-[var(--apple-orange-fg)] hover:bg-[color-mix(in_srgb,var(--apple-orange)_14%,transparent)] cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>{t('text.original')}</span>
@@ -301,14 +301,14 @@ export const InvisibleTextEditor: React.FC<InvisibleTextEditorProps> = ({
           )}
         </div>
       ) : (
-        <div className="w-[300px] rounded-2xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 p-2.5 shadow-xl space-y-2">
-          <div className="flex items-center justify-between text-[11px] font-bold text-stone-500 uppercase tracking-wide px-0.5">
-            <span>Sunting Teks</span>
+        <div className="apple-sheet apple-ui apple-squircle w-[310px] rounded-[24px] p-3 space-y-2.5">
+          <div className="flex items-center justify-between text-[11px] font-semibold text-[var(--apple-secondary-label)] tracking-wide px-0.5">
+            <span>{t('text.editTitle')}</span>
             <button
               type="button"
               onClick={() => setActive(null)}
               aria-label={t('common.cancel')}
-              className="p-0.5 text-stone-400 hover:text-stone-700 cursor-pointer"
+              className="apple-pressable w-7 h-7 rounded-full flex items-center justify-center text-[var(--apple-secondary-label)] hover:bg-[var(--apple-fill)] hover:text-[var(--apple-label)] cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -327,14 +327,14 @@ export const InvisibleTextEditor: React.FC<InvisibleTextEditorProps> = ({
                   confirmEdit();
                 }
               }}
-              className="flex-1 rounded-xl border border-stone-300 dark:border-stone-700 bg-[#FBF9F5] dark:bg-stone-950 px-2.5 py-1.5 text-sm font-medium text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-blue-600 resize-none"
+              className="flex-1 rounded-[12px] border border-[var(--apple-separator)] bg-[var(--apple-bg-tertiary)] px-3 py-2 text-[13px] font-medium text-[var(--apple-label)] focus:outline-none focus:ring-2 focus:ring-[var(--apple-blue)] resize-none"
             />
             <button
               type="button"
               data-testid="text-edit-confirm"
               aria-label={t('text.confirmEdit')}
               onClick={confirmEdit}
-              className="shrink-0 w-9 h-9 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center shadow-sm cursor-pointer"
+              className="apple-pressable shrink-0 w-10 h-10 rounded-[12px] bg-[var(--apple-green-fg)] hover:opacity-90 text-white flex items-center justify-center shadow-sm cursor-pointer"
             >
               <Check className="w-4 h-4" />
             </button>

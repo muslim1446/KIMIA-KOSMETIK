@@ -404,11 +404,11 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
               cursor: interactive ? (isEditing ? 'text' : 'grab') : 'default',
               zIndex: isSelected ? 28 : 26,
             }}
-            className={`absolute select-none rounded-md transition-shadow ${
+            className={`absolute select-none rounded-[12px] transition-shadow ${
               isEditing
-                ? 'ring-2 ring-emerald-500 bg-white/10 shadow-md'
+                ? 'ring-2 ring-[var(--apple-green)] bg-white/10 shadow-md'
                 : isSelected
-                ? 'ring-2 ring-blue-600 shadow-md'
+                ? 'ring-2 ring-[var(--apple-blue)] shadow-md'
                 : ''
             }`}
           >
@@ -436,7 +436,7 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
                     textBackground === 'transparent' ? 'rgba(255, 255, 255, 0.92)' : textBackground,
                   caretColor: item.color,
                 }}
-                className="absolute inset-0 w-full h-full resize-none rounded-md p-1.5 outline-none border-0 select-text"
+                className="absolute inset-0 w-full h-full resize-none rounded-[12px] p-1.5 outline-none border-0 select-text"
               />
             ) : (
               <div
@@ -444,7 +444,7 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
                   ...fontStyle,
                   background: textBackground,
                 }}
-                className="w-full h-full overflow-hidden rounded-md p-1.5 whitespace-pre-wrap break-words"
+                className="w-full h-full overflow-hidden rounded-[12px] p-1.5 whitespace-pre-wrap break-words"
               >
                 {item.text}
               </div>
@@ -458,23 +458,23 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
                   onPointerDown={(e) => e.stopPropagation()}
                   onMouseDown={(e) => e.preventDefault()}
                   style={{
-                    top: toolbarAbove ? '-42px' : `${screenH + 8}px`,
+                    top: toolbarAbove ? '-46px' : `${screenH + 8}px`,
                     left: toolbarOnRight ? 'auto' : 0,
                     right: toolbarOnRight ? 0 : 'auto',
                   }}
-                  className="absolute flex items-center gap-0.5 rounded-lg bg-stone-900/95 text-white px-1.5 py-1 text-[11px] font-semibold shadow-lg whitespace-nowrap z-20"
+                  className="apple-hud-glass apple-ui apple-squircle absolute flex items-center gap-0.5 rounded-[14px] px-1.5 py-1 text-[11px] font-semibold whitespace-nowrap z-20"
                 >
                   <button
                     type="button"
                     data-testid="slide-text-edit-button"
                     title={t('text.editTitle')}
                     onClick={() => beginEditing(item)}
-                    className="p-1 rounded hover:bg-stone-700 cursor-pointer"
+                    className="apple-pressable min-h-[28px] min-w-[28px] flex items-center justify-center p-1 rounded-[10px] hover:bg-white/15 cursor-pointer"
                   >
                     <Pencil className="w-3.5 h-3.5" />
                   </button>
 
-                  <span className="w-px h-4 bg-stone-600 mx-0.5" />
+                  <span className="w-px h-4 bg-white/20 mx-0.5" />
 
                   <button
                     type="button"
@@ -486,13 +486,13 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
                         true,
                       )
                     }
-                    className="p-1 rounded hover:bg-stone-700 cursor-pointer"
+                    className="apple-pressable min-h-[28px] min-w-[28px] flex items-center justify-center p-1 rounded-[10px] hover:bg-white/15 cursor-pointer"
                   >
                     <Minus className="w-3.5 h-3.5" />
                   </button>
                   <span
                     data-testid="slide-text-font-size"
-                    className="min-w-[38px] text-center tabular-nums-clean text-[10px]"
+                    className="min-w-[38px] text-center tabular-nums-clean text-[11px] text-white/90"
                   >
                     {item.fontSize}px
                   </span>
@@ -506,7 +506,7 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
                         true,
                       )
                     }
-                    className="p-1 rounded hover:bg-stone-700 cursor-pointer"
+                    className="apple-pressable min-h-[28px] min-w-[28px] flex items-center justify-center p-1 rounded-[10px] hover:bg-white/15 cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </button>
@@ -517,8 +517,8 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
                     onClick={() =>
                       onUpdateSlideText(item.id, { isBold: !item.isBold }, true)
                     }
-                    className={`p-1 rounded cursor-pointer ${
-                      item.isBold ? 'bg-blue-600 text-white' : 'hover:bg-stone-700'
+                    className={`apple-pressable min-h-[28px] min-w-[28px] flex items-center justify-center p-1 rounded-[10px] cursor-pointer ${
+                      item.isBold ? 'bg-[var(--apple-blue)] text-white' : 'hover:bg-white/15'
                     }`}
                   >
                     <Bold className="w-3.5 h-3.5" />
@@ -534,12 +534,12 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
                         true,
                       )
                     }
-                    className="p-1 rounded hover:bg-stone-700 cursor-pointer"
+                    className="apple-pressable min-h-[28px] min-w-[28px] flex items-center justify-center p-1 rounded-[10px] hover:bg-white/15 cursor-pointer"
                   >
                     <span className="relative flex items-center justify-center">
                       <Palette className="w-3.5 h-3.5" />
                       <span
-                        className="absolute -bottom-1 -right-1 w-2 h-2 rounded-full border border-stone-900"
+                        className="absolute -bottom-1 -right-1 w-2 h-2 rounded-full border border-white/80"
                         style={{ backgroundColor: item.color }}
                       />
                     </span>
@@ -555,12 +555,12 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
                         true,
                       )
                     }
-                    className="p-1 rounded hover:bg-stone-700 cursor-pointer"
+                    className="apple-pressable min-h-[28px] min-w-[28px] flex items-center justify-center p-1 rounded-[10px] hover:bg-white/15 cursor-pointer"
                   >
                     <Highlighter className="w-3.5 h-3.5" />
                   </button>
 
-                  <span className="w-px h-4 bg-stone-600 mx-0.5" />
+                  <span className="w-px h-4 bg-white/20 mx-0.5" />
 
                   <button
                     type="button"
@@ -571,13 +571,13 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
                       setSelectedId(null);
                       setEditingId(null);
                     }}
-                    className="p-1 rounded text-red-300 hover:bg-red-600 hover:text-white cursor-pointer"
+                    className="apple-pressable min-h-[28px] min-w-[28px] flex items-center justify-center p-1 rounded-[10px] text-[#FF6961] hover:bg-[var(--apple-red)] hover:text-white cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
-                {/* 4 corner resize handles (hidden until selected, like images) */}
+                {/* 4 corner circular resize handles */}
                 {(
                   [
                     { corner: 'nw', cls: '-top-1.5 -left-1.5 cursor-nwse-resize' },
@@ -593,7 +593,7 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
                     tabIndex={0}
                     aria-label={t('text.resize', { corner })}
                     onPointerDown={(e) => startResize(e, item, corner)}
-                    className={`absolute w-3.5 h-3.5 bg-white border-2 border-blue-600 rounded-sm shadow ${cls}`}
+                    className={`apple-pressable absolute w-3.5 h-3.5 bg-white border-2 border-[var(--apple-blue)] rounded-full shadow-md ${cls}`}
                   />
                 ))}
               </>

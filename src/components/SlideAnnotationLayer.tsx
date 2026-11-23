@@ -754,11 +754,11 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
                 pointerEvents: isRemoteProjector || isDrawingTool ? 'none' : 'auto',
                 cursor: isUnlocked ? 'grab' : isSelected ? 'pointer' : 'default',
               }}
-              className={`absolute select-none rounded-lg transition-shadow ${
+              className={`absolute select-none rounded-[14px] transition-shadow ${
                 isUnlocked
-                  ? 'ring-2 ring-emerald-500 shadow-lg'
+                  ? 'ring-2 ring-[var(--apple-green)] shadow-lg'
                   : isSelected
-                  ? 'ring-2 ring-blue-600 shadow-md'
+                  ? 'ring-2 ring-[var(--apple-blue)] shadow-md'
                   : ''
               }`}
             >
@@ -766,15 +766,15 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
                 src={img.dataUrl}
                 alt={t('image.alt')}
                 draggable={false}
-                className="w-full h-full object-contain rounded-lg pointer-events-none"
+                className="w-full h-full object-contain rounded-[14px] pointer-events-none"
               />
 
               {isSelected && (
                 <>
-                  {/* Floating image control bar */}
+                  {/* Floating image control bar (Apple HIG HUD Liquid Glass) */}
                   <div
                     onPointerDown={(e) => e.stopPropagation()}
-                    className="absolute -top-9 left-0 flex items-center gap-1 bg-stone-900/95 text-white rounded-lg px-2 py-1 text-[11px] font-semibold shadow-md whitespace-nowrap"
+                    className="apple-hud-glass apple-ui apple-squircle absolute -top-11 left-0 flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold whitespace-nowrap"
                   >
                     <button
                       type="button"
@@ -782,8 +782,10 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
                         setUnlockedDragId((cur) => (cur === img.id ? null : img.id))
                       }
                       title={isUnlocked ? t('image.dragEnabled') : t('image.dragEnable')}
-                      className={`flex items-center gap-1 px-1.5 py-0.5 rounded cursor-pointer ${
-                        isUnlocked ? 'bg-emerald-600 text-white' : 'hover:bg-stone-700'
+                      className={`apple-pressable flex items-center gap-1 min-h-[28px] px-2 py-0.5 rounded-full cursor-pointer ${
+                        isUnlocked
+                          ? 'bg-[var(--apple-green)] text-white'
+                          : 'text-white/90 hover:bg-white/15'
                       }`}
                     >
                       {isUnlocked ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
@@ -799,13 +801,17 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
                           ? t('image.followTab')
                           : t('image.pinToSlide')
                       }
-                      className={`flex items-center gap-1 px-1.5 py-0.5 rounded cursor-pointer ${
-                        isSubScoped ? 'bg-amber-600/90 text-white' : 'bg-stone-700 text-stone-100'
+                      className={`apple-pressable flex items-center gap-1 min-h-[28px] px-2 py-0.5 rounded-full cursor-pointer ${
+                        isSubScoped
+                          ? 'bg-[var(--apple-orange)] text-white'
+                          : 'bg-white/14 text-white hover:bg-white/22'
                       }`}
                     >
                       <Pin className="w-3 h-3" />
                       <span>{isSubScoped ? t('image.tab') : t('image.slide')}</span>
                     </button>
+
+                    <span className="w-px h-4 bg-white/20 mx-0.5" />
 
                     <button
                       type="button"
@@ -815,13 +821,13 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
                         setSelectedImageId(null);
                         setUnlockedDragId(null);
                       }}
-                      className="p-0.5 rounded hover:bg-red-600 text-red-300 hover:text-white cursor-pointer"
+                      className="apple-pressable min-h-[28px] min-w-[28px] flex items-center justify-center p-1 rounded-full hover:bg-[var(--apple-red)] text-[#FF6961] hover:text-white cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
 
-                  {/* 4 Corner Resize Handles */}
+                  {/* 4 Corner Circular Resize Handles (Apple PencilKit style) */}
                   {(
                     [
                       { corner: 'nw', cls: '-top-1.5 -left-1.5 cursor-nwse-resize' },
@@ -837,7 +843,7 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
                       tabIndex={0}
                       aria-label={t('image.resize', { corner })}
                       onPointerDown={(e) => startImageResize(e, img, corner)}
-                      className={`absolute w-3.5 h-3.5 bg-white border-2 border-blue-600 rounded-sm shadow ${cls}`}
+                      className={`apple-pressable absolute w-3.5 h-3.5 bg-white border-2 border-[var(--apple-blue)] rounded-full shadow-md ${cls}`}
                     />
                   ))}
                 </>

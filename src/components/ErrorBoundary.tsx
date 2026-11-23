@@ -25,18 +25,18 @@ export class ErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen w-full flex items-center justify-center bg-[#FBF9F5] p-6 text-stone-900">
-          <div className="max-w-lg w-full rounded-2xl border border-red-200 bg-white p-6 shadow-sm space-y-3">
-            <h1 className="font-display text-xl font-bold text-red-800">
+        <div className="apple-ui min-h-screen w-full flex items-center justify-center bg-[var(--apple-bg-secondary)] p-6 text-[var(--apple-label)]">
+          <div className="apple-sheet apple-squircle max-w-md w-full rounded-[28px] p-6 sm:p-7 space-y-4">
+            <h1 className="text-[19px] font-semibold tracking-tight text-[var(--apple-red-fg)]">
               {uiText(getUiLanguage(), 'error.title')}
             </h1>
-            <p className="text-sm text-stone-700 break-words">
+            <p className="text-[14px] text-[var(--apple-secondary-label)] leading-relaxed break-words">
               {uiText(getUiLanguage(), 'error.generic')}
             </p>
             <button
               type="button"
               onClick={() => this.setState({ hasError: false, message: '' })}
-              className="px-4 py-2 rounded-xl bg-stone-900 text-white text-sm font-semibold cursor-pointer"
+              className="apple-pressable w-full sm:w-auto px-5 min-h-[44px] rounded-[14px] bg-[var(--apple-blue)] hover:opacity-95 text-white text-[14px] font-semibold cursor-pointer"
             >
               {uiText(getUiLanguage(), 'error.retry')}
             </button>

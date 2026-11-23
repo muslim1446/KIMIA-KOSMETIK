@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { User } from 'firebase/auth';
+import { APPLE_SPRINGS } from '../utils/applePhysics';
 import { SLIDES_META } from '../data/slidesData';
 import { LaserPoint, SharedSlideInteractions } from '../hooks/usePresentationSync';
 import { BoardSyncStatus, LiveStrokeMap } from '../hooks/useCollaborativeBoard';
@@ -750,7 +752,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
   );
 
   return (
-    <main className="relative w-screen h-screen overflow-hidden no-scrollbar">
+    <main className={`relative w-screen h-screen overflow-hidden no-scrollbar ${projectorDark ? 'dark' : ''}`}>
       <SlideStageContent
         slideIndex={slideIndex}
         interactions={interactions}
@@ -918,29 +920,43 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
         />
       )}
 
-      {/* Subtle laser hold indicator or paste toast */}
-      {(toastMsg || (laserKeyHeld && !isRemoteProjector)) && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 rounded-xl bg-stone-900/90 text-white px-3.5 py-2 text-xs font-semibold shadow-lg pointer-events-none">
-          {laserKeyHeld ? t('toast.laser') : toastMsg}
-        </div>
-      )}
+      {/* Subtle Dynamic-style laser hold HUD or paste toast */}
+      <AnimatePresence>
+        {(toastMsg || (laserKeyHeld && !isRemoteProjector)) && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.96 }}
+            transition={APPLE_SPRINGS.toast}
+            className="apple-glass apple-ui fixed top-[max(16px,env(safe-area-inset-top))] left-1/2 -translate-x-1/2 z-50 rounded-full px-4 py-2 text-[12px] font-semibold pointer-events-none max-w-[90vw] truncate"
+          >
+            {laserKeyHeld ? t('toast.laser') : toastMsg}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Prominent sync-blocked warning: never let collaborative data fail silently */}
-      {!isRemoteProjector && syncWarning && (
-        <div
-          role="alert"
-          data-testid="sync-warning-banner"
-          className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] w-[min(720px,94vw)] rounded-xl border-2 border-red-300 bg-red-600 text-white px-4 py-2.5 text-[11px] font-bold leading-snug shadow-2xl"
-        >
-          {syncWarning}
-        </div>
-      )}
+      <AnimatePresence>
+        {!isRemoteProjector && syncWarning && (
+          <motion.div
+            initial={{ opacity: 0, y: -12, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.97 }}
+            transition={APPLE_SPRINGS.toast}
+            role="alert"
+            data-testid="sync-warning-banner"
+            className="apple-ui apple-squircle fixed top-[max(16px,env(safe-area-inset-top))] left-1/2 -translate-x-1/2 z-[60] w-[min(720px,94vw)] rounded-[18px] border border-white/25 bg-[var(--apple-red)] text-white px-4 py-3 text-[12px] font-semibold leading-snug shadow-2xl"
+          >
+            {syncWarning}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Flush hairline progress indicator at very bottom edge */}
       {!blackout && (
-        <div className="pointer-events-none fixed bottom-0 left-0 right-0 h-[2px] z-30 bg-stone-200/50 dark:bg-stone-800/50">
+        <div className="pointer-events-none fixed bottom-0 left-0 right-0 h-[2px] z-30 bg-[var(--apple-separator)]">
           <div
-            className="h-full bg-stone-800 dark:bg-stone-300 transition-all duration-300"
+            className="h-full bg-[var(--apple-blue)] transition-[width] duration-300"
             style={{ width: `${progressPct}%` }}
           />
         </div>

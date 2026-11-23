@@ -324,8 +324,8 @@ export const SlidePdfLayer: React.FC<SlidePdfLayerProps> = ({
               cursor: interactive ? 'grab' : 'default',
               zIndex: isSelected ? 25 : 24,
             }}
-            className={`absolute select-none rounded-lg bg-white transition-shadow ${
-              isSelected ? 'ring-2 ring-red-600 shadow-lg' : 'shadow-md'
+            className={`absolute select-none rounded-[14px] bg-white transition-shadow ${
+              isSelected ? 'ring-2 ring-[var(--apple-red)] shadow-lg' : 'shadow-md'
             }`}
           >
             <img
@@ -336,7 +336,7 @@ export const SlidePdfLayer: React.FC<SlidePdfLayerProps> = ({
                 count: item.pageCount,
               })}
               draggable={false}
-              className="w-full h-full object-contain rounded-lg pointer-events-none"
+              className="w-full h-full object-contain rounded-[14px] pointer-events-none"
             />
 
             {showControls && (
@@ -346,22 +346,22 @@ export const SlidePdfLayer: React.FC<SlidePdfLayerProps> = ({
                   onPointerDown={(e) => e.stopPropagation()}
                   onMouseDown={(e) => e.preventDefault()}
                   style={{
-                    top: toolbarAbove ? '-42px' : `${screenH + 8}px`,
+                    top: toolbarAbove ? '-46px' : `${screenH + 8}px`,
                     left: toolbarOnRight ? 'auto' : 0,
                     right: toolbarOnRight ? 0 : 'auto',
                   }}
-                  className="absolute flex items-center gap-1.5 rounded-lg bg-stone-900/95 text-white px-2 py-1 text-[11px] font-semibold shadow-lg whitespace-nowrap z-20 max-w-[min(92vw,360px)]"
+                  className="apple-hud-glass apple-ui apple-squircle absolute flex items-center gap-1.5 rounded-[14px] px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap z-20 max-w-[min(92vw,360px)]"
                 >
-                  <span className="flex items-center gap-1 min-w-0">
-                    <FileText className="w-3.5 h-3.5 shrink-0 text-red-300" />
-                    <span className="truncate max-w-[180px]" title={item.fileName}>
+                  <span className="flex items-center gap-1.5 min-w-0">
+                    <FileText className="w-3.5 h-3.5 shrink-0 text-[#FF6961]" />
+                    <span className="truncate max-w-[165px]" title={item.fileName}>
                       {item.fileName}
                     </span>
                   </span>
-                  <span className="shrink-0 rounded bg-stone-700 px-1.5 py-0.5 text-[10px] tabular-nums-clean">
-                    {item.pageNumber}/{item.pageCount}
+                  <span className="shrink-0 text-[11px] text-white/75 tabular-nums-clean">
+                    · {item.pageNumber}/{item.pageCount}
                   </span>
-                  <span className="w-px h-4 bg-stone-600 mx-0.5" />
+                  <span className="w-px h-4 bg-white/20 mx-0.5" />
                   <button
                     type="button"
                     data-testid="slide-pdf-delete"
@@ -371,7 +371,7 @@ export const SlidePdfLayer: React.FC<SlidePdfLayerProps> = ({
                       onDeletePdf(item.id);
                       setSelectedId(null);
                     }}
-                    className="p-1 rounded text-red-300 hover:bg-red-600 hover:text-white cursor-pointer"
+                    className="apple-pressable min-h-[28px] min-w-[28px] flex items-center justify-center p-1 rounded-[10px] text-[#FF6961] hover:bg-[var(--apple-red)] hover:text-white cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -392,7 +392,7 @@ export const SlidePdfLayer: React.FC<SlidePdfLayerProps> = ({
                     tabIndex={0}
                     aria-label={t('pdf.resize', { corner })}
                     onPointerDown={(e) => startResize(e, item, corner)}
-                    className={`absolute w-3.5 h-3.5 bg-white border-2 border-red-600 rounded-sm shadow ${cls}`}
+                    className={`apple-pressable absolute w-3.5 h-3.5 bg-white border-2 border-[var(--apple-red)] rounded-full shadow-md ${cls}`}
                   />
                 ))}
               </>

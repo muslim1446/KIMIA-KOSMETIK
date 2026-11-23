@@ -45,6 +45,10 @@ export default function App() {
         : '5.4 Ubat-ubatan dan Bahan Kosmetik — Pembentangan Kimia KSSM';
   }, [uiLanguage]);
 
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', state.projectorDark);
+  }, [state.projectorDark]);
+
   const undoRedoRef = useRef({ undo: board.undo, redo: board.redo });
   undoRedoRef.current = { undo: board.undo, redo: board.redo };
 

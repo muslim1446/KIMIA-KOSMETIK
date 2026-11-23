@@ -637,7 +637,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
         width: `${frameRect.width}px`,
         height: minimized ? 'auto' : `${frameRect.height}px`,
       }}
-      className="fixed z-40 flex flex-col rounded-2xl border border-stone-300 dark:border-stone-700 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md shadow-2xl text-stone-900 dark:text-stone-100 select-text"
+      className="apple-ui apple-sheet apple-squircle fixed z-40 flex flex-col rounded-[26px] text-[var(--apple-label)] select-text"
     >
       {/* Drag ("Seret") Header Bar */}
       <div
@@ -645,16 +645,16 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
         onPointerDown={startDrag}
         onDoubleClick={startDrag}
         title={t('gemini.drag')}
-        className="flex items-center justify-between gap-2 px-3 py-2 border-b border-stone-200 dark:border-stone-800 bg-[#FBF9F5] dark:bg-stone-950 rounded-t-2xl cursor-grab active:cursor-grabbing select-none"
+        className="flex items-center justify-between gap-2 px-3.5 py-2.5 border-b border-[var(--apple-separator)] rounded-t-[26px] cursor-grab active:cursor-grabbing select-none"
       >
         <div className="flex items-center gap-2 min-w-0">
-          <GripHorizontal className="w-4 h-4 text-stone-400 shrink-0" />
-          <Sparkles className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" />
+          <GripHorizontal className="w-4 h-4 text-[var(--apple-tertiary-label)] shrink-0" />
+          <Sparkles className="w-4 h-4 text-[var(--apple-green-fg)] shrink-0" />
           <div className="min-w-0">
-            <div className="text-xs font-extrabold tracking-tight truncate">
+            <div className="text-[13px] font-semibold tracking-[-0.01em] truncate">
               {t('gemini.title')}
             </div>
-            <div className="text-[10px] text-stone-500 dark:text-stone-400 truncate">
+            <div className="text-[11px] text-[var(--apple-secondary-label)] truncate tabular-nums-clean">
               Slaid {digest.currentSlideNumber}/{digest.totalSlides} · {digest.currentSubElementLabel}
               {totalSlideStrokes > 0 ? ` · ${totalSlideStrokes} lukisan` : ''}
             </div>
@@ -668,10 +668,10 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
             aria-pressed={proveMode}
             title={t('gemini.proofMode')}
             onClick={() => setProveMode((p) => !p)}
-            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold transition-colors cursor-pointer ${
+            className={`apple-pressable flex items-center gap-1 min-h-[32px] px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap cursor-pointer ${
               proveMode
-                ? 'bg-amber-600 text-white shadow-sm'
-                : 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-200'
+                ? 'bg-[var(--apple-orange)] text-white shadow-sm'
+                : 'bg-[var(--apple-fill)] text-[var(--apple-label)] hover:bg-[var(--apple-fill-hover)]'
             }`}
           >
             <BookCheck className="w-3.5 h-3.5" />
@@ -682,7 +682,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
             type="button"
             aria-label={minimized ? t('google.expand') : t('google.minimize')}
             onClick={() => setMinimized((m) => !m)}
-            className="p-1 rounded-lg hover:bg-stone-200/70 dark:hover:bg-stone-800 text-stone-500 cursor-pointer"
+            className="apple-pressable flex items-center justify-center min-h-[32px] min-w-[32px] rounded-full hover:bg-[var(--apple-fill)] text-[var(--apple-secondary-label)] cursor-pointer"
           >
             {minimized ? <Maximize2 className="w-3.5 h-3.5" /> : <Minimize2 className="w-3.5 h-3.5" />}
           </button>
@@ -691,7 +691,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
             type="button"
             aria-label={t('google.close')}
             onClick={onClose}
-            className="p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/50 text-stone-500 hover:text-red-600 cursor-pointer"
+            className="apple-pressable flex items-center justify-center min-h-[32px] min-w-[32px] rounded-full hover:bg-[var(--apple-red)]/14 text-[var(--apple-secondary-label)] hover:text-[var(--apple-red-fg)] cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -700,17 +700,13 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
 
       {!minimized && (
         <>
-          {/* Quick Actions Strip (API-conscious presets) */}
-          <div className="flex flex-wrap items-center gap-1.5 px-3 py-2 border-b border-stone-100 dark:border-stone-800/80 bg-stone-50/70 dark:bg-stone-900/60">
+          {/* Quick Actions Strip */}
+          <div className="flex flex-wrap items-center gap-1.5 px-3 py-2 border-b border-[var(--apple-separator)]">
             <button
               type="button"
               disabled={loading}
-              onClick={() =>
-                void submitQuestion(
-                  t('gemini.explainPrompt'),
-                )
-              }
-              className="px-2 py-1 rounded-lg bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-[11px] font-semibold hover:border-emerald-500 hover:text-emerald-800 dark:hover:text-emerald-300 disabled:opacity-50 cursor-pointer"
+              onClick={() => void submitQuestion(t('gemini.explainPrompt'))}
+              className="apple-pressable min-h-[32px] px-2.5 py-1 rounded-[10px] bg-[var(--apple-fill)] hover:bg-[var(--apple-fill-hover)] text-[11px] font-semibold text-[var(--apple-label)] disabled:opacity-50 whitespace-nowrap cursor-pointer"
             >
               {t('gemini.explainAction')}
             </button>
@@ -720,12 +716,9 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
               disabled={loading}
               onClick={() => {
                 setProveMode(true);
-                void submitQuestion(
-                  t('gemini.proofPrompt'),
-                  { forceProve: true },
-                );
+                void submitQuestion(t('gemini.proofPrompt'), { forceProve: true });
               }}
-              className="px-2 py-1 rounded-lg bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-[11px] font-semibold hover:border-amber-500 hover:text-amber-800 dark:hover:text-amber-300 disabled:opacity-50 cursor-pointer"
+              className="apple-pressable min-h-[32px] px-2.5 py-1 rounded-[10px] bg-[var(--apple-fill)] hover:bg-[var(--apple-orange)]/15 hover:text-[var(--apple-orange-fg)] text-[11px] font-semibold text-[var(--apple-label)] disabled:opacity-50 whitespace-nowrap cursor-pointer"
             >
               {t('gemini.proofAction')}
             </button>
@@ -733,13 +726,8 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
             <button
               type="button"
               disabled={loading}
-              onClick={() =>
-                void submitQuestion(
-                  t('gemini.pasteImagePrompt'),
-                  { wantsImagePaste: true },
-                )
-              }
-              className="px-2 py-1 rounded-lg bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-[11px] font-semibold hover:border-blue-500 hover:text-blue-800 dark:hover:text-blue-300 disabled:opacity-50 cursor-pointer"
+              onClick={() => void submitQuestion(t('gemini.pasteImagePrompt'), { wantsImagePaste: true })}
+              className="apple-pressable min-h-[32px] px-2.5 py-1 rounded-[10px] bg-[var(--apple-fill)] hover:bg-[var(--apple-blue)]/15 hover:text-[var(--apple-blue-fg)] text-[11px] font-semibold text-[var(--apple-label)] disabled:opacity-50 whitespace-nowrap cursor-pointer"
             >
               {t('gemini.pasteImageAction')}
             </button>
@@ -752,7 +740,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
                   setMessages([]);
                   setPreviewRefImage(null);
                 }}
-                className="ml-auto p-1 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 cursor-pointer"
+                className="apple-pressable ml-auto flex items-center justify-center min-h-[32px] min-w-[32px] rounded-full text-[var(--apple-secondary-label)] hover:text-[var(--apple-red-fg)] hover:bg-[var(--apple-red)]/14 cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
@@ -762,16 +750,14 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
           {/* Scrollable Messages + Prove Mode In-Frame Reference Images */}
           <div
             ref={scrollRef}
-            className="flex-1 overflow-y-auto px-3 py-2.5 space-y-3 text-xs min-h-0"
+            className="flex-1 overflow-y-auto px-3 py-2.5 space-y-3 text-[13px] min-h-0"
           >
             {messages.length === 0 && (
-              <div className="rounded-xl border border-dashed border-stone-200 dark:border-stone-700 p-3 space-y-1.5 text-stone-600 dark:text-stone-400 bg-[#FBF9F5]/60 dark:bg-stone-950/40">
-                <div className="font-bold text-stone-800 dark:text-stone-200">
+              <div className="rounded-[16px] bg-[var(--apple-fill)] p-3.5 space-y-1.5 text-[var(--apple-secondary-label)]">
+                <div className="font-semibold text-[var(--apple-label)]">
                   {t('gemini.readyTitle')}
                 </div>
-                <p className="leading-relaxed">
-                  {t('gemini.readyBody')}
-                </p>
+                <p className="text-[12px] leading-relaxed">{t('gemini.readyBody')}</p>
               </div>
             )}
 
@@ -783,19 +769,21 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
                 }`}
               >
                 <div
-                  className={`max-w-[94%] rounded-xl px-3 py-2 space-y-2 ${
+                  className={`max-w-[94%] rounded-[18px] px-3.5 py-2.5 space-y-2 ${
                     msg.role === 'user'
-                      ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 font-medium'
+                      ? 'bg-[var(--apple-blue)] text-white font-medium'
                       : msg.error
-                      ? 'bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-300'
-                      : 'bg-[#FBF9F5] dark:bg-stone-800/80 border border-stone-200 dark:border-stone-700 text-stone-800 dark:text-stone-200'
+                      ? 'bg-[var(--apple-red)]/12 text-[var(--apple-red-fg)]'
+                      : 'bg-[var(--apple-bg-tertiary)] border border-[var(--apple-separator)] text-[var(--apple-label)]'
                   }`}
                 >
                   {msg.role === 'model' && !msg.error && (
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-stone-500 dark:text-stone-400">
+                    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[var(--apple-secondary-label)]">
                       <span>{msg.proveMode ? t('gemini.proof') : 'Gemini'}</span>
                       {msg.fromCache && (
-                        <span className="text-emerald-700 dark:text-emerald-400">· {t('gemini.cached')}</span>
+                        <span className="text-[var(--apple-green-fg)]">
+                          · {t('gemini.cached')}
+                        </span>
                       )}
                     </div>
                   )}
@@ -805,32 +793,31 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
                   {msg.pastedTitle && (
                     <div
                       data-testid="gemini-auto-pasted-badge"
-                      className="flex items-center gap-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-2 py-1 text-[11px] font-semibold text-emerald-800 dark:text-emerald-300"
+                      className="flex items-center gap-1.5 rounded-[10px] bg-[var(--apple-green)]/12 px-2.5 py-1.5 text-[11px] font-semibold text-[var(--apple-green-fg)]"
                     >
                       <ImagePlus className="w-3.5 h-3.5 shrink-0" />
-                        <span>{t('gemini.copiedToSlide', { title: msg.pastedTitle })}</span>
+                      <span>{t('gemini.copiedToSlide', { title: msg.pastedTitle })}</span>
                     </div>
                   )}
 
-                  {/* Prove Mode: Reference Images inside Gemini Frame (NOT pasted to slide) */}
                   {msg.referenceImages && msg.referenceImages.length > 0 && (
                     <div
                       data-testid="gemini-prove-gallery"
-                      className="pt-1.5 border-t border-stone-200/80 dark:border-stone-700 space-y-1.5"
+                      className="pt-2 border-t border-[var(--apple-separator)] space-y-2"
                     >
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300">
+                      <div className="text-[11px] font-semibold text-[var(--apple-orange-fg)]">
                         {t('gemini.referenceGallery', { count: msg.referenceImages.length })}
                       </div>
                       <div className="grid grid-cols-2 gap-1.5">
                         {msg.referenceImages.map((refImg, idx) => (
                           <div
                             key={`${refImg.thumbUrl}-${idx}`}
-                            className="rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 overflow-hidden flex flex-col"
+                            className="rounded-[12px] border border-[var(--apple-separator)] bg-[var(--apple-bg-secondary)] overflow-hidden flex flex-col"
                           >
                             <button
                               type="button"
                               onClick={() => setPreviewRefImage(refImg)}
-                              className="relative h-20 w-full bg-stone-100 dark:bg-stone-950 overflow-hidden cursor-pointer"
+                              className="relative h-20 w-full bg-[var(--apple-fill)] overflow-hidden cursor-pointer"
                               title={t('google.openNewTab')}
                             >
                               <img
@@ -839,8 +826,8 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
                                 className="w-full h-full object-cover"
                               />
                             </button>
-                            <div className="p-1.5 space-y-1">
-                              <div className="text-[10px] font-semibold line-clamp-1 text-stone-800 dark:text-stone-200">
+                            <div className="p-2 space-y-1.5">
+                              <div className="text-[11px] font-semibold line-clamp-1 text-[var(--apple-label)]">
                                 {refImg.title}
                               </div>
                               <div className="flex items-center justify-between gap-1">
@@ -848,7 +835,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
                                   href={refImg.pageUrl}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="inline-flex items-center gap-0.5 text-[10px] text-blue-700 dark:text-blue-400 hover:underline"
+                                  className="inline-flex items-center gap-0.5 text-[10px] font-medium text-[var(--apple-blue-fg)] hover:underline"
                                 >
                                   <span>{t('common.source')}</span>
                                   <ExternalLink className="w-2.5 h-2.5" />
@@ -858,7 +845,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
                                   data-testid="gemini-prove-paste-btn"
                                   disabled={pastingUrl === refImg.proxyUrl}
                                   onClick={() => void handlePasteReferenceImage(refImg)}
-                                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 text-[10px] font-bold hover:opacity-90 cursor-pointer"
+                                  className="apple-pressable inline-flex items-center gap-0.5 px-2 py-1 rounded-[8px] bg-[var(--apple-blue)] text-white text-[10px] font-semibold cursor-pointer"
                                 >
                                   <ImagePlus className="w-2.5 h-2.5" />
                                   <span>{pastingUrl === refImg.proxyUrl ? '…' : t('image.paste')}</span>
@@ -871,10 +858,9 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
                     </div>
                   )}
 
-                  {/* Grounded web references */}
                   {msg.sources && msg.sources.length > 0 && (
-                    <div className="pt-1.5 border-t border-stone-200/80 dark:border-stone-700 space-y-1">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-stone-500">
+                    <div className="pt-2 border-t border-[var(--apple-separator)] space-y-1">
+                      <div className="text-[11px] font-semibold text-[var(--apple-secondary-label)]">
                         {t('common.source')}
                       </div>
                       <div className="flex flex-wrap gap-1.5">
@@ -884,7 +870,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
                             href={src.url}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-1 rounded bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 px-1.5 py-0.5 text-[10px] text-blue-700 dark:text-blue-400 hover:underline max-w-full truncate"
+                            className="inline-flex items-center gap-1 rounded-[8px] bg-[var(--apple-fill)] px-2 py-1 text-[11px] font-medium text-[var(--apple-blue-fg)] hover:underline max-w-full truncate"
                           >
                             <span className="truncate max-w-[160px]">{src.title}</span>
                             <ExternalLink className="w-2.5 h-2.5 shrink-0" />
@@ -898,8 +884,8 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
             ))}
 
             {loading && (
-              <div className="flex items-center gap-2 text-xs text-stone-500 px-1">
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-700" />
+              <div className="flex items-center gap-2 text-[12px] text-[var(--apple-secondary-label)] px-1">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--apple-blue)]" />
                 <span>{t('gemini.loading')}</span>
               </div>
             )}
@@ -907,14 +893,14 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
 
           {/* In-frame larger preview modal for Prove Mode reference image */}
           {previewRefImage && (
-            <div className="mx-3 mb-2 rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50/70 dark:bg-stone-950 p-2 space-y-1.5">
+            <div className="mx-3 mb-2 rounded-[16px] border border-[var(--apple-separator)] bg-[var(--apple-fill)] p-2.5 space-y-1.5">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[11px] font-bold truncate">{previewRefImage.title}</span>
+                <span className="text-[12px] font-semibold truncate">{previewRefImage.title}</span>
                 <button
                   type="button"
                   onClick={() => setPreviewRefImage(null)}
                   aria-label={t('gemini.closePreview')}
-                  className="p-0.5 text-stone-500 hover:text-stone-900 cursor-pointer"
+                  className="apple-pressable flex items-center justify-center w-7 h-7 rounded-full hover:bg-[var(--apple-fill-hover)] text-[var(--apple-secondary-label)] cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -922,21 +908,21 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
               <img
                 src={previewRefImage.proxyUrl}
                 alt={previewRefImage.title}
-                className="w-full max-h-40 object-contain rounded-lg bg-white dark:bg-stone-900"
+                className="w-full max-h-40 object-contain rounded-[10px] bg-[var(--apple-bg-tertiary)]"
               />
-              <p className="text-[10px] text-stone-600 dark:text-stone-400">
+              <p className="text-[11px] text-[var(--apple-secondary-label)]">
                 {previewRefImage.description}
               </p>
             </div>
           )}
 
-          {/* Input Bar */}
+          {/* Input Bar (12px padding -> 14px concentric radius) */}
           <form
             onSubmit={(e) => {
               e.preventDefault();
               void submitQuestion(input);
             }}
-            className="p-2.5 border-t border-stone-200 dark:border-stone-800 flex items-end gap-2 bg-white dark:bg-stone-900 rounded-b-2xl"
+            className="p-3 border-t border-[var(--apple-separator)] flex items-end gap-2 rounded-b-[26px]"
           >
             <textarea
               data-testid="gemini-prompt-input"
@@ -949,25 +935,21 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
                   void submitQuestion(input);
                 }
               }}
-              placeholder={
-                proveMode
-                  ? t('gemini.inputProof')
-                  : t('gemini.input')
-              }
-              className="flex-1 rounded-xl border border-stone-300 dark:border-stone-700 bg-[#FBF9F5] dark:bg-stone-950 px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600 resize-none"
+              placeholder={proveMode ? t('gemini.inputProof') : t('gemini.input')}
+              className="flex-1 rounded-[14px] border border-[var(--apple-separator)] bg-[var(--apple-bg-tertiary)] px-3 py-2 text-[13px] text-[var(--apple-label)] placeholder-[var(--apple-tertiary-label)] focus:outline-none focus:ring-2 focus:ring-[var(--apple-blue)] resize-none"
             />
             <button
               type="submit"
               data-testid="gemini-send-button"
               disabled={loading || !input.trim()}
               aria-label={t('gemini.send')}
-              className="shrink-0 w-9 h-9 rounded-xl bg-emerald-700 hover:bg-emerald-800 disabled:opacity-40 text-white flex items-center justify-center shadow-sm cursor-pointer"
+              className="apple-pressable shrink-0 w-10 h-10 rounded-[14px] bg-[var(--apple-blue)] disabled:opacity-35 text-white flex items-center justify-center shadow-sm cursor-pointer"
             >
               <Send className="w-4 h-4" />
             </button>
           </form>
 
-          {/* 4 Corner Resize Handles (matching SlideAnnotationLayer images) */}
+          {/* 4 Circular Corner Resize Handles */}
           {(
             [
               { corner: 'nw', cls: '-top-1.5 -left-1.5 cursor-nwse-resize' },
@@ -980,7 +962,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
               key={corner}
               data-testid={`gemini-resize-${corner}`}
               onPointerDown={(e) => startResize(e, corner)}
-              className={`absolute w-3.5 h-3.5 bg-white dark:bg-stone-800 border-2 border-emerald-600 rounded-sm shadow ${cls}`}
+              className={`apple-pressable absolute w-3.5 h-3.5 bg-white dark:bg-[#2C2C2E] border-2 border-[var(--apple-blue)] rounded-full shadow-md ${cls}`}
             />
           ))}
         </>

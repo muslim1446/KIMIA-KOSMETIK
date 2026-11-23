@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import {
   Check,
   ChevronLeft,
@@ -41,6 +42,7 @@ import {
   TempDurationSeconds,
 } from '../utils/annotationEngine';
 import { BoardSyncStatus } from '../hooks/useCollaborativeBoard';
+import { APPLE_SPRINGS } from '../utils/applePhysics';
 import {
   PresenceLocation,
   PresenceUser,
@@ -141,8 +143,6 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
   onUpdatePresenceDisplayName,
   onRefreshPresenceLocation,
   currentAuthorId,
-  user,
-  anonBlocked = false,
   roomId,
   joinCode,
   syncStatus,
@@ -158,6 +158,14 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
   const [islandHidden, setIslandHidden] = useState(false);
   const [nameDraft, setNameDraft] = useState(presenceDisplayName);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  React.useEffect(() => {
+    setRoomInput(roomId);
+  }, [roomId]);
+
+  React.useEffect(() => {
+    setCodeInput(joinCode);
+  }, [joinCode]);
 
   React.useEffect(() => {
     setNameDraft(presenceDisplayName);
@@ -202,7 +210,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
     }
   };
 
-  // ── Collapsed dot ──────────────────────────────────────────────────────────
+  // ── Collapsed Liquid Glass Orb (44x44pt Apple hit target) ──────────────────
   if (islandHidden) {
     return (
       <button
@@ -211,484 +219,528 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
         aria-label={t('island.show')}
         title={t('island.showTitle')}
         onClick={() => setIslandHidden(false)}
-        className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-5 h-5 rounded-full bg-white/90 border border-stone-400/70 shadow-md hover:scale-125 transition-transform pointer-events-auto"
-      />
+        className="apple-ui apple-pressable fixed bottom-[max(12px,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-40 flex h-11 w-11 items-center justify-center rounded-full pointer-events-auto cursor-pointer"
+      >
+        <span className="apple-glass w-6 h-6 rounded-full flex items-center justify-center">
+          <span className="w-2 h-2 rounded-full bg-[var(--apple-label)] opacity-80" />
+        </span>
+      </button>
     );
   }
 
   return (
     <div
       data-presentation-island="true"
-      className="fixed bottom-3 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-2 pointer-events-auto"
+      className="apple-ui fixed bottom-[max(12px,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-2.5 pointer-events-auto"
     >
-      {/* Pen Settings Popover */}
-      {openPopover === 'pen' && (
-        <div
-          data-testid="pen-settings-popover"
-          className="w-[min(340px,96vw)] rounded-2xl border border-stone-200 dark:border-stone-700 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md p-3.5 shadow-xl space-y-3 text-stone-900 dark:text-stone-100"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">
-              {t('pen.settings')}
-            </span>
-            <button
-              type="button"
-              onClick={() => setOpenPopover('none')}
-              className="text-xs font-semibold text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 cursor-pointer"
-            >
-              {t('common.close')}
-            </button>
-          </div>
-
-          {/* Mode: Permanent vs Temporary */}
-          <div className="grid grid-cols-2 gap-1.5 bg-stone-100 dark:bg-stone-800 p-1 rounded-xl">
-            <button
-              type="button"
-              data-testid="pen-mode-permanent"
-              onClick={() => onPenModeChange('permanent')}
-              className={`py-1.5 px-2.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                penMode === 'permanent'
-                  ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 shadow-sm'
-                  : 'text-stone-700 dark:text-stone-300 hover:bg-stone-200/70'
-              }`}
-            >
-              {t('pen.permanent')}
-            </button>
-            <button
-              type="button"
-              data-testid="pen-mode-temporary"
-              onClick={() => onPenModeChange('temporary')}
-              className={`py-1.5 px-2.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                penMode === 'temporary'
-                  ? 'bg-amber-600 text-white shadow-sm'
-                  : 'text-stone-700 dark:text-stone-300 hover:bg-stone-200/70'
-              }`}
-            >
-              {t('pen.temporary')}
-            </button>
-          </div>
-
-          {/* Temporary duration selector (3s, 5s, 6s) */}
-          {penMode === 'temporary' && (
-            <div className="flex items-center justify-between gap-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl px-2.5 py-2">
-              <span className="text-xs font-semibold text-amber-900 dark:text-amber-300">
-                {t('pen.fade')}
+      {/* ── Animated Liquid Glass Popovers ── */}
+      <AnimatePresence mode="wait">
+        {openPopover === 'pen' && (
+          <motion.div
+            key="popover-pen"
+            data-testid="pen-settings-popover"
+            initial={{ opacity: 0, y: 12, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.97 }}
+            transition={APPLE_SPRINGS.popover}
+            className="apple-sheet apple-squircle w-[min(352px,94vw)] rounded-[26px] p-4 space-y-3.5 text-[var(--apple-label)] origin-bottom"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[13px] font-semibold tracking-[-0.01em] text-[var(--apple-label)]">
+                {t('pen.settings')}
               </span>
-              <div className="flex items-center gap-1">
-                {TEMP_DURATIONS.map((sec) => (
+              <button
+                type="button"
+                onClick={() => setOpenPopover('none')}
+                className="apple-pressable min-h-[32px] px-2.5 rounded-full bg-[var(--apple-fill)] hover:bg-[var(--apple-fill-hover)] text-[12px] font-semibold text-[var(--apple-blue-fg)] cursor-pointer whitespace-nowrap"
+              >
+                {t('common.close')}
+              </button>
+            </div>
+
+            {/* Apple Segmented Control: Permanent vs Temporary */}
+            <div className="grid grid-cols-2 gap-1 bg-[var(--apple-fill)] p-1 rounded-[12px]">
+              <button
+                type="button"
+                data-testid="pen-mode-permanent"
+                onClick={() => onPenModeChange('permanent')}
+                className={`apple-pressable min-h-[36px] py-1.5 px-3 rounded-[8px] text-[12px] font-semibold whitespace-nowrap cursor-pointer ${
+                  penMode === 'permanent'
+                    ? 'bg-[var(--apple-bg-tertiary)] text-[var(--apple-label)] shadow-sm'
+                    : 'text-[var(--apple-secondary-label)] hover:text-[var(--apple-label)]'
+                }`}
+              >
+                {t('pen.permanent')}
+              </button>
+              <button
+                type="button"
+                data-testid="pen-mode-temporary"
+                onClick={() => onPenModeChange('temporary')}
+                className={`apple-pressable min-h-[36px] py-1.5 px-3 rounded-[8px] text-[12px] font-semibold whitespace-nowrap cursor-pointer ${
+                  penMode === 'temporary'
+                    ? 'bg-[var(--apple-orange)] text-white shadow-sm'
+                    : 'text-[var(--apple-secondary-label)] hover:text-[var(--apple-label)]'
+                }`}
+              >
+                {t('pen.temporary')}
+              </button>
+            </div>
+
+            {/* Temporary fade duration */}
+            {penMode === 'temporary' && (
+              <div className="flex items-center justify-between gap-2 bg-[var(--apple-fill)] rounded-[14px] px-3 py-2">
+                <span className="text-[12px] font-medium text-[var(--apple-orange-fg)]">
+                  {t('pen.fade')}
+                </span>
+                <div className="flex items-center gap-1">
+                  {TEMP_DURATIONS.map((sec) => (
+                    <button
+                      key={sec}
+                      type="button"
+                      data-testid={`temp-duration-${sec}`}
+                      onClick={() => onTempDurationChange(sec)}
+                      className={`apple-pressable min-h-[32px] px-2.5 rounded-[8px] text-[12px] font-semibold tabular-nums-clean cursor-pointer ${
+                        tempDuration === sec
+                          ? 'bg-[var(--apple-orange)] text-white shadow-sm'
+                          : 'bg-[var(--apple-bg-tertiary)] text-[var(--apple-label)]'
+                      }`}
+                    >
+                      {sec}s
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Ink Colors */}
+            <div className="space-y-2">
+              <div className="text-[12px] font-medium text-[var(--apple-secondary-label)]">
+                {t('pen.color')}
+              </div>
+              <div className="flex items-center justify-between gap-1.5">
+                {PEN_COLORS.map((c) => {
+                  const selected = penColor === c.value;
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      aria-label={t(
+                        `pen.color.${c.id}` as
+                          | 'pen.color.blue'
+                          | 'pen.color.red'
+                          | 'pen.color.emerald'
+                          | 'pen.color.amber'
+                          | 'pen.color.violet'
+                          | 'pen.color.ink'
+                          | 'pen.color.chalk',
+                      )}
+                      onClick={() => onPenColorChange(c.value)}
+                      style={{ backgroundColor: c.value }}
+                      className={`apple-pressable w-8 h-8 rounded-full border cursor-pointer ${
+                        c.value === '#FFFFFF'
+                          ? 'border-[var(--apple-separator)]'
+                          : 'border-black/15 dark:border-white/20'
+                      } ${
+                        selected
+                          ? 'ring-2 ring-offset-2 ring-[var(--apple-blue)] scale-110'
+                          : 'hover:scale-105'
+                      }`}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Stroke Thickness */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-[12px]">
+                <span className="font-medium text-[var(--apple-secondary-label)]">
+                  {t('pen.size')}
+                </span>
+                <span className="tabular-nums-clean font-semibold text-[var(--apple-label)]">
+                  {penSize}px
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                {PEN_SIZES.map((sz) => (
                   <button
-                    key={sec}
+                    key={sz}
                     type="button"
-                    data-testid={`temp-duration-${sec}`}
-                    onClick={() => onTempDurationChange(sec)}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer ${
-                      tempDuration === sec
-                        ? 'bg-amber-600 text-white'
-                        : 'bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300 border border-amber-200 dark:border-amber-800'
+                    aria-label={`${t('pen.size')} ${sz}px`}
+                    onClick={() => onPenSizeChange(sz)}
+                    className={`apple-pressable flex-1 h-9 rounded-[10px] border flex items-center justify-center cursor-pointer ${
+                      penSize === sz
+                        ? 'border-[var(--apple-blue)] bg-[var(--apple-blue)]/12'
+                        : 'border-[var(--apple-separator)] bg-[var(--apple-fill)] hover:bg-[var(--apple-fill-hover)]'
                     }`}
                   >
-                    {sec}s
+                    <span
+                      className="rounded-full bg-[var(--apple-label)] block"
+                      style={{
+                        width: `${Math.min(18, Math.max(3, sz))}px`,
+                        height: `${Math.min(18, Math.max(3, sz))}px`,
+                      }}
+                    />
                   </button>
                 ))}
               </div>
             </div>
-          )}
 
-          {/* Colors */}
-          <div className="space-y-1.5">
-            <div className="text-[11px] font-bold text-stone-500">{t('pen.color')}</div>
-            <div className="flex items-center justify-between gap-1.5">
-              {PEN_COLORS.map((c) => {
-                const selected = penColor === c.value;
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    aria-label={t(`pen.color.${c.id}` as 'pen.color.blue' | 'pen.color.red' | 'pen.color.emerald' | 'pen.color.amber' | 'pen.color.violet' | 'pen.color.ink' | 'pen.color.chalk')}
-                    onClick={() => onPenColorChange(c.value)}
-                    style={{ backgroundColor: c.value }}
-                    className={`w-7 h-7 rounded-full border cursor-pointer transition-transform ${
-                      c.value === '#FFFFFF' ? 'border-stone-300' : 'border-black/15'
-                    } ${selected ? 'ring-2 ring-offset-2 ring-blue-600 scale-110' : 'hover:scale-105'}`}
-                  />
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Stroke Size */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-[11px] font-bold text-stone-500">
-              <span>{t('pen.size')}</span>
-              <span className="tabular-nums-clean text-stone-800 dark:text-stone-200">
-                {penSize}px
+            {/* Hairline divider & Clear action */}
+            <div className="pt-2.5 border-t border-[var(--apple-separator)] flex items-center justify-between gap-2">
+              <span className="text-[11px] text-[var(--apple-secondary-label)] leading-snug">
+                {t('pen.tabHint')}
               </span>
+              <button
+                type="button"
+                onClick={onClearSlideRootStrokes}
+                className="apple-pressable min-h-[34px] flex items-center gap-1.5 text-[12px] font-semibold text-[var(--apple-red-fg)] px-2.5 py-1.5 rounded-[10px] hover:bg-[var(--apple-red)]/10 whitespace-nowrap shrink-0 cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>{t('pen.clearSlide')}</span>
+              </button>
             </div>
-            <div className="flex items-center gap-2">
-              {PEN_SIZES.map((sz) => (
-                <button
-                  key={sz}
-                  type="button"
-                  aria-label={`${t('pen.size')} ${sz}px`}
-                  onClick={() => onPenSizeChange(sz)}
-                  className={`flex-1 h-8 rounded-lg border flex items-center justify-center cursor-pointer ${
-                    penSize === sz
-                      ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50'
-                      : 'border-stone-200 dark:border-stone-700 hover:bg-stone-50'
-                  }`}
-                >
-                  <span
-                    className="rounded-full bg-stone-900 dark:bg-stone-100 block"
-                    style={{
-                      width: `${Math.min(18, Math.max(3, sz))}px`,
-                      height: `${Math.min(18, Math.max(3, sz))}px`,
-                    }}
-                  />
-                </button>
-              ))}
-            </div>
-          </div>
+          </motion.div>
+        )}
 
-          {/* Clear current slide root ink */}
-          <div className="pt-1 border-t border-stone-200 dark:border-stone-800 flex items-center justify-between">
-            <span className="text-[11px] text-stone-500">
-              {t('pen.tabHint')}
-            </span>
-            <button
-              type="button"
-              onClick={onClearSlideRootStrokes}
-              className="flex items-center gap-1 text-xs font-bold text-red-600 hover:text-red-700 px-2 py-1 rounded-lg hover:bg-red-50 cursor-pointer"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>{t('pen.clearSlide')}</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Firebase Live Sync / Room Popover */}
-      {openPopover === 'sync' && (
-        <div
-          data-testid="sync-settings-popover"
-          className="w-[min(360px,96vw)] rounded-2xl border border-stone-200 dark:border-stone-700 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md p-4 shadow-xl space-y-3 text-stone-900 dark:text-stone-100"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Cloud
-                className={`w-4 h-4 ${
-                  syncStatus === 'synced'
-                    ? 'text-emerald-600'
-                    : syncStatus === 'error'
-                    ? 'text-red-600'
-                    : 'text-blue-600'
-                }`}
-              />
-              <span className="text-xs font-bold uppercase tracking-wider text-stone-600 dark:text-stone-300">
-                {t('sync.title')}
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setOpenPopover('none')}
-              className="text-xs font-semibold text-stone-500 hover:text-stone-900 cursor-pointer"
-            >
-              {t('common.close')}
-            </button>
-          </div>
-
-          <div className="rounded-xl bg-[#FBF9F5] dark:bg-stone-950 border border-stone-200 dark:border-stone-800 p-2.5 text-xs space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <div className="min-w-0">
-                <div className="font-bold text-stone-900 dark:text-stone-100">
-                  {t('sync.openGuest')}
-                </div>
-                <div className="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold">
-                  {syncStatus === 'synced'
-                    ? t('sync.guestConnected')
-                    : syncStatus === 'connecting'
-                    ? t('sync.guestConnecting')
-                    : t('sync.guestError')}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Room ID & Join Code */}
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label htmlFor="sync-room-id" className="block text-[11px] font-bold text-stone-500 mb-1">
-                {t('sync.roomId')}
-              </label>
-              <input
-                id="sync-room-id"
-                type="text"
-                value={roomInput}
-                onChange={(e) => setRoomInput(e.target.value)}
-                className="w-full rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 px-2.5 py-1.5 text-xs font-semibold"
-              />
-            </div>
-            <div>
-              <label htmlFor="sync-join-code" className="block text-[11px] font-bold text-stone-500 mb-1">
-                {t('sync.joinCode')}
-              </label>
-              <input
-                id="sync-join-code"
-                type="text"
-                value={codeInput}
-                onChange={(e) => setCodeInput(e.target.value)}
-                className="w-full rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 px-2.5 py-1.5 text-xs font-semibold"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => onJoinRoom(roomInput, codeInput)}
-              className="flex-1 py-1.5 px-3 rounded-xl bg-blue-800 hover:bg-blue-900 text-white text-xs font-bold cursor-pointer"
-            >
-              {t('sync.joinRoom')}
-            </button>
-            <button
-              type="button"
-              onClick={handleCopyShareLink}
-              className="flex items-center gap-1 py-1.5 px-3 rounded-xl border border-stone-300 dark:border-stone-700 text-xs font-bold hover:bg-stone-100 cursor-pointer"
-            >
-              {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copiedLink ? t('sync.copied') : t('sync.copyLink')}</span>
-            </button>
-          </div>
-
-          {syncError && (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-2.5 text-[11px] font-semibold text-red-800 leading-snug">
-              {t('sync.roomError')}
-            </div>
-          )}
-
-          <details className="text-[11px] text-stone-600 dark:text-stone-400">
-            <summary className="font-bold cursor-pointer text-stone-700 dark:text-stone-300">
-              {t('sync.roomHelp')}
-            </summary>
-            <ol className="mt-1.5 list-decimal pl-4 space-y-1 leading-relaxed">
-              <li>
-                {t('sync.firebaseGuest')}
-              </li>
-              <li>
-                {t('sync.firebaseRules')}{' '}
-                <code className="px-1 py-0.5 bg-stone-100 dark:bg-stone-800 rounded">
-                  Firebase Console → Firestore Database → Rules → Publish
-                </code>
-              </li>
-            </ol>
-          </details>
-        </div>
-      )}
-
-      {/* Live Presence Popover */}
-      {openPopover === 'presence' && (
-        <div
-          data-testid="presence-popover"
-          className="w-[min(380px,96vw)] rounded-2xl border border-stone-200 dark:border-stone-700 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md p-4 shadow-xl space-y-3 text-stone-900 dark:text-stone-100"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-blue-700 dark:text-blue-300" />
-              <span className="text-xs font-bold uppercase tracking-wider text-stone-600 dark:text-stone-300">
-                {t('presence.title')}
-              </span>
-              <span className="rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 px-2 py-0.5 text-[11px] font-extrabold tabular-nums-clean">
-                {t('presence.onlineCount', { count: presenceUsers.length })}
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setOpenPopover('none')}
-              className="text-xs font-semibold text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 cursor-pointer"
-            >
-              {t('common.close')}
-            </button>
-          </div>
-
-          {syncStatus !== 'synced' && (
-            <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-3 py-2 text-[11px] font-semibold text-amber-900 dark:text-amber-200 leading-snug">
-              {t('presence.offlineNote')}
-            </div>
-          )}
-
-          <div className="rounded-xl border border-stone-200 dark:border-stone-700 bg-[#FBF9F5] dark:bg-stone-950 p-3 space-y-2">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <div className="text-[10px] font-extrabold uppercase tracking-wider text-stone-500">
-                  {t('presence.yourLocation')}
-                </div>
-                <div className="mt-0.5 flex items-center gap-1.5 text-xs font-bold">
-                  <MapPin className="w-3.5 h-3.5 shrink-0 text-red-600" />
-                  <span className="truncate">
-                    {presenceLocation?.label || t('presence.unknown')}
-                  </span>
-                </div>
-                <div className="mt-1 flex items-center gap-1.5 text-[10px] font-semibold text-stone-500">
-                  <span className="rounded-full bg-stone-200 dark:bg-stone-800 px-1.5 py-0.5">
-                    {presenceSourceLabel(presenceLocation, {
-                      gps: t('presence.gps'),
-                      ip: t('presence.ip'),
-                      none: t('presence.none'),
-                    })}
-                  </span>
-                  {presenceLocation?.updatedAt ? (
-                    <span>{t('presence.cachedLocation')}</span>
-                  ) : null}
-                </div>
+        {openPopover === 'sync' && (
+          <motion.div
+            key="popover-sync"
+            data-testid="sync-settings-popover"
+            initial={{ opacity: 0, y: 12, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.97 }}
+            transition={APPLE_SPRINGS.popover}
+            className="apple-sheet apple-squircle w-[min(368px,94vw)] rounded-[26px] p-4 space-y-3.5 text-[var(--apple-label)] origin-bottom"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Cloud
+                  className="w-4 h-4 shrink-0"
+                  style={{
+                    color:
+                      syncStatus === 'synced'
+                        ? 'var(--apple-green-fg)'
+                        : syncStatus === 'error'
+                        ? 'var(--apple-red-fg)'
+                        : 'var(--apple-blue-fg)',
+                  }}
+                />
+                <span className="text-[13px] font-semibold tracking-[-0.01em]">
+                  {t('sync.title')}
+                </span>
               </div>
               <button
                 type="button"
-                data-testid="presence-refresh-location"
-                onClick={onRefreshPresenceLocation}
-                disabled={presenceLocationBusy}
-                className="shrink-0 flex items-center gap-1 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 px-2 py-1.5 text-[10px] font-extrabold hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-50 cursor-pointer"
+                onClick={() => setOpenPopover('none')}
+                className="apple-pressable min-h-[32px] px-2.5 rounded-full bg-[var(--apple-fill)] hover:bg-[var(--apple-fill-hover)] text-[12px] font-semibold text-[var(--apple-blue-fg)] cursor-pointer whitespace-nowrap"
               >
-                {presenceLocationBusy ? (
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                ) : (
-                  <Navigation className="w-3 h-3" />
-                )}
-                <span>
-                  {presenceLocationBusy ? t('presence.locating') : t('presence.precise')}
-                </span>
+                {t('common.close')}
               </button>
             </div>
-            <p className="text-[10px] leading-snug text-stone-500 dark:text-stone-400">
-              {t('presence.locationHint')}
-            </p>
-            {presenceLocationError && (
-              <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 px-2 py-1.5 text-[10px] font-semibold text-red-800 dark:text-red-300">
-                {presenceLocationError}
+
+            <div className="rounded-[14px] bg-[var(--apple-fill)] px-3.5 py-2.5 space-y-0.5">
+              <div className="text-[12px] font-semibold text-[var(--apple-label)]">
+                {t('sync.openGuest')}
+              </div>
+              <div
+                className="text-[11px] font-medium"
+                style={{
+                  color:
+                    syncStatus === 'synced'
+                      ? 'var(--apple-green-fg)'
+                      : syncStatus === 'error'
+                      ? 'var(--apple-red-fg)'
+                      : 'var(--apple-blue-fg)',
+                }}
+              >
+                {syncStatus === 'synced'
+                  ? t('sync.guestConnected')
+                  : syncStatus === 'connecting'
+                  ? t('sync.guestConnecting')
+                  : t('sync.guestError')}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5">
+              <div>
+                <label
+                  htmlFor="sync-room-id"
+                  className="block text-[11px] font-medium text-[var(--apple-secondary-label)] mb-1"
+                >
+                  {t('sync.roomId')}
+                </label>
+                <input
+                  id="sync-room-id"
+                  type="text"
+                  value={roomInput}
+                  onChange={(e) => setRoomInput(e.target.value)}
+                  className="w-full min-h-[38px] rounded-[10px] border border-[var(--apple-separator)] bg-[var(--apple-bg-tertiary)] px-2.5 py-1.5 text-[13px] font-medium text-[var(--apple-label)] focus:outline-none focus:ring-2 focus:ring-[var(--apple-blue)]"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="sync-join-code"
+                  className="block text-[11px] font-medium text-[var(--apple-secondary-label)] mb-1"
+                >
+                  {t('sync.joinCode')}
+                </label>
+                <input
+                  id="sync-join-code"
+                  type="text"
+                  value={codeInput}
+                  onChange={(e) => setCodeInput(e.target.value)}
+                  className="w-full min-h-[38px] rounded-[10px] border border-[var(--apple-separator)] bg-[var(--apple-bg-tertiary)] px-2.5 py-1.5 text-[13px] font-medium text-[var(--apple-label)] focus:outline-none focus:ring-2 focus:ring-[var(--apple-blue)]"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => onJoinRoom(roomInput, codeInput)}
+                className="apple-pressable flex-1 min-h-[40px] py-2 px-3 rounded-[12px] bg-[var(--apple-blue)] text-white text-[13px] font-semibold whitespace-nowrap cursor-pointer"
+              >
+                {t('sync.joinRoom')}
+              </button>
+              <button
+                type="button"
+                onClick={handleCopyShareLink}
+                className="apple-pressable min-h-[40px] flex items-center gap-1.5 py-2 px-3 rounded-[12px] bg-[var(--apple-fill)] hover:bg-[var(--apple-fill-hover)] text-[13px] font-semibold text-[var(--apple-label)] whitespace-nowrap cursor-pointer"
+              >
+                {copiedLink ? (
+                  <Check className="w-3.5 h-3.5 text-[var(--apple-green-fg)]" />
+                ) : (
+                  <Copy className="w-3.5 h-3.5" />
+                )}
+                <span>{copiedLink ? t('sync.copied') : t('sync.copyLink')}</span>
+              </button>
+            </div>
+
+            {syncError && (
+              <div className="rounded-[12px] bg-[var(--apple-red)]/12 px-3 py-2 text-[12px] font-medium text-[var(--apple-red-fg)] leading-snug">
+                {t('sync.roomError')}
               </div>
             )}
-          </div>
 
-          <div className="space-y-1.5">
-            <label
-              htmlFor="presence-name"
-              className="block text-[10px] font-extrabold uppercase tracking-wider text-stone-500"
-            >
-              {t('presence.displayName')}
-            </label>
-            <input
-              id="presence-name"
-              data-testid="presence-name-input"
-              type="text"
-              value={nameDraft}
-              maxLength={80}
-              placeholder={t('presence.displayNamePlaceholder')}
-              onChange={(e) => setNameDraft(e.target.value)}
-              onBlur={() => {
-                const clean = nameDraft.trim();
-                onUpdatePresenceDisplayName(clean);
-                setNameDraft(clean);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  e.currentTarget.blur();
-                }
-              }}
-              className="w-full rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 px-2.5 py-1.5 text-xs font-semibold"
-            />
-          </div>
+            <details className="text-[11px] text-[var(--apple-secondary-label)] pt-1 border-t border-[var(--apple-separator)]">
+              <summary className="font-semibold cursor-pointer text-[var(--apple-label)] py-1">
+                {t('sync.roomHelp')}
+              </summary>
+              <ol className="mt-1.5 list-decimal pl-4 space-y-1 leading-relaxed">
+                <li>{t('sync.firebaseGuest')}</li>
+                <li>
+                  {t('sync.firebaseRules')}{' '}
+                  <code className="px-1.5 py-0.5 bg-[var(--apple-fill)] rounded text-[10px]">
+                    Firebase Console → Firestore Database → Rules → Publish
+                  </code>
+                </li>
+              </ol>
+            </details>
+          </motion.div>
+        )}
 
-          <div className="space-y-1.5">
-            <div className="text-[10px] font-extrabold uppercase tracking-wider text-stone-500">
-              {t('presence.onlineList')}
+        {openPopover === 'presence' && (
+          <motion.div
+            key="popover-presence"
+            data-testid="presence-popover"
+            initial={{ opacity: 0, y: 12, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.97 }}
+            transition={APPLE_SPRINGS.popover}
+            className="apple-sheet apple-squircle w-[min(388px,94vw)] rounded-[26px] p-4 space-y-3.5 text-[var(--apple-label)] origin-bottom"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <Users className="w-4 h-4 text-[var(--apple-blue-fg)] shrink-0" />
+                <span className="text-[13px] font-semibold tracking-[-0.01em] truncate">
+                  {t('presence.title')}
+                </span>
+                <span aria-hidden="true" className="text-[var(--apple-tertiary-label)]">
+                  ·
+                </span>
+                <span className="text-[12px] font-medium text-[var(--apple-secondary-label)] tabular-nums-clean whitespace-nowrap">
+                  {t('presence.onlineCount', { count: presenceUsers.length })}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOpenPopover('none')}
+                className="apple-pressable min-h-[32px] px-2.5 rounded-full bg-[var(--apple-fill)] hover:bg-[var(--apple-fill-hover)] text-[12px] font-semibold text-[var(--apple-blue-fg)] cursor-pointer whitespace-nowrap shrink-0"
+              >
+                {t('common.close')}
+              </button>
             </div>
-            {presenceUsers.length === 0 ? (
-              <p className="rounded-xl border border-stone-200 dark:border-stone-700 bg-white/70 dark:bg-stone-950/40 px-3 py-2.5 text-[11px] font-semibold text-stone-500 dark:text-stone-400">
-                {t('presence.empty')}
+
+            {syncStatus !== 'synced' && (
+              <div className="rounded-[12px] bg-[var(--apple-orange)]/14 px-3 py-2 text-[12px] font-medium text-[var(--apple-orange-fg)] leading-snug">
+                {t('presence.offlineNote')}
+              </div>
+            )}
+
+            <div className="rounded-[14px] bg-[var(--apple-fill)] p-3 space-y-2">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="text-[11px] font-medium text-[var(--apple-secondary-label)]">
+                    {t('presence.yourLocation')}
+                  </div>
+                  <div className="mt-0.5 flex items-center gap-1.5 text-[13px] font-semibold">
+                    <MapPin className="w-3.5 h-3.5 shrink-0 text-[var(--apple-red-fg)]" />
+                    <span className="truncate">
+                      {presenceLocation?.label || t('presence.unknown')}
+                    </span>
+                  </div>
+                  <div className="mt-1 flex items-center gap-1.5 text-[11px] text-[var(--apple-secondary-label)]">
+                    <span>
+                      {presenceSourceLabel(presenceLocation, {
+                        gps: t('presence.gps'),
+                        ip: t('presence.ip'),
+                        none: t('presence.none'),
+                      })}
+                    </span>
+                    {presenceLocation?.updatedAt ? (
+                      <>
+                        <span aria-hidden="true">·</span>
+                        <span>{t('presence.cachedLocation')}</span>
+                      </>
+                    ) : null}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  data-testid="presence-refresh-location"
+                  onClick={onRefreshPresenceLocation}
+                  disabled={presenceLocationBusy}
+                  className="apple-pressable shrink-0 min-h-[34px] flex items-center gap-1.5 rounded-[10px] bg-[var(--apple-bg-tertiary)] border border-[var(--apple-separator)] px-2.5 py-1.5 text-[11px] font-semibold text-[var(--apple-label)] disabled:opacity-50 whitespace-nowrap cursor-pointer"
+                >
+                  {presenceLocationBusy ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Navigation className="w-3 h-3 text-[var(--apple-blue-fg)]" />
+                  )}
+                  <span>
+                    {presenceLocationBusy ? t('presence.locating') : t('presence.precise')}
+                  </span>
+                </button>
+              </div>
+              <p className="text-[11px] leading-snug text-[var(--apple-secondary-label)]">
+                {t('presence.locationHint')}
               </p>
-            ) : (
-              <div className="max-h-[260px] overflow-y-auto space-y-1.5 pr-0.5">
-                {presenceUsers.map((entry) => {
-                  const isSelf = entry.uid === currentAuthorId;
-                  const initial =
-                    entry.displayName.trim().charAt(0).toUpperCase() || '?';
-                  const locationLabel = entry.location?.label || '';
-                  return (
-                    <div
-                      key={entry.uid}
-                      data-testid="presence-user-row"
-                      className={`flex items-start gap-2 rounded-xl border px-2.5 py-2 ${
-                        isSelf
-                          ? 'border-blue-300 dark:border-blue-800 bg-blue-50/80 dark:bg-blue-950/30'
-                          : 'border-stone-200 dark:border-stone-700 bg-white/80 dark:bg-stone-950/40'
-                      }`}
-                    >
-                      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-stone-800 text-[11px] font-extrabold text-white dark:bg-stone-200 dark:text-stone-900">
-                        {initial}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className="truncate text-xs font-bold">{entry.displayName}</span>
-                          {isSelf && (
-                            <span className="shrink-0 rounded bg-blue-700 px-1 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-white">
-                              {t('presence.you')}
+              {presenceLocationError && (
+                <div className="rounded-[10px] bg-[var(--apple-red)]/12 px-2.5 py-1.5 text-[11px] font-medium text-[var(--apple-red-fg)]">
+                  {presenceLocationError}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <label
+                htmlFor="presence-name"
+                className="block text-[11px] font-medium text-[var(--apple-secondary-label)]"
+              >
+                {t('presence.displayName')}
+              </label>
+              <input
+                id="presence-name"
+                data-testid="presence-name-input"
+                type="text"
+                value={nameDraft}
+                maxLength={80}
+                placeholder={t('presence.displayNamePlaceholder')}
+                onChange={(e) => setNameDraft(e.target.value)}
+                onBlur={() => {
+                  const clean = nameDraft.trim();
+                  onUpdatePresenceDisplayName(clean);
+                  setNameDraft(clean);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.currentTarget.blur();
+                  }
+                }}
+                className="w-full min-h-[38px] rounded-[10px] border border-[var(--apple-separator)] bg-[var(--apple-bg-tertiary)] px-3 py-1.5 text-[13px] font-medium text-[var(--apple-label)] focus:outline-none focus:ring-2 focus:ring-[var(--apple-blue)]"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="text-[11px] font-medium text-[var(--apple-secondary-label)]">
+                {t('presence.onlineList')}
+              </div>
+              {presenceUsers.length === 0 ? (
+                <p className="rounded-[14px] bg-[var(--apple-fill)] px-3 py-2.5 text-[12px] text-[var(--apple-secondary-label)]">
+                  {t('presence.empty')}
+                </p>
+              ) : (
+                <div className="max-h-[240px] overflow-y-auto divide-y divide-[var(--apple-separator)] rounded-[14px] bg-[var(--apple-fill)]">
+                  {presenceUsers.map((entry) => {
+                    const isSelf = entry.uid === currentAuthorId;
+                    const initial = entry.displayName.trim().charAt(0).toUpperCase() || '?';
+                    const locationLabel = entry.location?.label || '';
+                    return (
+                      <div
+                        key={entry.uid}
+                        data-testid="presence-user-row"
+                        className="flex items-center gap-2.5 px-3 py-2.5"
+                      >
+                        <span
+                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[12px] font-bold ${
+                            isSelf
+                              ? 'bg-[var(--apple-blue)] text-white'
+                              : 'bg-[var(--apple-bg-tertiary)] text-[var(--apple-label)] border border-[var(--apple-separator)]'
+                          }`}
+                        >
+                          {initial}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 text-[13px] font-semibold">
+                            <span className="truncate">{entry.displayName}</span>
+                            {isSelf && (
+                              <span className="text-[11px] font-medium text-[var(--apple-blue-fg)] shrink-0">
+                                · {t('presence.you')}
+                              </span>
+                            )}
+                          </div>
+                          <div className="mt-0.5 flex items-center gap-1 text-[11px] text-[var(--apple-secondary-label)]">
+                            <MapPin className="w-3 h-3 shrink-0" />
+                            <span className="truncate">
+                              {locationLabel || t('presence.unknown')}
                             </span>
-                          )}
-                        </div>
-                        <div className="mt-0.5 flex items-center gap-1 text-[10px] font-semibold text-stone-500 dark:text-stone-400">
-                          <MapPin className="w-2.5 h-2.5 shrink-0" />
-                          <span className="truncate">
-                            {locationLabel || t('presence.unknown')}
-                          </span>
+                            <span aria-hidden="true">·</span>
+                            <span className="shrink-0">
+                              {presenceSourceLabel(entry.location, {
+                                gps: t('presence.gps'),
+                                ip: t('presence.ip'),
+                                none: t('presence.none'),
+                              })}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                      <span
-                        className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide ${
-                          entry.location?.source === 'gps'
-                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
-                            : entry.location?.source === 'ip'
-                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
-                            : 'bg-stone-200 text-stone-600 dark:bg-stone-800 dark:text-stone-300'
-                        }`}
-                      >
-                        {presenceSourceLabel(entry.location, {
-                          gps: t('presence.gps'),
-                          ip: t('presence.ip'),
-                          none: t('presence.none'),
-                        })}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* ── Main Floating Presentation Island ─────────────────────────────── */}
-      {/*
-        On wide screens (≥ sm / ≥ 640 px) everything fits in a single row.
-        On narrow portrait phones we wrap into two rows automatically:
-          Row 1 → Nav + core tools (pointer, pen, eraser, image, text, laser, AI)
-          Row 2 → Zoom + sync + dark + fullscreen + hide-dot
-        The outer div is flex-col so rows stack; each inner row is flex-row.
-      */}
-      <div className="flex flex-col items-center gap-1 rounded-2xl border border-stone-200/90 dark:border-stone-700/90 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md px-2 py-1.5 shadow-lg text-stone-800 dark:text-stone-100 max-w-[96vw]">
-
-        {/* ── Row 1: always visible core controls ── */}
-        <div className="flex items-center gap-1 flex-wrap justify-center">
-
+      {/* ── Main Liquid Glass Floating Capsule Island ── */}
+      <div className="apple-glass apple-squircle flex flex-col items-center gap-1 rounded-[26px] sm:rounded-full p-1.5 max-w-[96vw]">
+        {/* Row 1: Slide nav + Core creative & AI tools */}
+        <div className="flex items-center gap-0.5 flex-wrap justify-center">
           {/* Slide Navigation */}
           <button
             type="button"
             onClick={onPrev}
             disabled={slideIndex === 0}
             aria-label={t('island.prev')}
-            className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-30 cursor-pointer"
+            className="apple-pressable flex items-center justify-center min-h-[40px] min-w-[40px] max-sm:min-h-[44px] max-sm:min-w-[44px] sm:min-h-[38px] sm:min-w-[38px] rounded-full hover:bg-[var(--apple-fill)] disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <span className="tabular-nums-clean text-xs font-bold px-1.5 min-w-[40px] text-center">
+          <span className="tabular-nums-clean text-[12px] font-semibold px-1.5 min-w-[40px] text-center whitespace-nowrap shrink-0">
             {slideIndex + 1}/{totalSlides}
           </span>
           <button
@@ -696,12 +748,12 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
             onClick={onNext}
             disabled={slideIndex === totalSlides - 1}
             aria-label={t('island.next')}
-            className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-30 cursor-pointer"
+            className="apple-pressable flex items-center justify-center min-h-[40px] min-w-[40px] max-sm:min-h-[44px] max-sm:min-w-[44px] sm:min-h-[38px] sm:min-w-[38px] rounded-full hover:bg-[var(--apple-fill)] disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
 
-          <div className="w-px h-5 bg-stone-200 dark:bg-stone-700 mx-0.5" />
+          <div className="w-px h-5 bg-[var(--apple-separator)] mx-1 shrink-0" />
 
           {/* Pointer Tool */}
           <button
@@ -713,10 +765,10 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
               onToolChange('pointer');
               setOpenPopover('none');
             }}
-            className={`p-1.5 rounded-xl transition-colors cursor-pointer ${
+            className={`apple-pressable flex items-center justify-center min-h-[40px] min-w-[40px] max-sm:min-h-[44px] max-sm:min-w-[44px] sm:min-h-[38px] sm:min-w-[38px] rounded-full cursor-pointer ${
               tool === 'pointer'
-                ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900'
-                : 'hover:bg-stone-100 dark:hover:bg-stone-800'
+                ? 'bg-[var(--apple-label)] text-[var(--apple-bg-tertiary)] shadow-sm'
+                : 'hover:bg-[var(--apple-fill)]'
             }`}
           >
             <MousePointer2 className="w-4 h-4" />
@@ -729,19 +781,19 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
             aria-label={t('island.pen')}
             title={t('island.penTitle')}
             onClick={handlePenClick}
-            className={`relative flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+            className={`apple-pressable relative flex items-center justify-center gap-1.5 px-2.5 min-h-[40px] max-sm:min-h-[44px] sm:min-h-[38px] rounded-full text-[12px] font-semibold whitespace-nowrap shrink-0 cursor-pointer ${
               tool === 'pen'
-                ? 'bg-blue-800 text-white'
-                : 'hover:bg-stone-100 dark:hover:bg-stone-800'
+                ? 'bg-[var(--apple-blue)] text-white shadow-sm'
+                : 'hover:bg-[var(--apple-fill)]'
             }`}
           >
             <PenTool className="w-4 h-4" />
             <span
-              className="w-2.5 h-2.5 rounded-full border border-white/60"
+              className="w-2.5 h-2.5 rounded-full border border-white/70 shadow-xs"
               style={{ backgroundColor: penColor }}
             />
             {penMode === 'temporary' && (
-              <span className="text-[10px] tabular-nums-clean opacity-90">{tempDuration}s</span>
+              <span className="text-[11px] tabular-nums-clean opacity-95">{tempDuration}s</span>
             )}
           </button>
 
@@ -755,10 +807,10 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
               onToolChange(tool === 'eraser' ? 'pointer' : 'eraser');
               setOpenPopover('none');
             }}
-            className={`p-1.5 rounded-xl transition-colors cursor-pointer ${
+            className={`apple-pressable flex items-center justify-center min-h-[40px] min-w-[40px] max-sm:min-h-[44px] max-sm:min-w-[44px] sm:min-h-[38px] sm:min-w-[38px] rounded-full cursor-pointer ${
               tool === 'eraser'
-                ? 'bg-red-700 text-white'
-                : 'hover:bg-stone-100 dark:hover:bg-stone-800'
+                ? 'bg-[var(--apple-red)] text-white shadow-sm'
+                : 'hover:bg-[var(--apple-fill)]'
             }`}
           >
             <Eraser className="w-4 h-4" />
@@ -775,7 +827,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
               setOpenPopover('none');
             }}
             disabled={!canUndo || !onUndo}
-            className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+            className="apple-pressable flex items-center justify-center min-h-[40px] min-w-[40px] max-sm:min-h-[44px] max-sm:min-w-[44px] sm:min-h-[38px] sm:min-w-[38px] rounded-full hover:bg-[var(--apple-fill)] disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
           >
             <Undo2 className="w-4 h-4" />
           </button>
@@ -789,12 +841,12 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
               setOpenPopover('none');
             }}
             disabled={!canRedo || !onRedo}
-            className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+            className="apple-pressable flex items-center justify-center min-h-[40px] min-w-[40px] max-sm:min-h-[44px] max-sm:min-w-[44px] sm:min-h-[38px] sm:min-w-[38px] rounded-full hover:bg-[var(--apple-fill)] disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
           >
             <Redo2 className="w-4 h-4" />
           </button>
 
-          {/* Add Image (file picker + Ctrl+V support) */}
+          {/* Add Image */}
           <input
             ref={fileInputRef}
             type="file"
@@ -812,7 +864,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
             aria-label={t('island.image')}
             title={t('island.imageTitle')}
             onClick={() => fileInputRef.current?.click()}
-            className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
+            className="apple-pressable flex items-center justify-center min-h-[40px] min-w-[40px] max-sm:min-h-[44px] max-sm:min-w-[44px] sm:min-h-[38px] sm:min-w-[38px] rounded-full hover:bg-[var(--apple-fill)] cursor-pointer"
           >
             <ImagePlus className="w-4 h-4" />
           </button>
@@ -827,12 +879,12 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
               onOpenPdfDialog();
               setOpenPopover('none');
             }}
-            className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
+            className="apple-pressable flex items-center justify-center min-h-[40px] min-w-[40px] max-sm:min-h-[44px] max-sm:min-w-[44px] sm:min-h-[38px] sm:min-w-[38px] rounded-full hover:bg-[var(--apple-fill)] cursor-pointer"
           >
             <FileText className="w-4 h-4" />
           </button>
 
-          {/* Add Movable Text Box (separate from editing embedded slide text) */}
+          {/* Add Movable Text Box */}
           <button
             type="button"
             data-testid="island-add-text-button"
@@ -842,15 +894,15 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
               onAddTextBox();
               setOpenPopover('none');
             }}
-            className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
+            className="apple-pressable flex items-center justify-center min-h-[40px] min-w-[40px] max-sm:min-h-[44px] max-sm:min-w-[44px] sm:min-h-[38px] sm:min-w-[38px] rounded-full hover:bg-[var(--apple-fill)] cursor-pointer"
           >
             <span className="relative flex items-center justify-center">
               <TextCursorInput className="w-4 h-4" />
-              <Plus className="absolute -bottom-1.5 -right-1.5 w-2.5 h-2.5 rounded-full bg-white dark:bg-stone-900 text-blue-700 dark:text-blue-400" />
+              <Plus className="absolute -bottom-1.5 -right-1.5 w-2.5 h-2.5 rounded-full bg-[var(--apple-bg-tertiary)] text-[var(--apple-blue-fg)]" />
             </span>
           </button>
 
-          {/* Text Edit Mode (embedded slide text) */}
+          {/* Embedded Slide Text Edit Tool */}
           <button
             type="button"
             data-testid="island-text-edit-button"
@@ -860,10 +912,10 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
               onToolChange(tool === 'text-edit' ? 'pointer' : 'text-edit');
               setOpenPopover('none');
             }}
-            className={`p-1.5 rounded-xl transition-colors cursor-pointer ${
+            className={`apple-pressable flex items-center justify-center min-h-[40px] min-w-[40px] max-sm:min-h-[44px] max-sm:min-w-[44px] sm:min-h-[38px] sm:min-w-[38px] rounded-full cursor-pointer ${
               tool === 'text-edit'
-                ? 'bg-emerald-700 text-white'
-                : 'hover:bg-stone-100 dark:hover:bg-stone-800'
+                ? 'bg-[var(--apple-green-fg)] text-white shadow-sm'
+                : 'hover:bg-[var(--apple-fill)]'
             }`}
           >
             <Type className="w-4 h-4" />
@@ -879,17 +931,17 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
               onToolChange(tool === 'laser' ? 'pointer' : 'laser');
               setOpenPopover('none');
             }}
-            className={`flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+            className={`apple-pressable flex items-center justify-center gap-1 px-2.5 min-h-[40px] max-sm:min-h-[44px] sm:min-h-[38px] rounded-full text-[12px] font-semibold whitespace-nowrap shrink-0 cursor-pointer ${
               tool === 'laser'
-                ? 'bg-red-600 text-white shadow-sm'
-                : 'hover:bg-stone-100 dark:hover:bg-stone-800'
+                ? 'bg-[var(--apple-red)] text-white shadow-sm'
+                : 'hover:bg-[var(--apple-fill)]'
             }`}
           >
             <LocateFixed className="w-4 h-4" />
             <span className="hidden md:inline text-[11px]">L</span>
           </button>
 
-          {/* Google Browser Toggle — real google.com inside the draggable frame */}
+          {/* Google Browser Toggle */}
           <button
             type="button"
             data-testid="island-google-button"
@@ -899,17 +951,17 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
               onToggleGoogle('google');
               setOpenPopover('none');
             }}
-            className={`flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+            className={`apple-pressable flex items-center justify-center gap-1.5 px-2.5 min-h-[40px] max-sm:min-h-[44px] sm:min-h-[38px] rounded-full text-[12px] font-semibold whitespace-nowrap shrink-0 cursor-pointer ${
               googleOpen && googleMode === 'google'
-                ? 'bg-stone-900 text-white shadow-sm dark:bg-stone-100 dark:text-stone-900'
-                : 'hover:bg-stone-100 dark:hover:bg-stone-800'
+                ? 'bg-[var(--apple-label)] text-[var(--apple-bg-tertiary)] shadow-sm'
+                : 'hover:bg-[var(--apple-fill)]'
             }`}
           >
             <GoogleLogoIcon className="w-4 h-4" />
             <span className="hidden sm:inline text-[11px]">Google</span>
           </button>
 
-          {/* Google AI Toggle — same G logo + AI sparkle, auto-searches the current slide */}
+          {/* Google AI Toggle */}
           <button
             type="button"
             data-testid="island-google-ai-button"
@@ -920,34 +972,32 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
               onToggleGoogle('google-ai');
               setOpenPopover('none');
             }}
-            className={`flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+            className={`apple-pressable flex items-center justify-center gap-1.5 px-2.5 min-h-[40px] max-sm:min-h-[44px] sm:min-h-[38px] rounded-full text-[12px] font-semibold whitespace-nowrap shrink-0 cursor-pointer ${
               googleOpen && googleMode === 'google-ai'
-                ? 'bg-emerald-700 text-white shadow-sm'
-                : 'hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300'
+                ? 'bg-[var(--apple-green-fg)] text-white shadow-sm'
+                : 'hover:bg-[var(--apple-green)]/15 text-[var(--apple-green-fg)]'
             }`}
           >
             <span className="relative flex items-center justify-center">
               <GoogleLogoIcon className="w-4 h-4" />
-              <Sparkles className="absolute -top-1.5 -right-1.5 w-2.5 h-2.5 text-emerald-600 dark:text-emerald-300" />
+              <Sparkles className="absolute -top-1.5 -right-1.5 w-2.5 h-2.5 text-[var(--apple-green-fg)]" />
             </span>
             <span className="hidden sm:inline text-[11px]">{t('island.aiBadge')}</span>
           </button>
         </div>
 
-        {/* ── Thin divider between rows on mobile ── */}
-        <div className="sm:hidden w-full h-px bg-stone-200 dark:bg-stone-700" />
+        {/* Hairline separator on narrow screens */}
+        <div className="sm:hidden w-[calc(100%-16px)] h-px bg-[var(--apple-separator)]" />
 
-        {/* ── Row 2: zoom + sync + settings + hide ── */}
-        <div className="flex items-center gap-1 flex-wrap justify-center">
-
-          {/* Zoom Controls */}
+        {/* Row 2: Zoom, Presence, Cloud Sync, Appearance, Fullscreen, Collapse */}
+        <div className="flex items-center gap-0.5 flex-wrap justify-center">
           <button
             type="button"
             data-testid="island-zoom-out"
             aria-label={t('island.zoomOut')}
             title={t('island.zoomOut')}
             onClick={() => onZoomChange(Math.max(0.3, Math.round((zoomScale - 0.15) * 100) / 100))}
-            className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
+            className="apple-pressable flex items-center justify-center min-h-[40px] min-w-[40px] max-sm:min-h-[44px] max-sm:min-w-[44px] sm:min-h-[38px] sm:min-w-[38px] rounded-full hover:bg-[var(--apple-fill)] cursor-pointer"
           >
             <ZoomOut className="w-4 h-4" />
           </button>
@@ -958,7 +1008,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
             aria-label={t('island.zoomReset')}
             title={t('island.zoomReset')}
             onClick={() => onZoomChange(1)}
-            className="tabular-nums-clean text-[11px] font-bold px-1.5 py-1 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
+            className="apple-pressable tabular-nums-clean text-[11px] font-semibold px-2 min-h-[40px] max-sm:min-h-[44px] sm:min-h-[38px] rounded-full hover:bg-[var(--apple-fill)] whitespace-nowrap shrink-0 cursor-pointer"
           >
             {Math.round(zoomScale * 100)}%
           </button>
@@ -968,32 +1018,34 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
             aria-label={t('island.zoomIn')}
             title={t('island.zoomIn')}
             onClick={() => onZoomChange(Math.min(4.0, Math.round((zoomScale + 0.15) * 100) / 100))}
-            className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
+            className="apple-pressable flex items-center justify-center min-h-[40px] min-w-[40px] max-sm:min-h-[44px] max-sm:min-w-[44px] sm:min-h-[38px] sm:min-w-[38px] rounded-full hover:bg-[var(--apple-fill)] cursor-pointer"
           >
             <ZoomIn className="w-4 h-4" />
           </button>
 
-          <div className="w-px h-5 bg-stone-200 dark:bg-stone-700 mx-0.5" />
+          <div className="w-px h-5 bg-[var(--apple-separator)] mx-1 shrink-0" />
 
-          {/* Live presence: how many partners are here right now */}
+          {/* Live Presence */}
           <button
             type="button"
             data-testid="island-presence-button"
             aria-label={t('island.presence')}
             title={t('island.presenceTitle')}
             onClick={() => setOpenPopover((p) => (p === 'presence' ? 'none' : 'presence'))}
-            className={`flex items-center gap-1.5 px-2 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+            className={`apple-pressable flex items-center justify-center gap-1.5 px-2.5 min-h-[40px] max-sm:min-h-[44px] sm:min-h-[38px] rounded-full text-[12px] font-semibold whitespace-nowrap shrink-0 cursor-pointer ${
               openPopover === 'presence'
-                ? 'bg-blue-800 text-white'
-                : 'hover:bg-stone-100 dark:hover:bg-stone-800'
+                ? 'bg-[var(--apple-blue)] text-white shadow-sm'
+                : 'hover:bg-[var(--apple-fill)]'
             }`}
           >
             <span className="relative flex items-center justify-center">
               <Users className="w-4 h-4" />
               <span
-                className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-white dark:border-stone-900 ${
-                  presenceUsers.length > 0 ? 'bg-emerald-500' : 'bg-stone-400'
-                }`}
+                className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-white dark:border-stone-900"
+                style={{
+                  backgroundColor:
+                    presenceUsers.length > 0 ? 'var(--apple-green)' : 'var(--apple-tertiary-label)',
+                }}
               />
             </span>
             <span className="tabular-nums-clean text-[11px] min-w-[12px] text-center">
@@ -1001,7 +1053,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
             </span>
           </button>
 
-          {/* Firebase Cloud Live Sync Button */}
+          {/* Firebase Cloud Sync */}
           <button
             type="button"
             data-testid="island-sync-button"
@@ -1009,21 +1061,25 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
             aria-label={t('island.sync')}
             title={t('island.sync')}
             onClick={() => setOpenPopover((p) => (p === 'sync' ? 'none' : 'sync'))}
-            className={`flex items-center gap-1.5 px-2 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+            className={`apple-pressable flex items-center justify-center gap-1.5 px-2.5 min-h-[40px] max-sm:min-h-[44px] sm:min-h-[38px] rounded-full text-[12px] font-semibold whitespace-nowrap shrink-0 cursor-pointer ${
               syncStatus === 'synced'
-                ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300'
+                ? 'bg-[var(--apple-green)]/15 text-[var(--apple-green-fg)]'
                 : syncStatus === 'error'
-                ? 'bg-red-50 text-red-700'
-                : 'hover:bg-stone-100 dark:hover:bg-stone-800'
+                ? 'bg-[var(--apple-red)]/15 text-[var(--apple-red-fg)]'
+                : 'hover:bg-[var(--apple-fill)]'
             }`}
           >
             {syncStatus === 'synced' ? (
-              <Cloud className="w-4 h-4 text-emerald-600" />
+              <Cloud className="w-4 h-4 text-[var(--apple-green-fg)]" />
             ) : (
-              <CloudOff className="w-4 h-4 text-stone-500" />
+              <CloudOff className="w-4 h-4 text-[var(--apple-secondary-label)]" />
             )}
             <span className="hidden sm:inline">
-              {syncStatus === 'synced' ? t('sync.connected') : syncStatus === 'connecting' ? '…' : t('island.sync')}
+              {syncStatus === 'synced'
+                ? t('sync.connected')
+                : syncStatus === 'connecting'
+                ? '…'
+                : t('island.sync')}
             </span>
           </button>
 
@@ -1033,7 +1089,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
             onClick={onToggleDark}
             aria-label={t('island.dark')}
             title={t('island.dark')}
-            className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
+            className="apple-pressable flex items-center justify-center min-h-[40px] min-w-[40px] max-sm:min-h-[44px] max-sm:min-w-[44px] sm:min-h-[38px] sm:min-w-[38px] rounded-full hover:bg-[var(--apple-fill)] cursor-pointer"
           >
             {projectorDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
@@ -1042,22 +1098,21 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
             onClick={onToggleFullscreen}
             aria-label={t('island.fullscreen')}
             title={t('island.fullscreen')}
-            className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
+            className="apple-pressable flex items-center justify-center min-h-[40px] min-w-[40px] max-sm:min-h-[44px] max-sm:min-w-[44px] sm:min-h-[38px] sm:min-w-[38px] rounded-full hover:bg-[var(--apple-fill)] cursor-pointer"
           >
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </button>
 
-          {/* Hide island → dot */}
+          {/* Collapse island */}
           <button
             type="button"
             onClick={() => setIslandHidden(true)}
             aria-label={t('island.hide')}
             title={t('island.hideTitle')}
-            className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer text-stone-400 hover:text-stone-700 dark:hover:text-stone-200"
+            className="apple-pressable flex items-center justify-center min-h-[40px] min-w-[40px] max-sm:min-h-[44px] max-sm:min-w-[44px] sm:min-h-[38px] sm:min-w-[38px] rounded-full hover:bg-[var(--apple-fill)] text-[var(--apple-secondary-label)] hover:text-[var(--apple-label)] cursor-pointer"
           >
-            {/* Simple ⊙ hide icon */}
             <svg viewBox="0 0 16 16" className="w-4 h-4" fill="currentColor">
-              <circle cx="8" cy="8" r="6" fillOpacity={0.15} stroke="currentColor" strokeWidth="1.5" fill="none" />
+              <circle cx="8" cy="8" r="6" fillOpacity={0.14} stroke="currentColor" strokeWidth="1.4" fill="none" />
               <circle cx="8" cy="8" r="2" />
             </svg>
           </button>

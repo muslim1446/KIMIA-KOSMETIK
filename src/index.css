@@ -57,6 +57,20 @@
     --apple-glass-backdrop: saturate(2.05) blur(13px) contrast(0.86) brightness(0.97);
     --apple-sheet-backdrop: saturate(1.95) blur(15px) contrast(0.88) brightness(0.98);
 
+    /* Apple Content Layer Elevation & SVG Tokens (Light Mode — Grouped Canvas #F2F2F7 -> #FFFFFF Cards) */
+    --slide-canvas-bg: #F2F2F7;
+    --slide-card-bg: #FFFFFF;
+    --slide-inset-bg: #F5F5F7;
+    --slide-chip-bg: #EBEBF0;
+    --slide-card-border: rgba(60, 60, 67, 0.10);
+    --slide-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px -6px rgba(0, 0, 0, 0.06);
+    --slide-svg-plate: #F5F5F7;
+    --slide-svg-ring: #D1D1D6;
+    --slide-svg-axis: #636366;
+    --slide-svg-ink: #1C1C1E;
+    --slide-svg-muted: #636366;
+    --slide-svg-neutral-fill: #EBEBF0;
+
     /* Sampled Damped Harmonic Oscillator CSS linear() Springs */
     /* Interactive crisp settle (response 0.30s, dampingFraction 0.84) */
     --apple-spring-snappy: linear(
@@ -111,6 +125,20 @@
     --apple-sheet-shadow: 0 1px 8px rgba(0, 0, 0, 0.52), 0 24px 60px -6px rgba(0, 0, 0, 0.52);
     --apple-glass-backdrop: saturate(1.85) blur(14px) contrast(0.84) brightness(0.68);
     --apple-sheet-backdrop: saturate(1.8) blur(16px) contrast(0.86) brightness(0.72);
+
+    /* Apple Content Layer Elevation & SVG Tokens (Dark Mode — #000000/#111113 Base -> #1C1C1E -> #2C2C2E -> #3A3A3C) */
+    --slide-canvas-bg: #0C0C0E;
+    --slide-card-bg: #1C1C1E;
+    --slide-inset-bg: #2C2C2E;
+    --slide-chip-bg: #3A3A3C;
+    --slide-card-border: rgba(255, 255, 255, 0.09);
+    --slide-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.36), 0 10px 28px -6px rgba(0, 0, 0, 0.44);
+    --slide-svg-plate: #242426;
+    --slide-svg-ring: #48484A;
+    --slide-svg-axis: #98989D;
+    --slide-svg-ink: #F5F5F7;
+    --slide-svg-muted: #AEAEB2;
+    --slide-svg-neutral-fill: #3A3A3C;
   }
 
   /* Subsystem 10: Physical 1px Retina hairlines (1.0 / contentsScale) */
@@ -131,8 +159,8 @@
   #root {
     height: 100%;
     font-family: var(--font-sans);
-    background-color: #fbf9f5;
-    color: #1c1917;
+    background-color: var(--slide-canvas-bg);
+    color: var(--apple-label);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     /* Prevent iOS Safari elastic bounce & native pinch interference */
@@ -142,8 +170,8 @@
 
   .dark body,
   .dark #root {
-    background-color: #181715;
-    color: #f5f5f4;
+    background-color: var(--slide-canvas-bg);
+    color: var(--apple-label);
   }
 }
 
@@ -154,6 +182,7 @@
 
 .tabular-nums-clean {
   font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "ss03" 1;
 }
 
 /* Apple UI Chrome Typography & Surfaces (isolated from .projection-slide, layered cleanly below Tailwind utilities) */
@@ -351,6 +380,28 @@
   .apple-readable-width {
     max-width: 672px;
   }
+
+  /* Apple Content Layer Surfaces (NO Liquid Glass backdrop-filter on content cards — Grouped Canvas Inversion + Dual Shadow) */
+  .apple-slide-card {
+    background-color: var(--slide-card-bg);
+    border: 1px solid var(--slide-card-border);
+    box-shadow: var(--slide-card-shadow);
+    color: var(--apple-label);
+    transition: color 140ms ease, background-color 280ms ease, border-color 280ms ease, box-shadow 280ms ease;
+  }
+
+  .apple-slide-inset {
+    background-color: var(--slide-inset-bg);
+    border: 1px solid var(--slide-card-border);
+    color: var(--apple-label);
+    transition: color 140ms ease, background-color 280ms ease, border-color 280ms ease;
+  }
+
+  .apple-slide-chip {
+    background-color: var(--slide-chip-bg);
+    color: var(--apple-label);
+    transition: color 140ms ease, background-color 200ms ease, border-color 200ms ease;
+  }
 }
 
 /* Subsystem 11: Fine-pointer UIPointerInteraction (.highlight) directional hover sheen */
@@ -498,15 +549,22 @@
 .projection-slide [class~="text-[15px]"] { font-size: 1.0625rem; line-height: 1.38rem; }
 
 /* High-contrast focus reduces search time when a presenter reveals one state. */
-.projection-slide button[aria-selected="true"] {
-  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.22);
+.projection-slide {
+  font-optical-sizing: auto;
+  font-synthesis: none;
+  color: var(--apple-label);
+}
+
+.projection-slide button[aria-selected="true"],
+.projection-slide button[aria-pressed="true"] {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--apple-blue) 26%, transparent);
 }
 
 /* The dark text/very light surface pairing is intentionally stronger than the
  * minimum accessibility contrast threshold and survives a dim projector. */
 .projection-slide button:focus-visible,
 .projection-slide input:focus-visible {
-  outline: 4px solid #1d4ed8;
+  outline: 4px solid var(--apple-blue);
   outline-offset: 3px;
 }
 

@@ -306,8 +306,8 @@ export const SlidePdfLayer: React.FC<SlidePdfLayerProps> = ({
         const screenH = Math.max(40, item.height * screenScale);
         const isSelected = selectedId === item.id;
         const showControls = isSelected && interactive;
-        const toolbarAbove = topLeft.y > 56;
-        const toolbarOnRight = topLeft.x > window.innerWidth - 360;
+        const toolbarAbove = topLeft.y > 60;
+        const toolbarOnRight = typeof window !== 'undefined' && topLeft.x > window.innerWidth - 360;
 
         return (
           <div
@@ -325,7 +325,9 @@ export const SlidePdfLayer: React.FC<SlidePdfLayerProps> = ({
               zIndex: isSelected ? 25 : 24,
             }}
             className={`absolute select-none rounded-[14px] bg-white transition-shadow ${
-              isSelected ? 'ring-2 ring-[var(--apple-red)] shadow-lg' : 'shadow-md'
+              isSelected
+                ? 'ring-2 ring-[var(--apple-red)] shadow-[0_1px_6px_rgba(0,0,0,0.16),0_14px_34px_-6px_rgba(0,0,0,0.22)]'
+                : 'shadow-[var(--slide-card-shadow)]'
             }`}
           >
             <img
@@ -350,7 +352,7 @@ export const SlidePdfLayer: React.FC<SlidePdfLayerProps> = ({
                     left: toolbarOnRight ? 'auto' : 0,
                     right: toolbarOnRight ? 0 : 'auto',
                   }}
-                  className="apple-hud-glass apple-ui apple-squircle absolute flex items-center gap-1.5 rounded-[14px] px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap z-20 max-w-[min(92vw,360px)]"
+                  className="apple-hud-glass apple-ui apple-squircle absolute flex items-center gap-1.5 rounded-[14px] px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap z-20 max-w-[min(calc(100vw-16px),360px)]"
                 >
                   <span className="flex items-center gap-1.5 min-w-0">
                     <FileText className="w-3.5 h-3.5 shrink-0 text-[#FF6961]" />

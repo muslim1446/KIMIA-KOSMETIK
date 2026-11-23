@@ -715,6 +715,8 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
           const isSelected = !isRemoteProjector && selectedImageId === img.id;
           const isUnlocked = !isRemoteProjector && unlockedDragId === img.id;
           const isSubScoped = img.scopeKey !== getRootSlideScope(slideIndex);
+          const hudAbove = topLeft.y > 60;
+          const hudOnRight = typeof window !== 'undefined' && topLeft.x > window.innerWidth - 280;
 
           return (
             <div
@@ -756,9 +758,9 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
               }}
               className={`absolute select-none rounded-[14px] transition-shadow ${
                 isUnlocked
-                  ? 'ring-2 ring-[var(--apple-green)] shadow-lg'
+                  ? 'ring-2 ring-[var(--apple-green)] shadow-[0_1px_6px_rgba(0,0,0,0.16),0_14px_34px_-6px_rgba(0,0,0,0.22)]'
                   : isSelected
-                  ? 'ring-2 ring-[var(--apple-blue)] shadow-md'
+                  ? 'ring-2 ring-[var(--apple-blue)] shadow-[0_1px_4px_rgba(0,0,0,0.12),0_12px_28px_-6px_rgba(0,0,0,0.18)]'
                   : ''
               }`}
             >
@@ -774,7 +776,12 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
                   {/* Floating image control bar (Apple HIG HUD Liquid Glass) */}
                   <div
                     onPointerDown={(e) => e.stopPropagation()}
-                    className="apple-hud-glass apple-ui apple-squircle absolute -top-11 left-0 flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold whitespace-nowrap"
+                    style={{
+                      top: hudAbove ? '-46px' : `${screenH + 8}px`,
+                      left: hudOnRight ? 'auto' : 0,
+                      right: hudOnRight ? 0 : 'auto',
+                    }}
+                    className="apple-hud-glass apple-ui apple-squircle absolute flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold whitespace-nowrap max-w-[calc(100vw-16px)] z-20"
                   >
                     <button
                       type="button"
@@ -843,7 +850,7 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
                       tabIndex={0}
                       aria-label={t('image.resize', { corner })}
                       onPointerDown={(e) => startImageResize(e, img, corner)}
-                      className={`apple-pressable apple-touch-halo absolute w-3.5 h-3.5 bg-white border-2 border-[var(--apple-blue)] rounded-full shadow-md ${cls}`}
+                      className={`apple-pressable apple-touch-halo absolute w-3.5 h-3.5 bg-white border-2 border-[var(--apple-blue)] rounded-full shadow-[0_1px_4px_rgba(0,0,0,0.22)] ${cls}`}
                     />
                   ))}
                 </>
@@ -885,17 +892,27 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
           />
         ))}
 
-        {/* Eraser visual cursor ring */}
+        {/* Eraser visual cursor reticle (high contrast on both Light & Dark slides) */}
         {tool === 'eraser' && eraserPos && !isRemoteProjector && (
-          <circle
-            cx={eraserPos.x}
-            cy={eraserPos.y}
-            r={Math.max(12, penSize * 1.4)}
-            fill="rgba(255,255,255,0.4)"
-            stroke="#1c1917"
-            strokeWidth={1.8}
-            strokeDasharray="3 3"
-          />
+          <g>
+            <circle
+              cx={eraserPos.x}
+              cy={eraserPos.y}
+              r={Math.max(12, penSize * 1.4)}
+              fill="rgba(120,120,128,0.16)"
+              stroke="rgba(255,255,255,0.88)"
+              strokeWidth={2.5}
+            />
+            <circle
+              cx={eraserPos.x}
+              cy={eraserPos.y}
+              r={Math.max(12, penSize * 1.4)}
+              fill="none"
+              stroke="rgba(28,28,30,0.9)"
+              strokeWidth={1.5}
+              strokeDasharray="3.5 3.5"
+            />
+          </g>
         )}
       </svg>
     </>

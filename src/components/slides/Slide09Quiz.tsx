@@ -14,26 +14,27 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
 
   return (
     <div className="h-full w-full flex flex-col gap-4 px-10 py-6 select-none">
-      <div className="shrink-0 flex items-end justify-between gap-3 border-b border-stone-200 dark:border-stone-800 pb-3">
+      <div className="shrink-0 flex items-end justify-between gap-3 apple-hairline-b pb-3">
         <div>
-          <div className="text-[15px] font-bold text-blue-900 dark:text-blue-400">
+          <div className="text-[15px] font-bold text-[var(--apple-blue-fg)] tabular-nums-clean">
             5.4.1–5.4.4 · Uji Diri 5.4 (m.s. 186)
           </div>
-          <h2 className="font-display text-[28px] font-bold text-stone-900 dark:text-stone-50 mt-0.5 leading-tight">
+          <h2 className="font-display text-[28px] font-bold text-[var(--apple-label)] mt-0.5 leading-tight">
             Uji Diri 5.4 &amp; Rumusan Topik Ubat-ubatan dan Bahan Kosmetik
           </h2>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0 p-1 rounded-[15px] apple-slide-inset">
           {DAILY_MYSTERIES.map((m, idx) => (
             <button
               key={m.id}
               type="button"
+              aria-selected={idx === interactions.quizIndex}
               onClick={() => onPatch({ quizIndex: idx, quizSelectedOption: null, explanationRevealed: false })}
-              className={`px-3.5 py-2 rounded-xl border text-[15px] font-bold cursor-pointer ${
+              className={`apple-pressable apple-tap-target px-3.5 py-2 rounded-[11px] text-[15px] font-bold cursor-pointer tabular-nums-clean ${
                 idx === interactions.quizIndex
-                  ? 'border-stone-900 bg-stone-900 text-white dark:border-stone-100 dark:bg-stone-100 dark:text-stone-900'
-                  : 'border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-200 hover:bg-stone-50'
+                  ? 'bg-[var(--apple-label)] text-[var(--apple-bg-base)] shadow-sm'
+                  : 'text-[var(--apple-secondary-label)] hover:bg-[var(--apple-fill)]'
               }`}
             >
               Soalan {idx + 1}
@@ -45,38 +46,39 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
       <div className="flex-1 min-h-0 grid grid-cols-12 gap-5">
         <div
           data-storage-scope={`slide:8/quiz:${interactions.quizIndex}`}
-          className="col-span-5 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-5 flex flex-col justify-between"
+          className="col-span-5 apple-slide-card rounded-[24px] p-5 flex flex-col justify-between"
         >
           <div className="space-y-3">
-            <div className="flex items-center gap-2 text-[15px] font-bold text-blue-900 dark:text-blue-400">
-              <HelpCircle className="w-5 h-5" />
+            <div className="flex items-center gap-2 text-[15px] font-bold text-[var(--apple-blue-fg)] tabular-nums-clean">
+              <HelpCircle className="w-5 h-5 shrink-0" />
               <span>{mystery.kssmRef}</span>
             </div>
-            <h3 className="font-display text-[21px] font-bold text-stone-900 dark:text-stone-100 leading-snug">
+            <h3 className="font-display text-[21px] font-bold text-[var(--apple-label)] leading-snug">
               {mystery.title}
             </h3>
-            <div className="bg-[#FBF9F5] dark:bg-stone-950 rounded-2xl p-4 text-[16px] text-stone-800 dark:text-stone-200 leading-relaxed">
+            <div className="apple-slide-inset rounded-[16px] p-4 text-[16px] text-[var(--apple-label)] leading-relaxed">
               {mystery.dailySituation}
             </div>
-            <p className="text-[16px] font-bold text-stone-900 dark:text-stone-100 leading-snug">
+            <p className="text-[16px] font-bold text-[var(--apple-label)] leading-snug">
               {mystery.questionWhy}
             </p>
           </div>
 
-          <div className="pt-3 border-t border-stone-200 dark:border-stone-800 space-y-1.5">
-            <div className="text-[14px] font-bold text-emerald-800 dark:text-emerald-400">
+          <div className="pt-3 apple-hairline-t space-y-1.5">
+            <div className="text-[14px] font-bold text-[var(--apple-green-fg)] tabular-nums-clean">
               Rumusan Standard Pembelajaran 5.4:
             </div>
-            <div className="text-[14px] text-stone-700 dark:text-stone-300 leading-snug">
-              1. <strong>Jenis &amp; Fungsi Ubat (5.4.1)</strong> · 2. <strong>Penggunaan Selamat (5.4.2)</strong> · 3.{' '}
-              <strong>Bahan &amp; Keselamatan Kosmetik (5.4.3–5.4.4)</strong>
+            <div className="text-[14px] text-[var(--apple-secondary-label)] leading-snug tabular-nums-clean">
+              1. <strong className="text-[var(--apple-label)]">Jenis &amp; Fungsi Ubat (5.4.1)</strong> · 2.{' '}
+              <strong className="text-[var(--apple-label)]">Penggunaan Selamat (5.4.2)</strong> · 3.{' '}
+              <strong className="text-[var(--apple-label)]">Bahan &amp; Keselamatan Kosmetik (5.4.3–5.4.4)</strong>
             </div>
           </div>
         </div>
 
         <div className="col-span-7 flex flex-col justify-between gap-3">
           <div className="space-y-2">
-            <div className="text-[15px] font-bold text-stone-700 dark:text-stone-300">
+            <div className="text-[15px] font-bold text-[var(--apple-secondary-label)]">
               Pilih Jawapan:
             </div>
             {mystery.hypotheses.map((hyp, i) => {
@@ -85,25 +87,26 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
                 <button
                   key={hyp.id}
                   type="button"
+                  aria-selected={selected}
                   onClick={() => onPatch({ quizSelectedOption: hyp.id })}
-                  className={`w-full text-left rounded-2xl border px-4 py-3 transition-colors cursor-pointer ${
+                  className={`apple-pressable apple-tap-target w-full text-left rounded-[18px] px-4 py-3 cursor-pointer ${
                     selected
-                      ? 'border-blue-800 bg-blue-50/80 dark:bg-blue-950/50'
-                      : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:bg-stone-50'
+                      ? 'apple-slide-card border-[var(--apple-blue)] bg-blue-50/85 dark:bg-blue-950/40'
+                      : 'apple-slide-card hover:bg-[var(--apple-fill)]'
                   }`}
                 >
                   <div className="flex items-start gap-2.5">
-                    <span className="text-[14px] font-bold px-2.5 py-0.5 rounded-lg border border-stone-300 bg-[#FBF9F5] text-stone-800 shrink-0">
+                    <span className="text-[14px] font-bold px-2.5 py-0.5 rounded-[8px] apple-slide-inset text-[var(--apple-label)] shrink-0 tabular-nums-clean">
                       Pilihan {i + 1}
                     </span>
-                    <span className="text-[15px] font-semibold text-stone-900 dark:text-stone-100 leading-snug">
+                    <span className="text-[15px] font-semibold text-[var(--apple-label)] leading-snug">
                       {hyp.label}
                     </span>
                   </div>
                   {selected && (
                     <p
                       data-storage-scope={`slide:8/quiz:${interactions.quizIndex}/hyp:${hyp.id}`}
-                      className="mt-1.5 pl-20 text-[14px] font-medium text-blue-950 dark:text-blue-200 leading-snug"
+                      className="mt-2 ml-1 pl-3 border-l-2 border-[var(--apple-blue)] text-[14px] font-medium text-[var(--apple-blue-fg)] leading-snug"
                     >
                       {hyp.discussionNote}
                     </p>
@@ -113,19 +116,20 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
             })}
           </div>
 
-          <div className="rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-4 flex flex-col gap-2.5">
+          <div className="apple-slide-card rounded-[22px] p-4 flex flex-col gap-2.5">
             <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-[15px] font-bold text-emerald-900 dark:text-emerald-400">
-                <Lightbulb className="w-5 h-5" />
+              <div className="flex items-center gap-2 text-[15px] font-bold text-[var(--apple-green-fg)]">
+                <Lightbulb className="w-5 h-5 shrink-0" />
                 <span>Jawapan &amp; Penerangan Buku Teks</span>
               </div>
 
               <button
                 type="button"
+                aria-expanded={interactions.explanationRevealed}
                 onClick={() => onPatch({ explanationRevealed: !interactions.explanationRevealed })}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-[14px] font-bold cursor-pointer"
+                className="apple-pressable apple-tap-target flex items-center gap-1.5 px-4 py-2 rounded-[13px] bg-[var(--apple-label)] hover:opacity-90 text-[var(--apple-bg-base)] text-[14px] font-bold cursor-pointer shadow-sm"
               >
-                <Eye className="w-4 h-4" />
+                <Eye className="w-4 h-4 shrink-0" />
                 <span>{interactions.explanationRevealed ? 'Tutup Jawapan' : 'Dedah Jawapan'}</span>
               </button>
             </div>
@@ -135,26 +139,26 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
                 data-storage-scope={`slide:8/quiz:${interactions.quizIndex}/revealed`}
                 className="grid grid-cols-3 gap-2.5"
               >
-                <div className="bg-[#FBF9F5] dark:bg-stone-950 rounded-xl p-3">
-                  <div className="text-[13px] font-bold text-blue-900 dark:text-blue-400 flex items-center gap-1">
+                <div className="apple-slide-inset rounded-[14px] p-3">
+                  <div className="text-[13px] font-bold text-[var(--apple-blue-fg)] flex items-center gap-1 tabular-nums-clean">
                     <span>1. Fakta Buku Teks</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRight className="w-3.5 h-3.5 shrink-0" />
                   </div>
-                  <p className="text-[14px] text-stone-800 dark:text-stone-200 mt-1 leading-snug">
+                  <p className="text-[14px] text-[var(--apple-label)] mt-1 leading-snug">
                     {mystery.causalChain.step1Fact}
                   </p>
                 </div>
-                <div className="bg-[#FBF9F5] dark:bg-stone-950 rounded-xl p-3">
-                  <div className="text-[13px] font-bold text-amber-800 dark:text-amber-400 flex items-center gap-1">
+                <div className="apple-slide-inset rounded-[14px] p-3">
+                  <div className="text-[13px] font-bold text-[var(--apple-orange-fg)] flex items-center gap-1 tabular-nums-clean">
                     <span>2. Huraian &amp; Contoh</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRight className="w-3.5 h-3.5 shrink-0" />
                   </div>
-                  <p className="text-[14px] text-stone-800 dark:text-stone-200 mt-1 leading-snug">
+                  <p className="text-[14px] text-[var(--apple-label)] mt-1 leading-snug">
                     {mystery.causalChain.step2Reason}
                   </p>
                 </div>
-                <div className="bg-emerald-50 dark:bg-emerald-950/40 rounded-xl p-3">
-                  <div className="text-[13px] font-bold text-emerald-900 dark:text-emerald-300">
+                <div className="bg-emerald-50/90 dark:bg-emerald-950/40 border border-emerald-300/70 dark:border-emerald-800/60 rounded-[14px] p-3">
+                  <div className="text-[13px] font-bold text-[var(--apple-green-fg)] tabular-nums-clean">
                     3. Prinsip Utama
                   </div>
                   <p className="text-[14px] font-bold text-emerald-950 dark:text-emerald-100 mt-1 leading-snug">
@@ -163,7 +167,7 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
                 </div>
               </div>
             ) : (
-              <p className="text-[15px] text-stone-600 dark:text-stone-400 leading-snug">
+              <p className="text-[15px] text-[var(--apple-secondary-label)] leading-snug">
                 {pickedHypothesis
                   ? 'Bincangkan pilihan di atas bersama kelas, kemudian klik "Dedah Jawapan" untuk menyemak jawapan buku teks.'
                   : 'Minta rakan sekelas memilih jawapan dahulu sebelum mendedahkan penerangan buku teks.'}

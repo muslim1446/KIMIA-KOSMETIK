@@ -1,8 +1,9 @@
 import React from 'react';
-import { motion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import { AlertTriangle, Flame, Hammer, Leaf, Pill } from 'lucide-react';
 import { TRADITIONAL_HERBS, TraditionalHerb } from '../../data/slidesData';
 import { SharedSlideInteractions } from '../../hooks/usePresentationSync';
+import { APPLE_SPRINGS } from '../../utils/applePhysics';
 
 interface Slide02Props {
   interactions: SharedSlideInteractions;
@@ -60,58 +61,61 @@ function HerbIllustration({ herb }: { herb: TraditionalHerb }) {
 
 export const Slide02Traditional: React.FC<Slide02Props> = ({ interactions, onPatch }) => {
   const activeHerb = TRADITIONAL_HERBS.find((h) => h.id === interactions.herbId) ?? TRADITIONAL_HERBS[0];
+  const prefersReducedMotion = useReducedMotion();
 
   return (
     <div className="h-full w-full flex flex-col gap-4 px-10 py-6 select-none">
-      <div className="shrink-0 flex items-end justify-between gap-4 border-b border-stone-200 dark:border-stone-800 pb-3">
+      <div className="shrink-0 flex items-end justify-between gap-4 apple-hairline-b pb-3">
         <div>
-          <div className="text-[15px] font-bold text-emerald-800 dark:text-emerald-400">
+          <div className="text-[15px] font-bold text-[var(--apple-green-fg)] tabular-nums-clean">
             5.4.1 · Ubat Tradisional (Rajah 5.13 &amp; Gambar foto 5.9 · m.s. 181)
           </div>
-          <h2 className="font-display text-[30px] font-bold text-stone-900 dark:text-stone-50 mt-0.5 leading-tight">
+          <h2 className="font-display text-[30px] font-bold text-[var(--apple-label)] mt-0.5 leading-tight">
             Ubat Tradisional: Daripada Tumbuh-tumbuhan Herba atau Haiwan
           </h2>
         </div>
       </div>
 
       <div className="flex-1 min-h-0 grid grid-cols-12 gap-5">
-        <div className="col-span-4 flex flex-col justify-between gap-2">
+        <div className="col-span-4 flex flex-col justify-between gap-2.5">
           {TRADITIONAL_HERBS.map((herb) => {
             const selected = herb.id === activeHerb.id && !interactions.ketumOpen;
             return (
               <button
                 key={herb.id}
                 type="button"
+                aria-selected={selected}
                 onClick={() => onPatch({ herbId: herb.id, ketumOpen: false })}
-                className={`w-full text-left rounded-2xl border px-4 py-3 transition-colors cursor-pointer ${
+                className={`apple-pressable apple-tap-target w-full text-left rounded-[18px] px-4 py-3 cursor-pointer ${
                   selected
-                    ? 'border-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 dark:border-emerald-500'
-                    : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:bg-stone-50'
+                    ? 'apple-slide-card border-[var(--apple-green-fg)] bg-emerald-50/90 dark:bg-emerald-950/45'
+                    : 'apple-slide-card hover:bg-[var(--apple-fill)]'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-display text-[20px] font-bold text-stone-900 dark:text-stone-100">{herb.name}</span>
+                  <span className="font-display text-[20px] font-bold text-[var(--apple-label)]">{herb.name}</span>
                   <Leaf className="w-5 h-5 shrink-0" style={{ color: herb.accentColor }} />
                 </div>
-                <div className="text-[15px] italic text-stone-600 dark:text-stone-400 mt-0.5">{herb.scientificName}</div>
+                <div className="text-[15px] italic text-[var(--apple-secondary-label)] mt-0.5">{herb.scientificName}</div>
               </button>
             );
           })}
 
           <button
             type="button"
+            aria-selected={interactions.ketumOpen}
             onClick={() => onPatch({ ketumOpen: !interactions.ketumOpen })}
-            className={`w-full text-left rounded-2xl border px-4 py-3 transition-colors cursor-pointer ${
+            className={`apple-pressable apple-tap-target w-full text-left rounded-[18px] border px-4 py-3 cursor-pointer ${
               interactions.ketumOpen
-                ? 'border-red-600 bg-red-50 dark:bg-red-950/50'
-                : 'border-amber-400 bg-amber-50/90 dark:bg-amber-950/30 dark:border-amber-700'
+                ? 'border-[var(--apple-red-fg)] bg-red-50 dark:bg-red-950/45'
+                : 'border-amber-400/80 dark:border-amber-600/50 bg-amber-50/90 dark:bg-amber-950/30 hover:bg-amber-100/70 dark:hover:bg-amber-950/45'
             }`}
           >
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[17px] font-bold text-red-800 dark:text-red-300">Cabaran Minda: Daun Ketum</span>
-              <AlertTriangle className="w-5 h-5 text-red-700 shrink-0" />
+              <span className="text-[17px] font-bold text-[var(--apple-red-fg)]">Cabaran Minda: Daun Ketum</span>
+              <AlertTriangle className="w-5 h-5 text-[var(--apple-red-fg)] shrink-0" />
             </div>
-            <div className="text-[15px] text-stone-700 dark:text-stone-300 mt-0.5">
+            <div className="text-[15px] text-[var(--apple-secondary-label)] mt-0.5 tabular-nums-clean">
               Gambar foto 5.9 · Mengapa diharamkan?
             </div>
           </button>
@@ -121,40 +125,41 @@ export const Slide02Traditional: React.FC<Slide02Props> = ({ interactions, onPat
           {interactions.ketumOpen ? (
             <motion.div
               data-storage-scope="slide:1/ketum"
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="h-full border border-red-200 dark:border-red-800 bg-white dark:bg-stone-900 rounded-3xl p-6 flex flex-col justify-between"
+              initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
+              animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+              transition={prefersReducedMotion ? { duration: 0.14 } : APPLE_SPRINGS.snappy}
+              className="apple-slide-card h-full border-red-300/70 dark:border-red-800/70 rounded-[24px] p-6 flex flex-col justify-between"
             >
               <div>
-                <div className="text-[15px] font-bold text-red-700 dark:text-red-400">
+                <div className="text-[15px] font-bold text-[var(--apple-red-fg)] tabular-nums-clean">
                   Cabaran Minda · Gambar foto 5.9 Daun ketum (m.s. 181)
                 </div>
-                <h3 className="font-display text-[30px] font-bold text-stone-900 dark:text-stone-100 mt-1">
+                <h3 className="font-display text-[30px] font-bold text-[var(--apple-label)] mt-1">
                   Daun Ketum
                 </h3>
                 <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div className="rounded-2xl p-5 bg-[#FBF9F5] dark:bg-stone-950 border border-stone-200 dark:border-stone-800">
-                    <div className="text-[15px] font-bold text-stone-500">Kegunaan Tradisional</div>
-                    <p className="text-[17px] text-stone-800 dark:text-stone-200 mt-2 leading-relaxed">
+                  <div className="apple-slide-inset rounded-[16px] p-5">
+                    <div className="text-[15px] font-bold text-[var(--apple-secondary-label)]">Kegunaan Tradisional</div>
+                    <p className="text-[17px] text-[var(--apple-label)] mt-2 leading-relaxed">
                       Digunakan secara tradisional untuk melegakan sakit belakang dan pemulih tenaga.
                     </p>
                   </div>
-                  <div className="rounded-2xl p-5 bg-red-50/70 dark:bg-red-950/40 border border-red-200 dark:border-red-900">
-                    <div className="text-[15px] font-bold text-red-800 dark:text-red-300">Sebab Diharamkan</div>
-                    <p className="text-[17px] text-stone-900 dark:text-stone-100 mt-2 leading-relaxed">
+                  <div className="rounded-[16px] p-5 bg-red-50/85 dark:bg-red-950/35 border border-red-200 dark:border-red-900/60">
+                    <div className="text-[15px] font-bold text-[var(--apple-red-fg)]">Sebab Diharamkan</div>
+                    <p className="text-[17px] text-[var(--apple-label)] mt-2 leading-relaxed">
                       Penjualan produk yang diproses daripada daun ketum diharamkan di sisi undang-undang kerana mengandungi bahan yang menyebabkan <strong>ketagihan dan penyalahgunaan</strong>.
                     </p>
                   </div>
                 </div>
               </div>
-              <div className="pt-4 border-t border-stone-200 dark:border-stone-800 flex items-center justify-between gap-4">
-                <span className="text-[16px] font-semibold text-stone-700 dark:text-stone-300">
+              <div className="pt-4 apple-hairline-t flex items-center justify-between gap-4">
+                <span className="text-[16px] font-semibold text-[var(--apple-secondary-label)]">
                   Ubat tradisional tidak diproses secara kimia, tetapi masih boleh memudaratkan jika disalahgunakan.
                 </span>
                 <button
                   type="button"
                   onClick={() => onPatch({ ketumOpen: false })}
-                  className="px-5 py-2.5 rounded-xl bg-stone-900 text-white text-[15px] font-bold cursor-pointer shrink-0"
+                  className="apple-pressable apple-tap-target px-5 py-2.5 rounded-[13px] bg-[var(--apple-label)] text-[var(--apple-bg-base)] text-[15px] font-bold cursor-pointer shrink-0"
                 >
                   Kembali ke Senarai Herba
                 </button>
@@ -164,46 +169,46 @@ export const Slide02Traditional: React.FC<Slide02Props> = ({ interactions, onPat
             <motion.div
               key={activeHerb.id}
               data-storage-scope={`slide:1/herb:${activeHerb.id}`}
-              initial={{ opacity: 0, x: 8 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.2 }}
-              className="h-full border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-3xl p-6 flex flex-col justify-between"
+              initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: 8 }}
+              animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
+              transition={prefersReducedMotion ? { duration: 0.14 } : APPLE_SPRINGS.snappy}
+              className="apple-slide-card h-full rounded-[24px] p-6 flex flex-col justify-between"
             >
               <div className="grid grid-cols-12 gap-5 items-center">
-                <div className="col-span-4 bg-[#FBF9F5] dark:bg-stone-950 rounded-2xl p-4">
+                <div className="col-span-4 apple-slide-inset rounded-[18px] p-4">
                   <HerbIllustration herb={activeHerb} />
-                  <div className="text-center text-[15px] font-bold text-stone-800 dark:text-stone-200 mt-1">
+                  <div className="text-center text-[15px] font-bold text-[var(--apple-label)] mt-1">
                     Bahagian: {activeHerb.partUsed}
                   </div>
                 </div>
 
                 <div className="col-span-8 space-y-2.5">
                   <div>
-                    <div className="text-[15px] italic text-emerald-800 dark:text-emerald-400">{activeHerb.scientificName}</div>
-                    <h3 className="font-display text-[28px] font-bold text-stone-900 dark:text-stone-100 leading-tight">{activeHerb.name}</h3>
+                    <div className="text-[15px] italic text-[var(--apple-green-fg)]">{activeHerb.scientificName}</div>
+                    <h3 className="font-display text-[28px] font-bold text-[var(--apple-label)] leading-tight">{activeHerb.name}</h3>
                   </div>
 
                   <ul className="space-y-1">
                     {activeHerb.uses.map((u) => (
-                      <li key={u} className="text-[17px] font-semibold text-stone-900 dark:text-stone-100 flex items-start gap-2.5">
-                        <span className="mt-2.5 w-2.5 h-2.5 rounded-full bg-emerald-700 shrink-0" />
+                      <li key={u} className="text-[17px] font-semibold text-[var(--apple-label)] flex items-start gap-2.5">
+                        <span className="mt-2.5 w-2.5 h-2.5 rounded-full bg-[var(--apple-green-fg)] shrink-0" />
                         <span>{u}</span>
                       </li>
                     ))}
                   </ul>
 
-                  <div className="rounded-xl bg-[#FBF9F5] dark:bg-stone-950 px-4 py-2.5 text-[16px] text-stone-800 dark:text-stone-200 leading-snug">
+                  <div className="apple-slide-inset rounded-[14px] px-4 py-2.5 text-[16px] text-[var(--apple-label)] leading-snug">
                     {activeHerb.explanation}
                   </div>
                 </div>
               </div>
 
-              <div className="mt-3 pt-3 border-t border-stone-200 dark:border-stone-800">
+              <div className="mt-3 pt-3 apple-hairline-t">
                 <div className="flex items-center justify-between gap-2 mb-2.5">
-                  <span className="text-[16px] font-bold text-stone-700 dark:text-stone-300">
+                  <span className="text-[16px] font-bold text-[var(--apple-secondary-label)]">
                     Cara Penyediaan Ubat Tradisional:
                   </span>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1.5 p-1 rounded-[14px] apple-slide-inset">
                     {(
                       [
                         { id: 'lesung', label: 'Lesung', Icon: Hammer },
@@ -214,14 +219,15 @@ export const Slide02Traditional: React.FC<Slide02Props> = ({ interactions, onPat
                       <button
                         key={id}
                         type="button"
+                        aria-selected={interactions.herbPrep === id}
                         onClick={() => onPatch({ herbPrep: id })}
-                        className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[15px] font-bold transition-colors cursor-pointer ${
+                        className={`apple-pressable apple-tap-target flex items-center gap-1.5 px-3.5 py-2 rounded-[11px] text-[15px] font-bold cursor-pointer ${
                           interactions.herbPrep === id
-                            ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900'
-                            : 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-200'
+                            ? 'bg-[var(--apple-label)] text-[var(--apple-bg-base)] shadow-sm'
+                            : 'text-[var(--apple-secondary-label)] hover:bg-[var(--apple-fill)]'
                         }`}
                       >
-                        <Icon className="w-4 h-4" />
+                        <Icon className="w-4 h-4 shrink-0" />
                         <span>{label}</span>
                       </button>
                     ))}
@@ -230,7 +236,7 @@ export const Slide02Traditional: React.FC<Slide02Props> = ({ interactions, onPat
 
                 <div
                   data-storage-scope={`slide:1/herb:${activeHerb.id}/prep:${interactions.herbPrep}`}
-                  className="bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 rounded-2xl px-5 py-3 text-[16px] font-medium text-stone-900 dark:text-stone-100 leading-snug"
+                  className="bg-emerald-50/75 dark:bg-emerald-950/30 border border-emerald-300/70 dark:border-emerald-800/60 rounded-[16px] px-5 py-3 text-[16px] font-medium text-[var(--apple-label)] leading-snug"
                 >
                   {activeHerb.prepNotes[interactions.herbPrep]}
                 </div>

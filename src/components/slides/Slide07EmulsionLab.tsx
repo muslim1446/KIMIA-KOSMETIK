@@ -55,12 +55,12 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
 
   return (
     <div className="h-full w-full flex flex-col gap-3.5 px-10 py-6 select-none">
-      <div className="shrink-0 flex items-end justify-between gap-3 border-b border-stone-200 dark:border-stone-800 pb-2.5">
+      <div className="shrink-0 flex items-end justify-between gap-3 apple-hairline-b pb-2.5">
         <div>
-          <div className="text-[15px] font-bold text-blue-900 dark:text-blue-400">
+          <div className="text-[15px] font-bold text-[var(--apple-blue-fg)] tabular-nums-clean">
             5.4.3 · Bahan-bahan Asas Kosmetik (Rajah 5.15 · m.s. 184–185)
           </div>
-          <h2 className="font-display text-[28px] font-bold text-stone-900 dark:text-stone-50 mt-0.5 leading-tight">
+          <h2 className="font-display text-[28px] font-bold text-[var(--apple-label)] mt-0.5 leading-tight">
             Tujuh Bahan Asas Kosmetik &amp; Peranan Pengemulsi
           </h2>
         </div>
@@ -69,29 +69,30 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
           <button
             type="button"
             onClick={() => applyPreset('separated')}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-[14px] font-bold text-stone-800 dark:text-stone-200 hover:bg-stone-50 cursor-pointer"
+            className="apple-pressable apple-tap-target flex items-center gap-1.5 px-3 py-2 rounded-[13px] apple-slide-card text-[14px] font-bold hover:bg-[var(--apple-fill)] cursor-pointer"
           >
-            <RotateCcw className="w-4 h-4" />
+            <RotateCcw className="w-4 h-4 shrink-0" />
             <span>Tanpa Pengemulsi</span>
           </button>
           <button
             type="button"
             onClick={() => applyPreset('complete')}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-stone-900 dark:bg-stone-100 text-[14px] font-bold text-white dark:text-stone-900 hover:bg-stone-800 cursor-pointer"
+            className="apple-pressable apple-tap-target flex items-center gap-1.5 px-3.5 py-2 rounded-[13px] bg-[var(--apple-label)] text-[var(--apple-bg-base)] text-[14px] font-bold hover:opacity-90 cursor-pointer shadow-sm"
           >
-            <Beaker className="w-4 h-4" />
+            <Beaker className="w-4 h-4 shrink-0" />
             <span>Campur Semua</span>
           </button>
           <button
             type="button"
+            aria-pressed={interactions.molecularLens}
             onClick={() => onPatch({ molecularLens: !interactions.molecularLens })}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-[14px] font-bold cursor-pointer ${
+            className={`apple-pressable apple-tap-target flex items-center gap-1.5 px-3 py-2 rounded-[13px] border text-[14px] font-bold cursor-pointer ${
               interactions.molecularLens
-                ? 'border-indigo-700 bg-indigo-900 text-white'
-                : 'border-stone-300 bg-white text-stone-800'
+                ? 'border-[var(--apple-blue)] bg-[var(--apple-blue)] text-white shadow-sm'
+                : 'apple-slide-card hover:bg-[var(--apple-fill)]'
             }`}
           >
-            <Atom className="w-4 h-4" />
+            <Atom className="w-4 h-4 shrink-0" />
             <span>Huraian</span>
           </button>
         </div>
@@ -107,37 +108,37 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
                 type="button"
                 onClick={() => toggleIngredient(ing.id)}
                 aria-pressed={active}
-                className={`text-left rounded-2xl border px-3.5 py-2.5 transition-colors cursor-pointer ${
+                className={`apple-pressable apple-tap-target text-left rounded-[18px] px-3.5 py-2.5 cursor-pointer ${
                   active
-                    ? 'border-blue-800 bg-blue-50/70 dark:bg-blue-950/50'
-                    : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:bg-stone-50'
+                    ? 'apple-slide-card border-[var(--apple-blue)] bg-blue-50/75 dark:bg-blue-950/35'
+                    : 'apple-slide-card hover:bg-[var(--apple-fill)]'
                 }`}
               >
                 <div className="flex items-center gap-2">
                   <span
-                    className={`w-5 h-5 rounded-md flex items-center justify-center border text-xs shrink-0 ${
+                    className={`w-5 h-5 rounded-[6px] flex items-center justify-center border text-xs shrink-0 ${
                       active
-                        ? 'bg-blue-900 border-blue-900 text-white'
-                        : 'border-stone-300 dark:border-stone-700 text-transparent'
+                        ? 'bg-[var(--apple-blue)] border-[var(--apple-blue)] text-white'
+                        : 'border-[var(--apple-separator)] text-transparent'
                     }`}
                   >
                     <Check className="w-3.5 h-3.5" />
                   </span>
-                  <span className="font-display text-[17px] font-bold text-stone-900 dark:text-stone-100">
+                  <span className="font-display text-[17px] font-bold text-[var(--apple-label)] tabular-nums-clean">
                     {idx + 1}. {ing.name}
                   </span>
                 </div>
-                <p className="text-[14px] text-stone-800 dark:text-stone-200 mt-1 leading-snug">
+                <p className="text-[14px] text-[var(--apple-label)] mt-1 leading-snug">
                   {interactions.molecularLens ? ing.simpleNote : ing.role}
                 </p>
-                <div className="text-[13px] font-semibold text-stone-500 mt-0.5">Contoh: {ing.examples}</div>
+                <div className="text-[13px] font-semibold text-[var(--apple-secondary-label)] mt-0.5">Contoh: {ing.examples}</div>
               </button>
             );
           })}
 
-          <div className="rounded-2xl border border-amber-300 bg-amber-50/80 dark:bg-amber-950/30 px-3.5 py-2.5 flex flex-col justify-center">
-            <div className="text-[14px] font-bold text-amber-900 dark:text-amber-300">Fungsi Pengemulsi</div>
-            <p className="text-[14px] text-stone-800 dark:text-stone-200 mt-0.5 leading-snug">
+          <div className="rounded-[18px] border border-amber-300/80 dark:border-amber-700/50 bg-amber-50/85 dark:bg-amber-950/30 px-3.5 py-2.5 flex flex-col justify-center">
+            <div className="text-[14px] font-bold text-[var(--apple-orange-fg)]">Fungsi Pengemulsi</div>
+            <p className="text-[14px] text-[var(--apple-label)] mt-0.5 leading-snug">
               Membentuk <strong>campuran homogen</strong> antara <strong>air</strong> dan <strong>minyak</strong> supaya kosmetik tidak terpisah.
             </p>
           </div>
@@ -145,13 +146,13 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
 
         <div
           data-storage-scope={`slide:6/emulsion:${em.air ? '1' : '0'}${em.pengemulsi ? '1' : '0'}${em.pengawet ? '1' : '0'}`}
-          className="col-span-6 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-4 flex flex-col justify-between gap-2.5"
+          className="col-span-6 apple-slide-card rounded-[24px] p-4 flex flex-col justify-between gap-2.5"
         >
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[15px] font-bold text-stone-700 dark:text-stone-300">Pemerhatian Campuran Kosmetik</span>
+            <span className="text-[15px] font-bold text-[var(--apple-secondary-label)]">Pemerhatian Campuran Kosmetik</span>
             <span
               className={`text-[15px] font-bold ${
-                evalResult.isHomogeneous && em.pengawet ? 'text-emerald-700' : 'text-amber-700'
+                evalResult.isHomogeneous && em.pengawet ? 'text-[var(--apple-green-fg)]' : 'text-[var(--apple-orange-fg)]'
               }`}
             >
               {evalResult.statusLabel}
@@ -159,10 +160,10 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
           </div>
 
           <div className="grid grid-cols-12 gap-3 items-center">
-            <div className="col-span-5 flex justify-center bg-[#FBF9F5] dark:bg-stone-950 rounded-2xl p-2">
+            <div className="col-span-5 flex justify-center apple-slide-inset rounded-[16px] p-2">
               <svg viewBox="0 0 185 168" className="w-44 h-40" role="img" aria-label="Bikar campuran bahan kosmetik">
                 {em.pewangi && (
-                  <g stroke="#15803D" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.8">
+                  <g stroke="var(--apple-green-fg)" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.85">
                     <path d="M68,26 C63,16 74,12 69,4" />
                     <path d="M92,24 C87,14 98,10 93,2" />
                     <path d="M116,26 C111,16 122,12 117,4" />
@@ -208,7 +209,7 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
                               cx={cx}
                               cy={cy}
                               r={em.pemekat ? 6.5 : 4.5}
-                              fill={em.pewarna ? '#DB2777' : '#1E3A8A'}
+                              fill={em.pewarna ? '#DB2777' : '#0066D6'}
                               opacity="0.32"
                             />
                           ))}
@@ -244,7 +245,7 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
                 <path
                   d="M36,36 L42,42 L42,146 C42,151 46,154 52,154 L132,154 C138,154 142,151 142,146 L142,42 L148,36"
                   fill="none"
-                  stroke="#44403C"
+                  stroke="var(--slide-svg-axis)"
                   strokeWidth="3.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -252,8 +253,8 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
               </svg>
             </div>
 
-            <div className="col-span-7 bg-[#FBF9F5] dark:bg-stone-950 rounded-2xl p-3">
-              <div className="text-[13px] font-bold text-indigo-900 dark:text-indigo-300 mb-1">
+            <div className="col-span-7 apple-slide-inset rounded-[16px] p-3">
+              <div className="text-[13px] font-bold text-[var(--apple-blue-fg)] mb-1 tabular-nums-clean">
                 Kesan Penambahan Pengemulsi (Rajah 5.15)
               </div>
               <svg viewBox="0 0 270 132" className="w-full h-32" aria-label="Gambar rajah pengemulsi menyatukan air dan minyak">
@@ -267,9 +268,9 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
                       Terapung di atas dan tidak bercampur
                     </text>
 
-                    <line x1="12" y1="66" x2="258" y2="66" stroke="#B91C1C" strokeWidth="2.5" strokeDasharray="5 4" />
+                    <line x1="12" y1="66" x2="258" y2="66" stroke="var(--apple-red-fg)" strokeWidth="2.5" strokeDasharray="5 4" />
 
-                    <rect x="8" y="76" width="254" height="48" rx="10" fill="#DBEAFE" stroke="#1D4ED8" strokeWidth="1.8" />
+                    <rect x="8" y="76" width="254" height="48" rx="10" fill="#DBEAFE" stroke="#0066D6" strokeWidth="1.8" />
                     <text x="135" y="98" textAnchor="middle" fontSize="12.5" fontWeight="800" fill="#1E3A8A">
                       Lapisan Air (Pelarut)
                     </text>
@@ -279,7 +280,7 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
                   </g>
                 ) : (
                   <g>
-                    <rect x="8" y="8" width="254" height="116" rx="12" fill="#EFF6FF" stroke="#1D4ED8" strokeWidth="1.8" />
+                    <rect x="8" y="8" width="254" height="116" rx="12" fill="#EFF6FF" stroke="#0066D6" strokeWidth="1.8" />
                     <circle cx="88" cy="56" r="18" fill="#FCD34D" stroke="#B45309" strokeWidth="2" />
                     <circle cx="135" cy="50" r="22" fill="#FCD34D" stroke="#B45309" strokeWidth="2" />
                     <circle cx="182" cy="58" r="17" fill="#FCD34D" stroke="#B45309" strokeWidth="2" />
@@ -299,30 +300,30 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
           </div>
 
           <div className="grid grid-cols-3 gap-2 text-center">
-            <div className="bg-[#FBF9F5] dark:bg-stone-950 rounded-xl py-2 px-1">
-              <div className="text-[13px] font-semibold text-stone-500">Pemekat</div>
-              <div className={`text-[16px] font-bold ${evalResult.hasThickener ? 'text-emerald-700' : 'text-stone-700 dark:text-stone-300'}`}>
+            <div className="apple-slide-inset rounded-[12px] py-2 px-1">
+              <div className="text-[13px] font-semibold text-[var(--apple-secondary-label)]">Pemekat</div>
+              <div className={`text-[16px] font-bold ${evalResult.hasThickener ? 'text-[var(--apple-green-fg)]' : 'text-[var(--apple-label)]'}`}>
                 {evalResult.hasThickener ? 'Pekat' : 'Cair'}
               </div>
             </div>
-            <div className="bg-[#FBF9F5] dark:bg-stone-950 rounded-xl py-2 px-1">
-              <div className="text-[13px] font-semibold text-stone-500">Pelembap</div>
-              <div className={`text-[16px] font-bold ${evalResult.hasMoisturizer ? 'text-emerald-700' : 'text-amber-700'}`}>
+            <div className="apple-slide-inset rounded-[12px] py-2 px-1">
+              <div className="text-[13px] font-semibold text-[var(--apple-secondary-label)]">Pelembap</div>
+              <div className={`text-[16px] font-bold ${evalResult.hasMoisturizer ? 'text-[var(--apple-green-fg)]' : 'text-[var(--apple-orange-fg)]'}`}>
                 {evalResult.hasMoisturizer ? 'Lembap' : 'Cepat Kering'}
               </div>
             </div>
-            <div className="bg-[#FBF9F5] dark:bg-stone-950 rounded-xl py-2 px-1">
-              <div className="text-[13px] font-semibold text-stone-500">Pengawet</div>
-              <div className={`text-[16px] font-bold ${evalResult.hasPreservative ? 'text-emerald-700' : 'text-red-700'}`}>
+            <div className="apple-slide-inset rounded-[12px] py-2 px-1">
+              <div className="text-[13px] font-semibold text-[var(--apple-secondary-label)]">Pengawet</div>
+              <div className={`text-[16px] font-bold ${evalResult.hasPreservative ? 'text-[var(--apple-green-fg)]' : 'text-[var(--apple-red-fg)]'}`}>
                 {evalResult.hasPreservative ? 'Terlindung' : 'Mudah Rosak'}
               </div>
             </div>
           </div>
 
-          <div className="rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 p-3 text-[15px] font-medium text-stone-900 dark:text-stone-100 leading-snug">
+          <div className="rounded-[14px] bg-blue-50/75 dark:bg-blue-950/35 border border-blue-200 dark:border-blue-800/60 p-3 text-[15px] font-medium text-[var(--apple-label)] leading-snug">
             <div>{evalResult.diagnosis}</div>
             {interactions.molecularLens && (
-              <div className="text-[14px] font-bold text-indigo-900 dark:text-indigo-300 mt-1">
+              <div className="text-[14px] font-bold text-[var(--apple-blue-fg)] mt-1 tabular-nums-clean">
                 Nota Rajah 5.15: {evalResult.molecularNote}
               </div>
             )}

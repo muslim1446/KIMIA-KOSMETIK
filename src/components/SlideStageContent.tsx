@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { SharedSlideInteractions } from '../hooks/usePresentationSync';
+import { APPLE_SPRINGS } from '../utils/applePhysics';
 import { Slide01Cover } from './slides/Slide01Cover';
 import { Slide02Traditional } from './slides/Slide02Traditional';
 import { Slide03ModernDrugs } from './slides/Slide03ModernDrugs';
@@ -36,9 +37,10 @@ export const SlideStageContent: React.FC<SlideStageContentProps> = ({
 }) => {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const [stageScale, setStageScale] = useState(1);
+  const prefersReducedMotion = useReducedMotion();
 
   // Dynamically scale the 1280x720 slide canvas to fit ANY projector/TV/laptop screen
-  // while preserving a 3% outer overscan safe padding so edges are never clipped.
+  // while preserving a 2% outer overscan safe padding so edges are never clipped.
   useEffect(() => {
     const el = hostRef.current;
     if (!el) return;
@@ -92,18 +94,18 @@ export const SlideStageContent: React.FC<SlideStageContentProps> = ({
   return (
     <div
       ref={hostRef}
-      className={`relative w-full h-full overflow-hidden no-scrollbar flex items-center justify-center ${
-        projectorDark ? 'dark bg-[#181715] text-stone-100' : 'bg-[#FBF9F5] text-stone-900'
+      className={`relative w-full h-full overflow-hidden no-scrollbar flex items-center justify-center bg-[var(--slide-canvas-bg)] text-[var(--apple-label)] transition-[background-color,color] duration-200 ${
+        projectorDark ? 'dark' : ''
       }`}
     >
-      {/* Subtle warm ambient backdrop filling 100% of physical screen */}
+      {/* Subtle Display-P3 ambient tonal stage backdrop */}
       <div
         aria-hidden="true"
         className="pointer-events-none fixed inset-0"
         style={{
           background: projectorDark
-            ? 'radial-gradient(circle at 85% 15%, rgba(217, 119, 6, 0.08), transparent 45%), radial-gradient(circle at 12% 88%, rgba(45, 106, 79, 0.12), transparent 50%)'
-            : 'radial-gradient(circle at 88% 12%, rgba(245, 158, 11, 0.09), transparent 46%), radial-gradient(circle at 10% 88%, rgba(16, 185, 129, 0.07), transparent 50%)',
+            ? 'radial-gradient(circle at 84% 14%, rgba(10, 132, 255, 0.08), transparent 46%), radial-gradient(circle at 12% 86%, rgba(48, 209, 88, 0.06), transparent 52%)'
+            : 'radial-gradient(circle at 86% 12%, rgba(0, 122, 255, 0.055), transparent 48%), radial-gradient(circle at 10% 88%, rgba(52, 199, 89, 0.045), transparent 52%)',
         }}
       />
 
@@ -145,10 +147,11 @@ export const SlideStageContent: React.FC<SlideStageContentProps> = ({
             <AnimatePresence mode="wait">
               <motion.div
                 key={slideIndex}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.2, ease: 'easeOut' }}
+                data-slide-panel-index={slideIndex}
+                initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
+                animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+                exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
+                transition={prefersReducedMotion ? { duration: 0.14 } : APPLE_SPRINGS.snappy}
                 className="projection-slide w-full min-h-[720px] h-auto overflow-visible"
               >
                 {renderSlide()}

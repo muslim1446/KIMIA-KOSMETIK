@@ -12,37 +12,46 @@ export const Slide08BannedForensics: React.FC<Slide08Props> = ({ interactions, o
   const activeChemical =
     BANNED_CHEMICALS.find((c) => c.id === interactions.bannedChemicalId) ?? BANNED_CHEMICALS[0];
 
+  const targetDepthY =
+    activeChemical.bodyTarget === 'sistem_saraf_ginjal'
+      ? 156
+      : activeChemical.bodyTarget === 'melanosit_uv' || activeChemical.bodyTarget === 'pigmentasi_epidermis'
+      ? 78
+      : 40;
+
   return (
     <div className="h-full w-full flex flex-col gap-3.5 px-10 py-6 select-none">
-      <div className="shrink-0 border-b border-stone-200 dark:border-stone-800 pb-2.5 flex items-end justify-between gap-4">
+      <div className="shrink-0 apple-hairline-b pb-2.5 flex items-end justify-between gap-4">
         <div>
-          <div className="text-[15px] font-bold text-red-700 dark:text-red-400">
+          <div className="text-[15px] font-bold text-[var(--apple-red-fg)] tabular-nums-clean">
             5.4.4 · Penggunaan Kosmetik &amp; Bahan Kimia Terlarang (Rajah 5.17 &amp; Jadual 5.8 · m.s. 185–186)
           </div>
-          <h2 className="font-display text-[28px] font-bold text-stone-900 dark:text-stone-50 mt-0.5 leading-tight">
+          <h2 className="font-display text-[28px] font-bold text-[var(--apple-label)] mt-0.5 leading-tight">
             Kosmetik Buatan Sendiri, Keburukan Komersial &amp; Kesan Bahan Terlarang
           </h2>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0 p-1 rounded-[15px] apple-slide-inset">
           <button
             type="button"
+            aria-selected={interactions.cosmeticCompareTab === 'buatan_sendiri'}
             onClick={() => onPatch({ cosmeticCompareTab: 'buatan_sendiri' })}
-            className={`px-3.5 py-2 rounded-xl border text-[14px] font-bold cursor-pointer ${
+            className={`apple-pressable apple-tap-target px-3.5 py-2 rounded-[11px] border text-[14px] font-bold cursor-pointer ${
               interactions.cosmeticCompareTab === 'buatan_sendiri'
-                ? 'border-emerald-700 bg-emerald-50 text-emerald-900'
-                : 'border-stone-200 text-stone-700 bg-white'
+                ? 'border-[var(--apple-green-fg)] bg-emerald-50 dark:bg-emerald-950/45 text-emerald-900 dark:text-emerald-200 shadow-sm'
+                : 'border-transparent text-[var(--apple-secondary-label)] hover:bg-[var(--apple-fill)]'
             }`}
           >
             Kebaikan Buatan Sendiri
           </button>
           <button
             type="button"
+            aria-selected={interactions.cosmeticCompareTab === 'komersial_haram'}
             onClick={() => onPatch({ cosmeticCompareTab: 'komersial_haram' })}
-            className={`px-3.5 py-2 rounded-xl border text-[14px] font-bold cursor-pointer ${
+            className={`apple-pressable apple-tap-target px-3.5 py-2 rounded-[11px] border text-[14px] font-bold cursor-pointer ${
               interactions.cosmeticCompareTab === 'komersial_haram'
-                ? 'border-red-600 bg-red-50 text-red-900'
-                : 'border-stone-200 text-stone-700 bg-white'
+                ? 'border-[var(--apple-red-fg)] bg-red-50 dark:bg-red-950/45 text-red-900 dark:text-red-200 shadow-sm'
+                : 'border-transparent text-[var(--apple-secondary-label)] hover:bg-[var(--apple-fill)]'
             }`}
           >
             Keburukan Komersial
@@ -56,32 +65,32 @@ export const Slide08BannedForensics: React.FC<Slide08Props> = ({ interactions, o
           className="col-span-12"
         >
           {interactions.cosmeticCompareTab === 'buatan_sendiri' ? (
-            <div className="border border-emerald-200 bg-emerald-50/80 rounded-2xl px-4 py-3 grid grid-cols-3 gap-4">
-              <div className="flex items-start gap-2.5 text-[15px] text-emerald-950">
-                <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
+            <div className="border border-emerald-300/80 dark:border-emerald-800/70 bg-emerald-50/90 dark:bg-emerald-950/35 rounded-[18px] px-4 py-3 grid grid-cols-3 gap-4">
+              <div className="flex items-start gap-2.5 text-[15px] text-emerald-950 dark:text-emerald-100">
+                <CheckCircle2 className="w-5 h-5 text-[var(--apple-green-fg)] shrink-0 mt-0.5" />
                 <span>Mudah dihasilkan menggunakan bahan-bahan semula jadi.</span>
               </div>
-              <div className="flex items-start gap-2.5 text-[15px] text-emerald-950">
-                <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-2.5 text-[15px] text-emerald-950 dark:text-emerald-100">
+                <CheckCircle2 className="w-5 h-5 text-[var(--apple-green-fg)] shrink-0 mt-0.5" />
                 <span>Selamat dan tiada bahan kimia berbahaya.</span>
               </div>
-              <div className="flex items-start gap-2.5 text-[15px] text-emerald-950">
-                <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-2.5 text-[15px] text-emerald-950 dark:text-emerald-100">
+                <CheckCircle2 className="w-5 h-5 text-[var(--apple-green-fg)] shrink-0 mt-0.5" />
                 <span>Kos yang murah.</span>
               </div>
             </div>
           ) : (
-            <div className="border border-red-200 bg-red-50/80 rounded-2xl px-4 py-3 grid grid-cols-3 gap-4">
-              <div className="flex items-start gap-2.5 text-[15px] text-red-950">
-                <ShieldAlert className="w-5 h-5 text-red-700 shrink-0 mt-0.5" />
+            <div className="border border-red-300/80 dark:border-red-800/70 bg-red-50/90 dark:bg-red-950/35 rounded-[18px] px-4 py-3 grid grid-cols-3 gap-4">
+              <div className="flex items-start gap-2.5 text-[15px] text-red-950 dark:text-red-100">
+                <ShieldAlert className="w-5 h-5 text-[var(--apple-red-fg)] shrink-0 mt-0.5" />
                 <span>Kesan sampingan yang merbahayakan.</span>
               </div>
-              <div className="flex items-start gap-2.5 text-[15px] text-red-950">
-                <ShieldAlert className="w-5 h-5 text-red-700 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-2.5 text-[15px] text-red-950 dark:text-red-100">
+                <ShieldAlert className="w-5 h-5 text-[var(--apple-red-fg)] shrink-0 mt-0.5" />
                 <span>Terdapat bahan kimia berbahaya dimasukkan secara tidak sah.</span>
               </div>
-              <div className="flex items-start gap-2.5 text-[15px] text-red-950">
-                <ShieldAlert className="w-5 h-5 text-red-700 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-2.5 text-[15px] text-red-950 dark:text-red-100">
+                <ShieldAlert className="w-5 h-5 text-[var(--apple-red-fg)] shrink-0 mt-0.5" />
                 <span>Iklan yang ditonjolkan secara berlebih-lebihan dan mengelirukan.</span>
               </div>
             </div>
@@ -95,18 +104,19 @@ export const Slide08BannedForensics: React.FC<Slide08Props> = ({ interactions, o
               <button
                 key={chem.id}
                 type="button"
+                aria-selected={active}
                 onClick={() => onPatch({ bannedChemicalId: chem.id })}
-                className={`text-left rounded-2xl border px-4 py-3 transition-colors cursor-pointer ${
+                className={`apple-pressable apple-tap-target text-left rounded-[18px] px-4 py-3 cursor-pointer ${
                   active
-                    ? 'border-red-600 bg-red-50 dark:bg-red-950/50'
-                    : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:bg-stone-50'
+                    ? 'apple-slide-card border-[var(--apple-red-fg)] bg-red-50/90 dark:bg-red-950/40'
+                    : 'apple-slide-card hover:bg-[var(--apple-fill)]'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-display text-[19px] font-bold text-stone-900 dark:text-stone-100">{chem.name}</span>
-                  <Skull className={`w-5 h-5 shrink-0 ${active ? 'text-red-700' : 'text-stone-400'}`} />
+                  <span className="font-display text-[19px] font-bold text-[var(--apple-label)]">{chem.name}</span>
+                  <Skull className={`w-5 h-5 shrink-0 ${active ? 'text-[var(--apple-red-fg)]' : 'text-[var(--apple-tertiary-label)]'}`} />
                 </div>
-                <div className="text-[14px] text-stone-700 dark:text-stone-300 mt-0.5 leading-snug">{chem.productFoundIn}</div>
+                <div className="text-[14px] text-[var(--apple-secondary-label)] mt-0.5 leading-snug">{chem.productFoundIn}</div>
               </button>
             );
           })}
@@ -114,25 +124,25 @@ export const Slide08BannedForensics: React.FC<Slide08Props> = ({ interactions, o
 
         <div
           data-storage-scope={`slide:7/chem:${activeChemical.id}`}
-          className="col-span-7 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-5 flex flex-col justify-between"
+          className="col-span-7 apple-slide-card rounded-[24px] p-5 flex flex-col justify-between"
         >
           <div className="grid grid-cols-12 gap-4 items-center">
-            <div className="col-span-5 bg-[#FBF9F5] dark:bg-stone-950 rounded-2xl p-3">
+            <div className="col-span-5 apple-slide-inset rounded-[18px] p-3">
               <svg viewBox="0 0 215 190" className="w-full h-44" role="img" aria-label="Kesan bahan kimia terlarang pada kulit dan badan">
                 <line
                   x1="18"
                   y1="14"
                   x2="18"
-                  y2={activeChemical.bodyTarget === 'sistem_saraf_ginjal' ? 156 : activeChemical.bodyTarget === 'melanosit_uv' ? 78 : 40}
-                  stroke="#B91C1C"
+                  y2={targetDepthY}
+                  stroke="var(--apple-red-fg)"
                   strokeWidth="4"
                   strokeLinecap="round"
                 />
                 <circle
                   cx="18"
-                  cy={activeChemical.bodyTarget === 'sistem_saraf_ginjal' ? 156 : activeChemical.bodyTarget === 'melanosit_uv' ? 78 : 40}
+                  cy={targetDepthY}
                   r="6"
-                  fill="#B91C1C"
+                  fill="var(--apple-red-fg)"
                 />
 
                 <rect
@@ -140,12 +150,19 @@ export const Slide08BannedForensics: React.FC<Slide08Props> = ({ interactions, o
                   y="20"
                   width="172"
                   height="32"
-                  rx="6"
-                  fill={activeChemical.bodyTarget === 'lapisan_luar' || activeChemical.bodyTarget === 'pigmentasi_epidermis' ? '#FCA5A5' : '#FDE68A'}
-                  stroke="#B45309"
+                  rx="7"
+                  fill={
+                    activeChemical.bodyTarget === 'lapisan_luar' ||
+                    activeChemical.bodyTarget === 'melanosit_uv' ||
+                    activeChemical.bodyTarget === 'pigmentasi_epidermis' ||
+                    activeChemical.bodyTarget === 'sistem_saraf_ginjal'
+                      ? '#FCA5A5'
+                      : 'var(--slide-svg-neutral-fill)'
+                  }
+                  stroke="#DC2626"
                   strokeWidth="1.5"
                 />
-                <text x="120" y="40" textAnchor="middle" fontSize="12" fill="#451A03" fontWeight="800">
+                <text x="120" y="40" textAnchor="middle" fontSize="12" fill="#450A0A" fontWeight="800">
                   1. Permukaan Kulit
                 </text>
 
@@ -154,17 +171,52 @@ export const Slide08BannedForensics: React.FC<Slide08Props> = ({ interactions, o
                   y="58"
                   width="172"
                   height="36"
-                  rx="6"
-                  fill={activeChemical.bodyTarget === 'melanosit_uv' ? '#FECACA' : '#FEF3C7'}
-                  stroke="#D97706"
+                  rx="7"
+                  fill={
+                    activeChemical.bodyTarget === 'melanosit_uv' || activeChemical.bodyTarget === 'pigmentasi_epidermis'
+                      ? '#FECACA'
+                      : 'var(--slide-svg-neutral-fill)'
+                  }
+                  stroke={
+                    activeChemical.bodyTarget === 'melanosit_uv' || activeChemical.bodyTarget === 'pigmentasi_epidermis'
+                      ? '#DC2626'
+                      : 'var(--slide-svg-ring)'
+                  }
                   strokeWidth="1.5"
                 />
-                <text x="120" y="80" textAnchor="middle" fontSize="11.5" fill="#78350F" fontWeight="800">
-                  2. Pigmentasi &amp; Sinar UV
+                <text
+                  x="120"
+                  y="80"
+                  textAnchor="middle"
+                  fontSize="11.5"
+                  fill={
+                    activeChemical.bodyTarget === 'melanosit_uv' || activeChemical.bodyTarget === 'pigmentasi_epidermis'
+                      ? '#450A0A'
+                      : 'var(--slide-svg-ink)'
+                  }
+                  fontWeight="800"
+                >
+                  2. Pigmentasi Kulit &amp; Sinar UV
                 </text>
 
-                <rect x="34" y="100" width="172" height="30" rx="6" fill="#FEE2E2" stroke="#DC2626" strokeWidth="1.5" />
-                <text x="120" y="119" textAnchor="middle" fontSize="12" fill="#7F1D1D" fontWeight="800">
+                <rect
+                  x="34"
+                  y="100"
+                  width="172"
+                  height="30"
+                  rx="7"
+                  fill={activeChemical.bodyTarget === 'sistem_saraf_ginjal' ? '#FCA5A5' : 'var(--slide-svg-neutral-fill)'}
+                  stroke={activeChemical.bodyTarget === 'sistem_saraf_ginjal' ? '#DC2626' : 'var(--slide-svg-ring)'}
+                  strokeWidth="1.5"
+                />
+                <text
+                  x="120"
+                  y="119"
+                  textAnchor="middle"
+                  fontSize="12"
+                  fill={activeChemical.bodyTarget === 'sistem_saraf_ginjal' ? '#450A0A' : 'var(--slide-svg-ink)'}
+                  fontWeight="800"
+                >
                   3. Salur Darah
                 </text>
 
@@ -173,15 +225,17 @@ export const Slide08BannedForensics: React.FC<Slide08Props> = ({ interactions, o
                   y="136"
                   width="172"
                   height="38"
-                  rx="6"
-                  fill={activeChemical.bodyTarget === 'sistem_saraf_ginjal' ? '#B91C1C' : '#E7E5E4'}
+                  rx="7"
+                  fill={activeChemical.bodyTarget === 'sistem_saraf_ginjal' ? '#C91D12' : 'var(--slide-svg-neutral-fill)'}
+                  stroke={activeChemical.bodyTarget === 'sistem_saraf_ginjal' ? '#991B1B' : 'var(--slide-svg-ring)'}
+                  strokeWidth="1.5"
                 />
                 <text
                   x="120"
                   y="159"
                   textAnchor="middle"
                   fontSize="11.5"
-                  fill={activeChemical.bodyTarget === 'sistem_saraf_ginjal' ? '#FFFFFF' : '#44403C'}
+                  fill={activeChemical.bodyTarget === 'sistem_saraf_ginjal' ? '#FFFFFF' : 'var(--slide-svg-ink)'}
                   fontWeight="800"
                 >
                   4. Buah Pinggang &amp; Saraf
@@ -191,21 +245,21 @@ export const Slide08BannedForensics: React.FC<Slide08Props> = ({ interactions, o
 
             <div className="col-span-7 space-y-2.5">
               <div>
-                <div className="text-[14px] font-bold text-red-700 dark:text-red-400">Jadual 5.8 · Bahan Kimia Terlarang</div>
-                <h3 className="font-display text-[24px] font-bold text-stone-900 dark:text-stone-100 leading-tight">
+                <div className="text-[14px] font-bold text-[var(--apple-red-fg)] tabular-nums-clean">Jadual 5.8 · Bahan Kimia Terlarang</div>
+                <h3 className="font-display text-[24px] font-bold text-[var(--apple-label)] leading-tight">
                   {activeChemical.name}
                 </h3>
               </div>
 
-              <div className="bg-[#FBF9F5] dark:bg-stone-950 rounded-xl p-3">
-                <div className="text-[14px] font-bold text-stone-500">Kesan Sampingan</div>
-                <p className="text-[15px] text-stone-900 dark:text-stone-100 mt-0.5 leading-snug">
+              <div className="apple-slide-inset rounded-[14px] p-3">
+                <div className="text-[14px] font-bold text-[var(--apple-secondary-label)]">Kesan Sampingan</div>
+                <p className="text-[15px] text-[var(--apple-label)] mt-0.5 leading-snug">
                   {activeChemical.explanation}
                 </p>
               </div>
 
-              <div className="bg-red-50 dark:bg-red-950/40 rounded-xl p-3">
-                <div className="text-[14px] font-bold text-red-800 dark:text-red-300">Catatan</div>
+              <div className="bg-red-50/90 dark:bg-red-950/35 border border-red-200 dark:border-red-900/60 rounded-[14px] p-3">
+                <div className="text-[14px] font-bold text-[var(--apple-red-fg)]">Catatan</div>
                 <p className="text-[15px] text-red-950 dark:text-red-100 mt-0.5 font-bold leading-snug">
                   {activeChemical.productFoundIn}
                 </p>
@@ -213,9 +267,9 @@ export const Slide08BannedForensics: React.FC<Slide08Props> = ({ interactions, o
             </div>
           </div>
 
-          <div className="mt-2 pt-2.5 border-t border-stone-200 dark:border-stone-800 text-[14px] text-stone-800 dark:text-stone-200 leading-snug">
-            <strong>Nasihat Pengguna (m.s. 186):</strong> Peka dengan kandungan bahan dan pastikan kosmetik berdaftar dengan{' '}
-            <strong>Bahagian Regulatori Farmasi Negara (NPRA)</strong>.
+          <div className="mt-2 pt-2.5 apple-hairline-t text-[14px] text-[var(--apple-secondary-label)] leading-snug tabular-nums-clean">
+            <strong className="text-[var(--apple-label)]">Nasihat Pengguna (m.s. 186):</strong> Peka dengan kandungan bahan dan pastikan kosmetik berdaftar dengan{' '}
+            <strong className="text-[var(--apple-label)]">Bahagian Regulatori Farmasi Negara (NPRA)</strong>.
           </div>
         </div>
       </div>

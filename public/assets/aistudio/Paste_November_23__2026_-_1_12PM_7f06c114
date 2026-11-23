@@ -1,0 +1,392 @@
+This completes the entire vertical stack—moving up from pixels, shaders, and
+physics into Apple’s complete UI/UX Philosophy, Spatial & Ergonomic Rules,
+Interaction Choreography, Navigation Grammar, Iconography, Audio-Haptics,
+Microcopy, Accessibility, and Cross-Platform Translation.
+
+With Parts 1, 2, and this Part 3 together, there are zero missing layers in the
+system.
+
+1. Design Philosophy: How Apple Decisions Are Actually Made
+
+Every native Apple interface is governed by two overlapping triads—the classic
+interaction foundation (1987 / iOS 7) and the modern Liquid Glass spatial era
+(WWDC25+):
+
+The Core Triads
+
+1.  Classic Interaction Foundation (Clarity • Deference • Depth)
+      - Clarity: Every pixel must earn its place. Text is legible at every
+        distance, icons are immediately unambiguous, and decoration never
+        obscures function.
+      - Deference: The UI must never compete with the user's content. Chrome
+        shrinks, goes translucent, hides during scrolling/immersion, and lets
+        full-bleed photos, maps, or documents own the viewport.
+      - Depth: Visual layers, distinct z-planes, lighting, and realistic
+        physical motion tell the user where they came from, what floats above
+        what, and what happens if they let go.
+2.  Modern Era Triad (Hierarchy • Harmony • Consistency)
+      - Hierarchy: Establish strict separation between the floating functional
+        control layer (bars, pills, sheets) and the content layer scrolling
+        underneath. Never style content cards with the same floating glass
+        material used for navigation chrome.
+      - Harmony: Software geometry, corner curvature, color temperature, and
+        motion echo the physical hardware bezel and room environment (concentric
+        corners, True Tone, adaptive luma).
+      - Consistency: Design one conceptual anatomy per feature and express it
+        idiomatically across devices—never copy-paste an iPhone tab bar onto
+        macOS or a desktop menu onto watchOS.
+
+The Hidden 1987 Axioms (Still Enforced Internally)
+
+  - Direct Manipulation: Users act directly on objects (pinch the photo, drag
+    the sheet, pull the list), not via proxy forms or tiny +/- arrows.
+  - Forgiveness Over Nagging: Prefer instant execution + Undo over confirmation
+    popups. Modal interruptions should feel rare and serious.
+  - Perceived Stability: Never dynamically hide or remove primary navigation
+    tabs when empty—keep tabs stable and explain empty state inside the view.
+
+2. Spatial Layout, Ergonomic Grids & Optical Alignment
+
+A. Layout Margins, Grids & Readable Width Caps
+
+  - Spacing Unit System: Strict 8pt macro grid (8 / 16 / 24 / 32pt) with 4pt
+    micro steps (4 / 12pt) for tight icon-to-label pairing.
+  - Container Side Margins:
+      - Compact Width (iPhone portrait): 16pt standard (20pt on Pro Max / roomy
+        editorial layouts).
+      - Regular Width (iPad / large panes): 20pt standard; 48pt for full-width
+        containers \ge 768\text{pt}.
+  - Readable Width Ceiling (readableContentGuide): Even on a 13" iPad or 32" Mac
+    monitor, never stretch paragraphs across the entire screen. Cap body reading
+    columns at 672pt max width (centered inside margins; scales dynamically
+    upward/downward as Dynamic Type changes so line length stays within
+    comfortable ~50–75 characters per eye sweep).
+  - Edge-to-Edge Content & backgroundExtensionEffect(): Background media, lists,
+    and hero images always bleed edge-to-edge under bars and sidebars. If a
+    sidebar covers an important part of a hero image, Apple mirrors & blurs the
+    adjacent edge underneath the sidebar (backgroundExtensionEffect) rather than
+    cropping or leaving dead opaque sidebars.
+
+B. Ergonomic Interactive Target Floors (Per Modality)
+
+| Input Modality                | Minimum Interactive Hit Box                                                                           | Inter-Element Gap               | Visual Size Rule                                                                                            |
+| :---------------------------- | :---------------------------------------------------------------------------------------------------- | :------------------------------ | :---------------------------------------------------------------------------------------------------------- |
+| **Touch (iOS / iPadOS)**      | **`44 × 44 pt`**                                                                                      | `>= 8 pt` (`12–16pt` preferred) | Glyph may be `16–22pt`, **hit frame must be padded to `>= 44×44pt`**.                                       |
+| **Gaze + Pinch (visionOS)**   | **`60 × 60 pt`**                                                                                      | **`>= 12–16 pt`**               | Visual button can be `28–44pt`, padded with `8pt+` invisible hit halo to absorb natural eye micro-saccades. |
+| **Precision Pointer (macOS)** | `20–24 pt` (compact), `28–32 pt` (standard)                                                           | `>= 6–8 pt`                     | Hover cursor highlights/lifts target cleanly.                                                               |
+| **Thumb Ergonomics (iPhone)** | Primary actions in **bottom 40%**; top bar reserved for passive titles, Back, and infrequent actions. | —                               | Bottom-anchored floating bars (`Search`, `Compose`, `Tab Bar`) keep one-handed reach effortless.            |
+
+C. Optical Alignment vs. Mathematical Centering
+
+Software built strictly by bounding-box math always looks subtly crooked. Apple
+corrects optical centers:
+
+  - Asymmetric Triangle / Arrow (▶ Play icon inside circle): Geometric
+    bounding-box centering makes a play triangle look shifted left because most
+    visual mass sits on its vertical left edge. Shift triangular icons +6% to
+    +8% of container radius (+1.5pt to +2.5pt) right toward their center of
+    mass.
+  - Optical Baseline for Symbols + Text: Never center an SF Symbol by its outer
+    image frame next to Text; align to the cap-height midpoint / first-baseline
+    so symbols sit naturally on the same visual horizon as uppercase glyphs.
+  - Left-Align Critical Text: In iOS 26+ HIG, prefer left-aligned titles,
+    headers, and list hierarchy inside complex cards/bars rather than weak
+    center-alignment unless the card is a single minimal hero status.
+
+3. Interaction Choreography: "Fluid Interfaces" (WWDC18 803+)
+
+Apple’s interaction philosophy (Chan Karunamuni, Designing Fluid Interfaces)
+rejects traditional "user acts \to wait for movie to play" choreography:
+
+"Fluidity is responsiveness and redirectability, not frame rate."
+
+The 5 Non-Negotiable Fluid Interaction Laws
+
+1.  Zero-Latency Acknowledgment (0ms Response): Every touch down must
+    immediately acknowledge contact in Frame 1 (subtle scale press, luminance
+    shift, finger glow). If an object doesn't visibly react until finger-up, it
+    feels dead/laggy.
+2.  Continuous Redirection & Interruption: A user must be able to grab, pause,
+    reverse, or throw any sheet, drawer, navigation transition, or zoom card
+    mid-flight. Never lock input during transitions (isUserInteractionEnabled =
+    false is a severe UX smell) except during irreversible disk/payment commits.
+3.  Momentum Matches Intent (v_0 Conservation): Fast flicks skip intermediate
+    detents or fly across tabs; slow drags settle gently. Velocity from gesture
+    release passes uninterrupted into the ODE spring.
+4.  Asymmetric Entrances vs. Exits: Elements exit faster than they enter.
+    Entering UI guides spatial orientation; dismissing UI gets out of the user's
+    way immediately.
+5.  Spatial Continuity (matchedTransitionSource / Hero Morph): When opening an
+    item (photo, note, card, album), morph the tapped card directly into the
+    detail canvas (.navigationTransition(.zoom)) rather than cross-fading or
+    sliding in a disconnected sheet from below. Keep shared elements (image,
+    title) continuously alive across frames.
+
+Choreography & State-Transition Rules
+
+  - Never Teleport Values (Numbers & Labels): Numeric counters, timers,
+    currencies, and status text roll or cross-dissolve smoothly
+    (.contentTransition(.numericText())), never snap harshly.
+  - Tight Micro-Stagger Budget: If staggering grid cards or list rows on appear,
+    keep stagger delay to 15–30ms per visible row and cap total reveal cascade
+    at <= 180ms (skip animation completely for off-screen rows).
+  - Ban Generic .easeInOut: Use critically damped or softly underdamped springs
+    for position/scale, linear/fast-out-ease for opacity fades, and never use
+    sluggish symmetrical CSS ease-in-out on user-triggered gestures.
+
+4. Navigation Architecture & Modality Discipline
+
+A. Choose Exactly One Primary Structural Model
+
+1.  Flat Destinations (TabBar / Adaptive Sidebar):
+      - 3–5 peer top-level sections (avoid creating a "More" overflow tab on
+        iPhone).
+      - Golden Rule: Tabs are destinations, never actions (don't put a "+"
+        Create button acting as a fake tab inside the tab bar unless it's a
+        clearly separated detached action or toolbar button).
+      - Every tab preserves its own independent navigation stack and scroll
+        position. Tapping the active tab again pops to root / scrolls to top.
+      - Never hide the tab bar inside normal navigation pushes unless entering a
+        dedicated fullscreen media viewer or modal task.
+2.  Hierarchical Drill-Down (NavigationStack):
+      - Large Title (34pt bold) collapses smoothly on scroll into inline bar
+        (17pt semibold).
+      - Back always resolves to the hierarchical parent (never blindly "last
+        visited URL").
+      - Never put custom opaque backgrounds or hard 1px rules under navigation
+        bars—content flows beneath transparent/glass chrome.
+3.  Content-First Canvas (Maps, Notes Canvas, Media Editors):
+      - Edge-to-edge live workspace; floating top/bottom pill toolbars +
+        optional trailing Inspector.
+
+B. Modality & Presentation Escalation Ladder
+
+Only interrupt flow when a focused subtask or critical choice demands isolation.
+Always choose the lowest-disruption container that solves the task:
+
+| Level | Pattern                          | When to Use                                                                                      | Strict Rules                                                                                                                                                                                      |
+| :---- | :------------------------------- | :----------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **1** | **Inline Expansion / Inspector** | Inspecting/editing properties without losing main canvas context (trailing sidebar on iPad/Mac). | Changes apply live immediately; no "Save/Cancel" modal needed.                                                                                                                                    |
+| **2** | **Popover**                      | Quick single-purpose properties anchored directly to a tapped button on iPad/Mac.                | Auto-dismisses on outside tap; keep focused to 1–few related controls.                                                                                                                            |
+| **3** | **Sheet (with Detents)**         | Focused multi-step task (Compose, Filter, Settings).                                             | Use `.medium` / `.large` detents + grabber; **only one sheet stacked at a time**; dirty unsaved changes intercept swipe-dismiss with a bottom Action Sheet (`Save` / `Discard` / `Keep Editing`). |
+| **4** | **Full-Screen Cover**            | Immersive capture, camera, playback, full canvas editing.                                        | Must provide unmistakable explicit exit (`×` or `Done`).                                                                                                                                          |
+| **5** | **Alert**                        | **Emergency / Irreversible Danger ONLY**.                                                        | **Never** show on app launch; **never** show for routine info or undoable deletions; max 2 buttons.                                                                                               |
+
+5. Iconography: SF Symbols & Layered App Icons (Icon Composer)
+
+A. SF Symbols System Rules (7,000+ Vector Glyphs)
+
+  - Prefer System Symbols Over Custom Icons for all standard concepts (share,
+    trash, search, plus, xmark)—zero cognitive friction and automatic Dynamic
+    Type + optical weight matching.
+  - 4 Rendering Modes (Pick by Context):
+      - Monochrome: Single flat color—dense text-inline badges.
+      - Hierarchical: One color, automatic layer opacity depth across
+        primary/secondary/tertiary paths—ideal default for toolbars & Liquid
+        Glass controls.
+      - Palette: 2–3 explicit contrasting colors assigned per layer.
+      - Multicolor: Apple's intrinsic semantic colors (e.g., green badge, yellow
+        sun, red trash)—best in rich list rows and status indicators.
+  - Continuous Interpolation Engine (Custom Symbols): Author 3 source drawings
+    (Ultralight-Small, Regular-Small, Black-Small) with identical point/path
+    topology—the system interpolates all 27 weight × scale combinations
+    seamlessly. Center visually on the cap-height midpoint.
+  - Semantic Animation Vocabulary:
+      - Bounce: Discrete tap acknowledgment.
+      - Pulse / Breathe: Indefinite active/connecting/recording state (must have
+        explicit stop condition).
+      - Wiggle / Rotate: Layer-aware mechanical motion (fan blades spin inside
+        stationary housing; alarm bell shakes inside frame).
+      - Replace / Magic Replace: Morphs shared enclosures across state flips
+        (e.g., mic \leftrightarrow mic.slash) using directional Draw Off / Draw
+        On stroke animation.
+      - Variable Value vs. Variable Draw: Layer thresholds (0.0–1.0, where only
+        0% is empty) vs. smooth progressive stroke length (SF Symbols 7).
+
+B. Layered Liquid Glass App Icons (Icon Composer .icon)
+
+  - Never Pre-Mask or Pre-Shade: Export 1024 × 1024 full-bleed opaque background
+    + separate vector SVG foreground layers inside Apple's Icon Composer. Do not
+    bake rounded corners, fake static specular glare, or drop shadows—the OS
+    masks the concentric squircle and applies live P3 glass refraction, specular
+    rim highlights, and parallax per layer across Default (Light), Dark, Clear,
+    and Tinted Home Screen appearances.
+  - Three Survival Tests:
+    1.  Recognition: Instant identification without reading the app name
+        underneath.
+    2.  Scale Survival: Crisp from 1024px App Store hero down to 29pt Settings
+        list row—zero unreadable micro-text.
+    3.  Grid Separation: Distinct foreground silhouette and luminance contrast
+        even when the user enables system-wide Monochrome Tinted mode.
+
+6. Sound Design & Audio-Haptic Philosophy (WWDC19 + Hugo Verweij)
+
+Visuals alone feel weightless without acoustic/tactile grounding:
+
+The 3 Acoustic Pillars
+
+1.  Causality: Sound is never ambient wallpaper; it happens strictly as the
+    physical consequence of an object touching, locking, snapping, completing,
+    or failing.
+2.  Harmony: All UI sounds in an app share a coherent harmonic family and
+    physical material metaphor (warm wood, tuned glass, muted felt/marimba
+    transients)—never jarring sine-wave beeps or clashing third-party SFX packs.
+3.  Utility: Sound communicates confirmation, error, or off-screen completion
+    without forcing the user to look down.
+
+The 4 Acoustic Engineering Rules
+
+  - The "1st vs. 100th Use" Test: A dramatic laser whoosh that feels cool on
+    onboarding #1 becomes unbearable annoyance by action #100. Keep routine UI
+    audio ultra-short (30–120ms), clean-tailed, and un-fatiguing.
+  - Earshot Calibration: Sonic amplitude must scale proportionally with visual
+    importance; micro-interactions whisper softly.
+  - Hardware Mute Respect: Respect the physical Silent Switch / Focus modes
+    using .ambient audio session categories for non-essential UI feedback.
+  - Sync Latency Budgets: Human audio–visual perception tolerates only +45ms
+    early to -125ms late (ITU-R BT.1359), and haptic+audio physical coincidence
+    requires < 10ms lock to the exact visual spring detent/contact frame
+    (CHHapticPattern bundling audio + transient haptic inside one .ahap
+    timeline).
+
+7. Microcopy, Writing Rules & Perceived Performance
+
+A. Apple UI Writing Grammar
+
+  - Capitalization Split (HIG / Apple Style Guide):
+      - Title Style (Capitalize main words; lowercase short
+        articles/conjunctions/prepositions \le 3 letters): Navigation titles,
+        Tab labels, Button titles ("Add to Favorites"), Menu items, Section
+        headers—no ending punctuation.
+      - Sentence Style (First word + proper nouns only): Alert titles ("Delete
+        this draft?"), Alert body messages, List descriptions, Input
+        placeholders, Accessibility labels, Toggles/Checkboxes.
+  - Consequence Verbs on Buttons: Never use "Yes" / "No" / "OK" on decision
+    dialogs. Name the exact consequence in 1–2 words: "Delete Photo" vs.
+    "Cancel" (and style destructive actions with .destructive red role; safe
+    non-destructive choice as default).
+  - Zero Blame / Zero Robotic Jargon: Never say "You entered an invalid email"
+    or "Error 0x4F2"; avoid patronizing pronouns (you, your, my) in system
+    alerts. State the situation plainly + give the concrete next action in 1–2
+    short lines.
+
+B. Perceived Latency & Waiting Rules
+
+  - 0–100 ms: Show no loading indicator—instantaneous transition.
+  - 100 ms – 1.0 s: Show measured skeletons (placeholder blocks calculated
+    directly from real font line-heights/metrics and rounded to match real card
+    shapes, driven by one synchronized global shimmer clock). Never flash a
+    spinning wheel for < 1s—Stanford/Apple HCI shows frantic spinners actively
+    amplify perceived wait anxiety.
+  - > 1.0 s: Show determinate progress (0% -> 100%) whenever possible, render
+    cached/partial content immediately, and keep the rest of the interface
+    interactive (never block the whole screen with a modal spinner).
+
+8. Spatial Computing Ergonomics (visionOS Design Grammar)
+
+In 3D space, Z stops being a drop-shadow illusion and becomes physical distance:
+
+1.  Ergonomic Comfort Zone (1–2 m & Central 30° Cone):
+      - Place primary windows at 1.0 – 2.0 meters (< 1m for direct arm's-length
+        touch; > 3m strictly for ambient environmental objects).
+      - Keep active UI inside the central 30° forward field-of-view cone to
+        prevent neck strain. When needing more canvas area, expand horizontally,
+        never tall vertically.
+2.  Vergence–Accommodation Safety: Never lunge UI rapidly toward the user's nose
+    or place crisp tiny text simultaneously across wildly conflicting focal
+    planes.
+3.  Eyes as Pointer + Indirect Pinch:
+      - Users look at a target (60×60pt, >= 12pt gap), receive immediate
+        hoverEffect luminance feedback on the hovered element before clicking,
+        and pinch anywhere naturally in their lap.
+      - Never head-lock HUD overlays directly onto the user's face—provide
+        world/body-trailing anchors (accessibilityPrefersHeadAnchorAlternative).
+4.  Adaptive Glass Windows: Because rooms vary from sunlit patios to dark
+    bedrooms, visionOS glass adjusts tint/vibrancy automatically against real
+    camera passthrough lighting; bold/slightly thicker SF Pro weights + white
+    typography + Vibrancy hierarchy replace heavy black text and light/dark
+    theme toggles.
+
+9. Accessibility as Core Architecture (The 6 Deterministic Fallbacks)
+
+Apple treats accessibility as first-class parallel rendering paths, not post-hoc
+labels:
+
+1.  VoiceOver Semantic Tree: Group composite cards
+    (accessibilityElement(children: .combine)) so a user swipes once per card
+    instead of 5 times across icon, title, subtitle, chevron; strip decorative
+    shapes; provide custom rotor/swipe actions for hidden gestures.
+2.  Dynamic Type (xS \to AX5 Reflow): Every text element uses semantic styles
+    (.body, .headline, .caption). When dynamicTypeSize.isAccessibilitySize
+    (AX1–AX5) activates, automatically switch horizontal HStack layouts into
+    stacked VStack layouts and remove fixed row heights so nothing ever clips or
+    truncates (...).
+3.  Reduce Motion (accessibilityReduceMotion / PrefersCrossFadeTransitions):
+    Strip spring overshoots, hero zoom flights, parallax tilts, and animated
+    shader noise/mesh motion—replace cleanly with 0.2–0.25s opacity cross-fades.
+4.  Reduce Transparency & Increase Contrast (accessibilityReduceTransparency):
+    Replace translucent glass/blurs with opaque elevated surfaces (>= 4.5:1 WCAG
+    AA text contrast, >= 3:1 UI controls) and crisp 1.0pt solid borders.
+5.  Differentiate Without Color (accessibilityDifferentiateWithoutColor): Never
+    indicate errors, online states, or trends purely by Red vs. Green
+    dots—always pair color with distinct SF Symbol glyphs, labels, or geometry.
+6.  Large Content Viewer (accessibilityShowsLargeContentViewer): Fixed-height
+    bars (tab bar, bottom toolbar) that cannot grow to 53pt text must show an
+    enlarged centered HUD preview on long-press.
+
+10. Cross-Platform Translation Matrix (Same App, Native Idiom)
+
+Never port one layout verbatim across devices. Translate the exact same core
+data model through each platform's ergonomic grammar:
+
+| Platform     | Primary Chrome & Nav                                                                                     | Ergonomic Distance / Input                    | Signature Native Expectations                                                                                                                               |
+| :----------- | :------------------------------------------------------------------------------------------------------- | :-------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **iOS**      | Bottom Floating Glass **Tab Bar** + Top Scroll-Collapsing Nav Stack + Bottom Sheets                      | `~30cm` / Thumb (One-handed)                  | Swipe-back from left edge, `44pt` targets, pull-to-refresh, context menus with haptic preview, Dynamic Island Live Activities.                              |
+| **iPadOS**   | **Adaptive Top Tab Bar $\leftrightarrow$ Collapsible Left Sidebar** + Trailing **Inspector**             | `~40cm` / Two hands + Trackpad + Apple Pencil | Multi-column `NavigationSplitView`, pointer `.lift`/`.highlight` magnetism, full `Cmd` keyboard shortcuts, drag & drop across windows.                      |
+| **macOS**    | **Menu Bar + Unified Window Toolbar + Translucent Source-List Sidebar + Inspector**                      | `~55cm` / Mouse + Keyboard                    | Right-click everything, multi-window document model, `Cmd+K` / `Cmd+F` / `Esc` everywhere, **never copy iOS bottom tab bars or giant mobile toggle cards**. |
+| **watchOS**  | Vertical Page/Crown Scroll + Corner Circular Complications / Pills                                       | Wrist glance (`< 3s` task)                    | Deep pure-black OLED backdrop extending to bezel edges, Digital Crown velocity ticks + micro-haptics, zero complex keyboards.                               |
+| **tvOS**     | **Top Horizontal Tab Bar** + Edge-to-Edge Media Showcase                                                 | `3m` / 10-foot Siri Remote Focus Engine       | Highlighted cards scale + 3D parallax-tilt under remote touch; `Menu` button always climbs to **hierarchical parent**.                                      |
+| **visionOS** | **Floating Left-Edge Ornament** (vertical icon tabs expanding labels on gaze) + Bottom Ornament Controls | `1–2m` / Gaze + Pinch                         | Glass windows lit by room passthrough, `60pt` gaze targets, indirect hover glow before pinch, horizontal expansion.                                         |
+
+11. The Complete Pre-Ship Native Verification Gate (Zero Guesswork)
+
+Run every screen, custom engine, or component against this 12-point diagnostic
+before shipping:
+
+1.  Hierarchy Check: Does content fill the screen edge-to-edge while functional
+    chrome floats distinctly above it? (Zero fake boxes wrapping every section;
+    zero glass stacked on glass.)
+2.  Optical Geometry Check: Are all corners true continuous squircles
+    (kCACornerCurveContinuous) with concentric nested corner subtraction
+    (r_inner = max(r_outer - d, 0)), and asymmetric glyphs optically shifted
+    toward centroid?
+3.  Shader / Material Check: Is saturation applied before blur, dynamic range
+    compressed via floor + ceiling (min/max), rim stroked with two concentric
+    directional passes (0.5pt + 1.0pt), and scroll edges softly
+    variable-blurred?
+4.  Physics Check: Are all animations velocity-preserving ODE springs (bounce /
+    duration)—zero ease-in-out defaults, zero teleporting values, exact 0.998/ms
+    scroll friction + 0.55 rubber-banding?
+5.  Interruption Check: Can every sheet, zoom transition, and drawer be grabbed,
+    reversed, or retargeted cleanly mid-flight without freezing or losing state?
+6.  Pacing Check: Does the loop run locked to targetPresentationTimestamp across
+    discrete LTPO buckets (120/80/60/48...) with atomic Metal/CA commits?
+7.  Typography Check: Are opsz optical cutovers (20pt), size-specific tracking,
+    linear-space blending + stem darkening, and 672pt readable line caps all
+    active?
+8.  Color & Display Check: Is wide-gamut Display P3 + thermal-aware EDR headroom
+    used only on true accents/glows while resting dark surfaces step luminance
+    smoothly (#000 -> #1C1C1E -> #2C2C2E)?
+9.  Tactile & Sound Check: Do transients fire < 10ms locked to physical
+    snap/contact points, pass the "100th-use non-annoyance test", and respect
+    the hardware Mute switch?
+10. Ergonomics & Copy Check: Are all touch targets >= 44×44pt (60×60pt
+    visionOS), hairlines physical 1px, capitalization strictly split Title vs.
+    Sentence case, and alert buttons named by explicit consequence verbs?
+11. Accessibility Stress Check: Does the screen survive AX5 Giant Text
+    (horizontal \to vertical reflow), VoiceOver (grouped cards), Reduce Motion
+    (cross-fade fallback), Reduce Transparency (>= 4.5:1 solid fallback), and
+    Color-Blind Grayscale?
+12. Native Idiom Check: If you hide the app logo, does the iOS version feel
+    unmistakably iOS, the Mac version unmistakably Mac, and zero foreign
+    Android/web idioms leak through?

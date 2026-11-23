@@ -35,26 +35,27 @@ export const Slide03ModernDrugs: React.FC<Slide03Props> = ({ interactions, onPat
 
   return (
     <div className="h-full w-full flex flex-col gap-3.5 px-10 py-6 select-none">
-      <div className="shrink-0 flex items-end justify-between gap-4 border-b border-stone-200 dark:border-stone-800 pb-2.5">
+      <div className="shrink-0 flex items-end justify-between gap-4 apple-hairline-b pb-2.5">
         <div>
-          <div className="text-[15px] font-bold text-blue-900 dark:text-blue-400">
+          <div className="text-[15px] font-bold text-[var(--apple-blue-fg)] tabular-nums-clean">
             5.4.1 &amp; 5.4.2 · Ubat Moden (Rajah 5.14 &amp; Jadual 5.7 · m.s. 182–183)
           </div>
-          <h2 className="font-display text-[29px] font-bold text-stone-900 dark:text-stone-50 mt-0.5 leading-tight">
+          <h2 className="font-display text-[29px] font-bold text-[var(--apple-label)] mt-0.5 leading-tight">
             Lima Jenis Ubat Moden: Fungsi, Cara Penggunaan &amp; Kesan Sampingan
           </h2>
         </div>
 
         <button
           type="button"
+          aria-pressed={interactions.molecularLens}
           onClick={() => onPatch({ molecularLens: !interactions.molecularLens })}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-[15px] font-bold shrink-0 cursor-pointer transition-colors ${
+          className={`apple-pressable apple-tap-target flex items-center gap-2 px-4 py-2 rounded-[13px] border text-[15px] font-bold shrink-0 cursor-pointer ${
             interactions.molecularLens
-              ? 'border-indigo-700 bg-indigo-900 text-white'
-              : 'border-stone-300 bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-200 hover:bg-stone-50'
+              ? 'border-[var(--apple-blue)] bg-[var(--apple-blue)] text-white shadow-sm'
+              : 'apple-slide-card hover:bg-[var(--apple-fill)]'
           }`}
         >
-          <Atom className="w-4 h-4" />
+          <Atom className="w-4 h-4 shrink-0" />
           <span>{interactions.molecularLens ? 'Rujukan Jadual: Aktif' : 'Rujukan Jadual'}</span>
         </button>
       </div>
@@ -67,25 +68,26 @@ export const Slide03ModernDrugs: React.FC<Slide03Props> = ({ interactions, onPat
             return (
               <div
                 key={cat.id}
-                className={`rounded-2xl border px-4 py-2.5 transition-colors ${
+                className={`rounded-[18px] px-4 py-2.5 transition-colors ${
                   catSelected
-                    ? 'border-blue-800 bg-blue-50/70 dark:bg-blue-950/40'
-                    : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900'
+                    ? 'apple-slide-card border-[var(--apple-blue)] bg-blue-50/75 dark:bg-blue-950/35'
+                    : 'apple-slide-card'
                 }`}
               >
                 <button
                   type="button"
+                  aria-selected={catSelected && drugsInCat.length === 1}
                   onClick={() =>
                     onPatch({
                       drugCategoryId: cat.id,
                       selectedDrugId: drugsInCat[0]?.id ?? 'aspirin',
                     })
                   }
-                  className="w-full text-left font-display text-[18px] font-bold text-stone-900 dark:text-stone-100 cursor-pointer flex items-center justify-between"
+                  className="apple-pressable apple-tap-target w-full text-left font-display text-[18px] font-bold text-[var(--apple-label)] cursor-pointer flex items-center justify-between rounded-[10px]"
                 >
-                  <span>{cat.name}</span>
+                  <span className="tabular-nums-clean">{cat.name}</span>
                   {drugsInCat.length === 1 && (
-                    <span className="text-[14px] font-medium text-stone-600 dark:text-stone-400">
+                    <span className="text-[14px] font-medium text-[var(--apple-secondary-label)]">
                       {drugsInCat[0].examples.join(', ')}
                     </span>
                   )}
@@ -99,11 +101,12 @@ export const Slide03ModernDrugs: React.FC<Slide03Props> = ({ interactions, onPat
                         <button
                           key={d.id}
                           type="button"
+                          aria-selected={picked}
                           onClick={() => onPatch({ drugCategoryId: cat.id, selectedDrugId: d.id })}
-                          className={`px-3.5 py-1.5 rounded-xl text-[15px] font-bold transition-colors cursor-pointer ${
+                          className={`apple-pressable apple-tap-target px-3.5 py-1.5 rounded-[11px] text-[15px] font-bold cursor-pointer ${
                             picked
-                              ? 'bg-blue-900 text-white'
-                              : 'bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-800 dark:text-stone-200 hover:bg-stone-100'
+                              ? 'bg-[var(--apple-blue)] text-white shadow-sm'
+                              : 'apple-slide-inset hover:bg-[var(--apple-fill)]'
                           }`}
                         >
                           {d.name}
@@ -116,58 +119,58 @@ export const Slide03ModernDrugs: React.FC<Slide03Props> = ({ interactions, onPat
             );
           })}
 
-          <div className="text-[14px] text-stone-600 dark:text-stone-400 px-1 leading-snug">
-            <strong>Ibnu Sina</strong> (Bapa Perubatan Moden) · Bentuk: pil, kapsul, serbuk dan larutan
+          <div className="text-[14px] text-[var(--apple-secondary-label)] px-1 leading-snug">
+            <strong className="text-[var(--apple-label)]">Ibnu Sina</strong> (Bapa Perubatan Moden) · Bentuk: pil, kapsul, serbuk dan larutan
           </div>
         </div>
 
         <div className="col-span-7 flex flex-col justify-between gap-3.5">
           <div
             data-storage-scope={`slide:2/drug:${activeDrug.id}`}
-            className="border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-5 space-y-3"
+            className="apple-slide-card rounded-[22px] p-5 space-y-3"
           >
-            <div className="flex items-baseline justify-between gap-2 border-b border-stone-100 dark:border-stone-800 pb-2">
+            <div className="flex items-baseline justify-between gap-2 apple-hairline-b pb-2.5">
               <div>
-                <span className="text-[15px] font-bold text-blue-900 dark:text-blue-400">{activeDrug.categoryName}</span>
-                <h3 className="font-display text-[28px] font-bold text-stone-900 dark:text-stone-100 leading-tight">
+                <span className="text-[15px] font-bold text-[var(--apple-blue-fg)]">{activeDrug.categoryName}</span>
+                <h3 className="font-display text-[28px] font-bold text-[var(--apple-label)] leading-tight">
                   {activeDrug.name}
                 </h3>
               </div>
-              <div className="text-[15px] font-semibold text-stone-700 dark:text-stone-300 text-right">
+              <div className="text-[15px] font-semibold text-[var(--apple-secondary-label)] text-right">
                 Contoh: {activeDrug.examples.join(', ')}
               </div>
             </div>
 
             <div className="grid grid-cols-12 gap-3 items-stretch">
-              <div className="col-span-6 bg-[#FBF9F5] dark:bg-stone-950 rounded-xl p-3.5">
-                <div className="text-[14px] font-bold text-blue-900 dark:text-blue-400">
+              <div className="col-span-6 apple-slide-inset rounded-[14px] p-3.5">
+                <div className="text-[14px] font-bold text-[var(--apple-blue-fg)] tabular-nums-clean">
                   Fungsi (Jadual 5.7)
                 </div>
-                <p className="text-[16px] font-semibold text-stone-900 dark:text-stone-100 mt-1 leading-snug">
+                <p className="text-[16px] font-semibold text-[var(--apple-label)] mt-1 leading-snug">
                   {activeDrug.functionDesc}
                 </p>
               </div>
 
-              <div className="col-span-6 bg-amber-50/80 dark:bg-amber-950/30 rounded-xl p-3.5">
-                <div className="text-[14px] font-bold text-amber-900 dark:text-amber-300">
+              <div className="col-span-6 bg-amber-50/85 dark:bg-amber-950/30 border border-amber-300/60 dark:border-amber-700/50 rounded-[14px] p-3.5">
+                <div className="text-[14px] font-bold text-[var(--apple-orange-fg)]">
                   Kesan Sampingan
                 </div>
-                <p className="text-[15px] text-stone-900 dark:text-stone-100 mt-1 leading-snug">
+                <p className="text-[15px] text-[var(--apple-label)] mt-1 leading-snug">
                   {activeDrug.sideEffects}
                 </p>
               </div>
             </div>
 
-            <div className="text-[15px] text-stone-700 dark:text-stone-300">
-              <strong>Cara Penggunaan:</strong> {activeDrug.usageRule}
+            <div className="text-[15px] text-[var(--apple-secondary-label)]">
+              <strong className="text-[var(--apple-label)]">Cara Penggunaan:</strong> {activeDrug.usageRule}
             </div>
           </div>
 
-          <div className="border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-4 flex-1 flex flex-col justify-between">
+          <div className="apple-slide-card rounded-[22px] p-4 flex-1 flex flex-col justify-between">
             <div>
-              <div className="flex items-center gap-2 mb-2">
-                <UserCheck className="w-5 h-5 text-blue-900 dark:text-blue-400" />
-                <span className="font-display text-[18px] font-bold text-stone-900 dark:text-stone-100">
+              <div className="flex items-center gap-2 mb-2.5">
+                <UserCheck className="w-5 h-5 text-[var(--apple-blue-fg)]" />
+                <span className="font-display text-[18px] font-bold text-[var(--apple-label)]">
                   Kesesuaian Mengikut Pesakit
                 </span>
               </div>
@@ -179,11 +182,12 @@ export const Slide03ModernDrugs: React.FC<Slide03Props> = ({ interactions, onPat
                     <button
                       key={p.id}
                       type="button"
+                      aria-selected={active}
                       onClick={() => onPatch({ selectedPatient: p.id })}
-                      className={`text-center py-2.5 px-2 rounded-xl border transition-colors cursor-pointer text-[14px] font-bold ${
+                      className={`apple-pressable apple-tap-target text-center py-2.5 px-2 rounded-[12px] border cursor-pointer text-[14px] font-bold ${
                         active
-                          ? 'border-stone-900 bg-stone-900 text-white dark:border-stone-100 dark:bg-stone-100 dark:text-stone-900'
-                          : 'border-stone-200 dark:border-stone-800 bg-[#FBF9F5] dark:bg-stone-950 text-stone-800 dark:text-stone-200 hover:bg-stone-100'
+                          ? 'border-[var(--apple-label)] bg-[var(--apple-label)] text-[var(--apple-bg-base)] shadow-sm'
+                          : 'apple-slide-inset hover:bg-[var(--apple-fill)]'
                       }`}
                     >
                       {p.label}
@@ -195,20 +199,20 @@ export const Slide03ModernDrugs: React.FC<Slide03Props> = ({ interactions, onPat
 
             <div
               data-storage-scope={`slide:2/drug:${activeDrug.id}/patient:${interactions.selectedPatient}`}
-              className={`mt-2.5 rounded-xl border p-3.5 flex items-start gap-3 ${
+              className={`mt-2.5 rounded-[14px] border p-3.5 flex items-start gap-3 ${
                 assessment.riskLevel === 'selamat'
-                  ? 'border-emerald-300 bg-emerald-50 text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-100'
+                  ? 'border-emerald-300 dark:border-emerald-800/70 bg-emerald-50/90 dark:bg-emerald-950/35 text-emerald-950 dark:text-emerald-100'
                   : assessment.riskLevel === 'berjaga'
-                  ? 'border-amber-300 bg-amber-50 text-amber-950 dark:bg-amber-950/40 dark:text-amber-100'
-                  : 'border-red-300 bg-red-50 text-red-950 dark:bg-red-950/40 dark:text-red-100'
+                  ? 'border-amber-300 dark:border-amber-800/70 bg-amber-50/90 dark:bg-amber-950/35 text-amber-950 dark:text-amber-100'
+                  : 'border-red-300 dark:border-red-800/70 bg-red-50/90 dark:bg-red-950/35 text-red-950 dark:text-red-100'
               }`}
             >
               {assessment.riskLevel === 'selamat' ? (
-                <CheckCircle2 className="w-6 h-6 text-emerald-700 shrink-0 mt-0.5" />
+                <CheckCircle2 className="w-6 h-6 text-[var(--apple-green-fg)] shrink-0 mt-0.5" />
               ) : assessment.riskLevel === 'berjaga' ? (
-                <AlertCircle className="w-6 h-6 text-amber-700 shrink-0 mt-0.5" />
+                <AlertCircle className="w-6 h-6 text-[var(--apple-orange-fg)] shrink-0 mt-0.5" />
               ) : (
-                <ShieldAlert className="w-6 h-6 text-red-700 shrink-0 mt-0.5" />
+                <ShieldAlert className="w-6 h-6 text-[var(--apple-red-fg)] shrink-0 mt-0.5" />
               )}
               <div>
                 <div className="text-[17px] font-bold leading-snug">{assessment.headline}</div>

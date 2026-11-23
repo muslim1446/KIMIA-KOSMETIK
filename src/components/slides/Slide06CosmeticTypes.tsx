@@ -103,18 +103,18 @@ export const Slide06CosmeticTypes: React.FC<Slide06Props> = ({ interactions, onP
 
   return (
     <div className="h-full w-full flex flex-col gap-3.5 px-10 py-6 select-none">
-      <div className="shrink-0 flex items-end justify-between gap-4 border-b border-stone-200 dark:border-stone-800 pb-2.5">
+      <div className="shrink-0 flex items-end justify-between gap-4 apple-hairline-b pb-2.5">
         <div>
-          <div className="text-[15px] font-bold text-emerald-800 dark:text-emerald-400">
+          <div className="text-[15px] font-bold text-[var(--apple-green-fg)] tabular-nums-clean">
             5.4.3 · Bahan Kosmetik &amp; Jenis-jenis Kosmetik (Rajah 5.16 · m.s. 184–185)
           </div>
-          <h2 className="font-display text-[28px] font-bold text-stone-900 dark:text-stone-50 mt-0.5 leading-tight">
+          <h2 className="font-display text-[28px] font-bold text-[var(--apple-label)] mt-0.5 leading-tight">
             Kosmetik: Kegunaan Luaran untuk Membersih, Melindungi atau Mencantikkan
           </h2>
         </div>
       </div>
 
-      <div className="shrink-0 rounded-2xl border border-amber-300 bg-amber-50/80 dark:bg-amber-950/30 px-4 py-2.5 text-[15px] text-stone-900 dark:text-stone-100 leading-snug">
+      <div className="shrink-0 rounded-[18px] border border-amber-300/80 dark:border-amber-700/50 bg-amber-50/85 dark:bg-amber-950/30 px-4 py-2.5 text-[15px] text-[var(--apple-label)] leading-snug tabular-nums-clean">
         <strong>Definisi (m.s. 184):</strong> Kosmetik ialah bahan atau produk yang digunakan secara luaran untuk{' '}
         <strong>membersih, melindungi atau mencantikkan</strong> penampilan seseorang.
       </div>
@@ -134,18 +134,19 @@ export const Slide06CosmeticTypes: React.FC<Slide06Props> = ({ interactions, onP
               <button
                 key={id}
                 type="button"
+                aria-selected={active}
                 onClick={() => onPatch({ cosmeticSortCategory: id })}
-                className={`text-left rounded-2xl border p-3.5 transition-colors cursor-pointer ${
+                className={`apple-pressable apple-tap-target text-left rounded-[18px] border p-3.5 cursor-pointer ${
                   active
-                    ? 'border-stone-900 bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900'
-                    : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:bg-stone-50'
+                    ? 'border-[var(--apple-label)] bg-[var(--apple-label)] text-[var(--apple-bg-base)] shadow-sm'
+                    : 'apple-slide-card hover:bg-[var(--apple-fill)]'
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <span className="font-display text-[17px] font-bold">{title}</span>
-                  <Icon className={`w-5 h-5 shrink-0 ${active ? 'text-amber-300 dark:text-amber-700' : 'text-emerald-700'}`} />
+                  <Icon className={`w-5 h-5 shrink-0 ${active ? 'text-[var(--apple-orange-fg)]' : 'text-[var(--apple-green-fg)]'}`} />
                 </div>
-                <div className={`text-[14px] mt-1 font-medium ${active ? 'text-stone-300 dark:text-stone-700' : 'text-stone-600 dark:text-stone-400'}`}>
+                <div className={`text-[14px] mt-1 font-medium tabular-nums-clean ${active ? 'opacity-80' : 'text-[var(--apple-secondary-label)]'}`}>
                   {desc}
                 </div>
               </button>
@@ -163,15 +164,16 @@ export const Slide06CosmeticTypes: React.FC<Slide06Props> = ({ interactions, onP
               <button
                 key={item.id}
                 type="button"
+                aria-selected={selected}
                 onClick={() => onPatch({ selectedCosmeticItemId: item.id })}
-                className={`text-left rounded-2xl border px-4 py-3 transition-colors cursor-pointer ${
+                className={`apple-pressable apple-tap-target text-left rounded-[18px] px-4 py-3 cursor-pointer ${
                   selected
-                    ? 'border-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 dark:border-emerald-500'
-                    : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:bg-stone-50'
+                    ? 'apple-slide-card border-[var(--apple-green-fg)] bg-emerald-50/90 dark:bg-emerald-950/45'
+                    : 'apple-slide-card hover:bg-[var(--apple-fill)]'
                 }`}
               >
-                <div className="font-display text-[18px] font-bold text-stone-900 dark:text-stone-100">{item.name}</div>
-                <div className="text-[14px] font-semibold text-emerald-800 dark:text-emerald-400 mt-0.5">
+                <div className="font-display text-[18px] font-bold text-[var(--apple-label)]">{item.name}</div>
+                <div className="text-[14px] font-semibold text-[var(--apple-green-fg)] mt-0.5">
                   {item.categoryLabel}
                 </div>
               </button>
@@ -181,29 +183,36 @@ export const Slide06CosmeticTypes: React.FC<Slide06Props> = ({ interactions, onP
 
         <div
           data-storage-scope={`slide:5/item:${selectedItem.id}`}
-          className="col-span-5 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-5 flex flex-col justify-between"
+          className="col-span-5 apple-slide-card rounded-[22px] p-5 flex flex-col justify-between"
         >
           <div className="space-y-3">
             <div>
-              <div className="text-[14px] font-bold text-emerald-800 dark:text-emerald-400">{selectedItem.categoryLabel}</div>
-              <h3 className="font-display text-[25px] font-bold text-stone-900 dark:text-stone-100 mt-0.5 leading-tight">
+              <div className="text-[14px] font-bold text-[var(--apple-green-fg)]">{selectedItem.categoryLabel}</div>
+              <h3 className="font-display text-[25px] font-bold text-[var(--apple-label)] mt-0.5 leading-tight">
                 {selectedItem.name}
               </h3>
             </div>
 
-            <div className="bg-[#FBF9F5] dark:bg-stone-950 rounded-2xl p-3">
+            <div className="apple-slide-inset rounded-[16px] p-3">
               <svg viewBox="0 0 280 95" className="w-full h-22" aria-label="Kumpulan kosmetik dan kegunaan luaran">
                 <rect
                   x="10"
                   y="6"
                   width="260"
                   height="26"
-                  rx="6"
-                  fill={selectedItem.actionZone === 'udara' ? '#DCFCE7' : '#F5F5F4'}
-                  stroke={selectedItem.actionZone === 'udara' ? '#15803D' : '#D6D3D1'}
+                  rx="7"
+                  fill={selectedItem.actionZone === 'udara' ? '#DCFCE7' : 'var(--slide-svg-neutral-fill)'}
+                  stroke={selectedItem.actionZone === 'udara' ? '#1F7A36' : 'var(--slide-svg-ring)'}
                   strokeWidth="1.8"
                 />
-                <text x="140" y="23" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="#1C1917">
+                <text
+                  x="140"
+                  y="23"
+                  textAnchor="middle"
+                  fontSize="12.5"
+                  fontWeight="700"
+                  fill={selectedItem.actionZone === 'udara' ? '#14532D' : 'var(--slide-svg-ink)'}
+                >
                   Pewangi (Memberikan Haruman)
                 </text>
 
@@ -212,12 +221,19 @@ export const Slide06CosmeticTypes: React.FC<Slide06Props> = ({ interactions, onP
                   y="36"
                   width="260"
                   height="25"
-                  rx="6"
-                  fill={selectedItem.actionZone === 'atas_kulit' ? '#FDE68A' : '#FEF3C7'}
-                  stroke={selectedItem.actionZone === 'atas_kulit' ? '#B45309' : '#E5E7EB'}
+                  rx="7"
+                  fill={selectedItem.actionZone === 'atas_kulit' ? '#FDE68A' : 'var(--slide-svg-neutral-fill)'}
+                  stroke={selectedItem.actionZone === 'atas_kulit' ? '#B45309' : 'var(--slide-svg-ring)'}
                   strokeWidth="1.8"
                 />
-                <text x="140" y="53" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="#78350F">
+                <text
+                  x="140"
+                  y="53"
+                  textAnchor="middle"
+                  fontSize="12.5"
+                  fontWeight="700"
+                  fill={selectedItem.actionZone === 'atas_kulit' ? '#78350F' : 'var(--slide-svg-ink)'}
+                >
                   Kosmetik Rias (Mencantikkan Wajah)
                 </text>
 
@@ -226,30 +242,37 @@ export const Slide06CosmeticTypes: React.FC<Slide06Props> = ({ interactions, onP
                   y="65"
                   width="260"
                   height="25"
-                  rx="6"
-                  fill={selectedItem.actionZone === 'lapisan_epidermis' ? '#DBEAFE' : '#EFF6FF'}
-                  stroke={selectedItem.actionZone === 'lapisan_epidermis' ? '#1E3A8A' : '#E5E7EB'}
+                  rx="7"
+                  fill={selectedItem.actionZone === 'lapisan_epidermis' ? '#DBEAFE' : 'var(--slide-svg-neutral-fill)'}
+                  stroke={selectedItem.actionZone === 'lapisan_epidermis' ? '#0066D6' : 'var(--slide-svg-ring)'}
                   strokeWidth="1.8"
                 />
-                <text x="140" y="82" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="#1E3A8A">
+                <text
+                  x="140"
+                  y="82"
+                  textAnchor="middle"
+                  fontSize="12.5"
+                  fontWeight="700"
+                  fill={selectedItem.actionZone === 'lapisan_epidermis' ? '#1E3A8A' : 'var(--slide-svg-ink)'}
+                >
                   Kosmetik Perawatan (Rawatan pada Tubuh)
                 </text>
               </svg>
             </div>
 
-            <div className="bg-[#FBF9F5] dark:bg-stone-950 rounded-xl p-3.5">
-              <div className="text-[14px] font-bold text-stone-500">Kegunaan</div>
-              <p className="text-[16px] text-stone-900 dark:text-stone-100 mt-0.5 leading-snug">{selectedItem.purpose}</p>
+            <div className="apple-slide-inset rounded-[14px] p-3.5">
+              <div className="text-[14px] font-bold text-[var(--apple-secondary-label)]">Kegunaan</div>
+              <p className="text-[16px] text-[var(--apple-label)] mt-0.5 leading-snug">{selectedItem.purpose}</p>
             </div>
 
-            <div className="bg-emerald-50/70 dark:bg-emerald-950/30 rounded-xl p-3.5">
-              <div className="text-[14px] font-bold text-emerald-900 dark:text-emerald-300">Nota Buku Teks</div>
-              <p className="text-[15px] text-stone-900 dark:text-stone-100 mt-0.5 leading-snug">{selectedItem.textbookNote}</p>
+            <div className="bg-emerald-50/75 dark:bg-emerald-950/30 border border-emerald-300/60 dark:border-emerald-800/50 rounded-[14px] p-3.5">
+              <div className="text-[14px] font-bold text-[var(--apple-green-fg)]">Nota Buku Teks</div>
+              <p className="text-[15px] text-[var(--apple-label)] mt-0.5 leading-snug">{selectedItem.textbookNote}</p>
             </div>
           </div>
 
-          <div className="mt-2 pt-2.5 border-t border-stone-200 dark:border-stone-800 text-[14px] text-stone-700 dark:text-stone-300 leading-snug">
-            Tertakluk kepada <strong>Peraturan-peraturan Kawalan Dadah dan Kosmetik 1984</strong> (m.s. 185).
+          <div className="mt-2 pt-2.5 apple-hairline-t text-[14px] text-[var(--apple-secondary-label)] leading-snug tabular-nums-clean">
+            Tertakluk kepada <strong className="text-[var(--apple-label)]">Peraturan-peraturan Kawalan Dadah dan Kosmetik 1984</strong> (m.s. 185).
           </div>
         </div>
       </div>

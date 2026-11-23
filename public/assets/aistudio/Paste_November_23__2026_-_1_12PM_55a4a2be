@@ -1,0 +1,329 @@
+The reason almost every third-party implementation looks like a cheap "Android
+skin copycat" is that most developers model glass as static frosting (blur +
+white translucent fill + uniform 1px border).
+
+Apple does not render Liquid Glass as a flat translucent blur.
+Reverse-engineering of QuartzCore, RenderServer, CABackdropLayer, and
+pixel-by-pixel SSIM/\Delta E calibration against iOS 26/27 SwiftUI shows that
+Apple’s pipeline is a multi-pass SDF lensing, dynamic-range compression, and
+dual-angle directional rim system.
+
+Below is the complete OSINT architecture, the exact mathematical equations, and
+the per-condition recipes.
+
+1. Why Copycats Look Fake (The 6 Dead Giveaways)
+
+1.  White Veil Instead of Dynamic-Range Compression: Putting
+    rgba(255,255,255,0.15) over content raises the luminance floor but has no
+    ceiling—bright backgrounds blow out to milky plastic and dark backgrounds
+    turn muddy grey. Apple uses opposing floor + ceiling blends
+    (min/darkenBlendMode in light mode, max/lightenBlendMode in dark mode).
+2.  Blur Before Saturate: CSS/naive shaders run blur() then saturate(),
+    averaging adjacent colors into grey mud before boosting. Apple boosts
+    saturation before blurring.
+3.  Uniform Gaussian Smear Instead of Lensing + Scattered Diffusion: Naive
+    clones smudge the whole rectangle uniformly. Apple leaves the interior
+    optically clearer (~1/3 sharp structure + 2/3 wide scatter in Regular glass)
+    and concentrates extreme refraction & inward reflection at the rim.
+4.  Uniform 1px Border Instead of Opposite-Angle Dual Highlights + Two-Stroke
+    Concentric Rim: A flat rgba(255,255,255,0.4) border screams "CSS mockup".
+    Apple renders two separate directional SDF highlight layers at opposite
+    angles, modulated by backdrop-aware vibrantColorMatrix.
+5.  CSS border-radius Instead of Squircle Geometry: Standard rounded rectangles
+    have a curvature discontinuity where the arc meets the straight edge. Apple
+    uses continuous curvature superellipses/squircles (n \approx 4) for both the
+    silhouette and the bevel cross-section.
+6.  Ignoring Size, Luma, and Motion Conditions: Small pills flip Light
+    \leftrightarrow Dark dynamically; large panels adapt without flipping;
+    pressed small buttons grow by constant area and run a touch-frost envelope
+    decoupled from spring rebound.
+
+2. Apple's Actual RenderServer Architecture (OSINT)
+
+Runtime introspection and layer-tree dumps of iOS 26/27 and macOS 26/27
+(_UIViewGlass, CABackdropLayer, CASDFLayer, CAFilter) reveal the exact native
+pipeline:
+
+_UIMultiLayer / SwiftUI.SDFLayer
+├── CABackdropLayer (captures background; tracksLuma, lumaSubrect, lumaUpdateRate)
+│   ├── filter: CAFilter("glassBackground")  <-- reads "@0" SDF texture
+│   └── CASDFLayer ("@0")                    <-- effect: CASDFOutputEffect
+│       └── CALayer container
+│           └── CASDFElementLayer            <-- synced via CAMatchBounds/CornerRadius
+├── CASDFLayer ("@1")                        <-- CASDFGlassHighlightEffect (Angle A) + vibrantColorMatrix
+│   └── SDFPortalLayer -> sources CASDFElementLayer
+└── CASDFLayer ("@2")                        <-- CASDFGlassHighlightEffect (Angle B = A + 180°) + vibrantColorMatrix
+    └── SDFPortalLayer -> sources CASDFElementLayer
+
+(Source: Layer hierarchy deconstruction & iOS 26/27 QuartzCore headers)
+
+Confirmed CAFilter Shader Inputs (CAGlassBackground & CAGlassForeground)
+
+Dumped directly from QuartzCore filter inputKeys:
+
+  - Refraction: inputInnerRefractionAmount, inputInnerRefractionHeight,
+    inputOuterRefractionAmount, inputOuterRefractionHeight,
+    inputRefractionDistance0, inputRefractionDistance1, inputRefractionOpacity
+  - 5-Band Progressive Blur: inputBlurRadius, inputBlurOpacity0..4,
+    inputBlurDistance0..4
+  - Interior Face Tone Matrix: inputFaceOpacity, inputFaceColorMatrixWhite,
+    inputFaceColorMatrixBlack, inputFaceColorMatrixSaturation,
+    inputFaceColorMatrixFillColor
+  - Surrounding Color Bleed (Spill): inputBleedAmount, inputBleedHeight,
+    inputBleedBlurRadius, inputBleedDistance0, inputBleedDistance1,
+    inputBleedOpacity, inputBleedDarkenBlend,
+    inputBleedColorMatrixWhite/Black/Saturation/FillColor
+  - Content-Aware Shadow: inputShadowOffset, inputShadowAmount,
+    inputShadowHeight, inputShadowOpacity, inputShadowDistanceOffset,
+    inputShadowBlurRadius, inputShadowRadius, inputShadowVibrancyContribution,
+    inputShadowColorMatrix*
+  - HDR / Tone Holding: inputSDRHoldingToneEnabled, inputSDRHoldingToneWhite,
+    inputSDRGradientDistance0..1, inputSDRShadowOpacity, inputMaxHeadroom,
+    inputClamp, inputClampPreserveHue
+  - Foreground (glassForeground): inputRefractionAmount, inputRefractionHeight,
+    inputRefractionOffset, inputAberrationAmount, inputAberrationHeight,
+    inputAberrationOffset, inputAberrationAngle, inputEdgeStart, inputEdgeEnd,
+    inputEdgeOpacityStart, inputEdgeOpacityEnd
+
+And on CASDFLayer("@0"), RenderServer calls _CA::OGL::SDFNode::apply(...) via
+CASDFGenerator (GPU Jump Flood / 8SSEDT) to pack a cached SDF + Gradient
+Texture:
+
+  - R: Normalized distance from edge (1 \to 0 across the bezel depth, e.g.,
+    0\text{px} \dots 50\text{px})
+  - G, B: Normalized 2D edge normal
+    \mathbf{n}_{2D} = \text{sdf.gb} \times 2.0 - 1.0
+
+(Note: Never conflate the padded capture texture bounds layerSize with the glass
+silhouette bounds materialSize. Inflate backdrop capture by 2 * blurRadius +
+|refraction| so edge taps never clamp, but compute all SDF math in
+materialSize.)
+
+3. Full Mathematical Pipeline (Stage by Stage)
+
+Stage 1: Squircle Geometry & Smooth-Min Liquid Merging
+
+For standard rounded-box / capsule elements in local centered coordinates
+\mathbf{p} \in [-\mathbf{h}, \mathbf{h}] (where \mathbf{h} = \text{size}/2) with
+corner radius r:
+
+1.  Superellipse / Squircle SDF (continuous curvature, n \approx 4 for Apple
+    squircles):
+    d_{\text{squircle}}(\mathbf{p}, \mathbf{h}, n) = \left( \left|\frac{p_x}{h_x}\right|^n + \left|\frac{p_y}{h_y}\right|^n \right)^{1/n} - 1
+    Or the stretched rounded-box SDF with superellipse corner norm (L_p metric
+    with p = 4 instead of Euclidean p = 2):
+    \mathbf{q} = |\mathbf{p}| - (\mathbf{h} - r), \quad d(\mathbf{p}) = \|\max(\mathbf{q}, 0)\|_p + \min(\max(q_x, q_y), 0) - r
+2.  Closed-Form Edge Normal (for single analytic shapes, zero extra texture
+    lookups):
+    \mathbf{n}_{2D} = \text{normalize}\!\left(\text{sign}(\mathbf{p}) \odot \nabla_{\mathbf{q}}\|\max(\mathbf{q}, 0)\|_p\right)
+    (Inside the interior flat region where \max(q_x, q_y) \le 0:
+    \mathbf{n}_{2D} = \text{step}(q_y, q_x)\cdot(\text{sign}(p_x), 0) + (1 - \text{step}(q_y, q_x))\cdot(0, \text{sign}(p_y)).)
+3.  Polynomial Smooth-Minimum (GlassEffectContainer / Multi-Shape Merging):
+    Given N SDFs d_1, d_2, \dots, d_N and merge radius k = \text{spacing}
+    (shapeMergeSmoothness):
+    \text{smin}(a, b, k) = \min(a, b) - \frac{h^2}{4k}, \quad h = \max(k - |a - b|, 0)
+    Let d = \text{smin}(\dots) be negative inside the glass and positive
+    outside. Define inward edge depth u = -d \ge 0.
+
+Stage 2: Bevel Heightfield h(t) & 3D Surface Normal \mathbf{N}
+
+Normalize inward depth over bezel width W (inputInnerRefractionHeight):
+t = \text{clamp}(u / W, 0, 1), where t = 0 is the outer rim and t = 1 is the
+flat plateau.
+
+Choose the cross-section profile y = f(t):
+
+  - Convex Squircle (Apple's standard UI bezel): Smooth flat-to-curve
+    transition, stays clean on stretched bars:
+    f_{\text{squircle}}(t) = \left(1 - (1 - t)^4\right)^{1/4}, \qquad f'(t) = \frac{(1 - t)^3}{\left(1 - (1 - t)^4\right)^{3/4}}
+  - Convex Circle (Magnifying / Liquid Lens): Sharper rim bend:
+    f_{\text{circle}}(t) = \sqrt{1 - (1 - t)^2}, \qquad f'(t) = \frac{1 - t}{\sqrt{1 - (1 - t)^2}}
+  - Lip Profile (Toggle / Switch Thumb): Convex outer rim + shallow concave
+    center dip (zooms out center, bends edges inward):
+    f_{\text{lip}}(t) = \text{mix}\!\left(f_{\text{convex}}(t),\; 1 - f_{\text{convex}}(1 - t),\; \text{smootherstep}(0, 1, t)\right)
+    where \text{smootherstep}(t) = t^3(t(6t - 15) + 10).
+
+3D Surface Normal (clamp t \ge \epsilon e.g. 10^{-3} so slope doesn't explode at
+the exact rim):
+\mathbf{N} = \text{normalize}\!\Big(-f'(t)\cdot \mathbf{n}_{2D},\;\; 1.0\Big)
+(Invariant: Never split the shader into an if (t >= 1.0) branch with different
+tint/normal math—that creates a visible inset rectangle seam. Use one continuous
+equation where f'(1) = 0 \implies \mathbf{N} = (0, 0, 1) smoothly.)
+
+Stage 3: Lensing — Snell's Law, Rim Mirroring & Chromatic Dispersion
+
+1.  Snell–Descartes Refraction (air n_1 = 1.0, glass n_2 \in [1.1, 1.52]): With
+    incident eye ray \mathbf{I} = (0, 0, -1) and \eta = n_1 / n_2:
+    \cos\theta_1 = N_z, \qquad k = 1 - \eta^2(1 - \cos^2\theta_1)
+    \mathbf{R} = \eta \mathbf{I} + \left(\eta \cos\theta_1 - \sqrt{\max(k, 0)}\right)\mathbf{N}
+    In 2D screen UV displacement with slab thickness H_{\text{glass}}
+    (inputInnerRefractionAmount):
+    \Delta \mathbf{p}_{\text{refract}} = \mathbf{R}_{xy} \cdot \frac{H_{\text{glass}}}{\max(|R_z|, 0.1)}
+2.  Apple's Signature "Inward Rim Mirroring" (Why Apple's edges look thick &
+    glossy): Reverse-engineering of glassBackground (Lrdcq) and iOS 27
+    measurements (liquid_glass_shader) show Apple maps pixels in the rim band
+    [0, W] inward along -\mathbf{n}_{2D} so strongly near u \to 0 that the outer
+    few pixels actually reflect/sample pixels from deeper inside the glass (up
+    to half the capsule thickness):
+    \text{offset}(u) = u - \text{mix}\!\big(W - A_{\text{refract}},\; W,\; \text{curve}(u / W)\big) \quad \text{sampled along } \mathbf{p}_{\text{uv}} + \mathbf{n}_{2D}\cdot \text{offset}(u)
+    Notice why: when \text{offset}(u) reverses sign near u=0, pixels at the
+    boundary pull from the interior rather than clamping outside the glass
+    bounds!
+3.  Edge-Weighted Chromatic Dispersion: Split R/G/B only where \nabla h (or
+    1 - N_z) is non-zero:
+    \mathbf{p}_R = \mathbf{p} + \Delta\mathbf{p}_{\text{refract}}(n_2 - \delta), \quad \mathbf{p}_G = \mathbf{p} + \Delta\mathbf{p}_{\text{refract}}(n_2), \quad \mathbf{p}_B = \mathbf{p} + \Delta\mathbf{p}_{\text{refract}}(n_2 + \delta)
+    (Note: In iOS 27 resting UI bars, \delta \to 0; chromatic dispersion is
+    primarily reserved for lifted lenses like _UILiquidLensView.)
+
+Stage 4: Saturate-Before-Blur & Scattered Diffusion (Not Plain Gaussian)
+
+Apple’s legacy blur order (confirmed from CoreUI) and iOS 26/27 glassBackground
+diffusion work in reverse of CSS:
+
+1.  Pre-Blur Saturation Boost: Convert RGB to luma
+    Y = \text{dot}(\mathbf{c}, (0.2126, 0.7152, 0.0722)), then boost saturation
+    before spatial averaging so colors don't turn grey:
+    \mathbf{c}_{\text{sat}} = \text{mix}(\mathbf{Y},\; \mathbf{c},\; S), \qquad S \in [1.5, 2.5]
+2.  5-Band Progressive Blur vs. Per-Pixel Rotated Diffusion:
+      - glassBackground exposes 5 depth-weighted bands (inputBlurOpacity0..4 at
+        inputBlurDistance0..4) over inputBlurRadius.
+      - For Regular glass (especially iOS 27), Apple does not smear everything
+        into a flat blur: ~\frac{1}{3} remains relatively crisp/structural while
+        ~\frac{2}{3} is widely scattered (~14 logical px radius). In a
+        single-pass shader, approximate this without ghosting artifacts by
+        rotating a 16–32 tap Poisson/Gaussian kernel by a per-pixel hash angle
+        \phi(\mathbf{x}) = 2\pi \cdot \text{IGN}(\mathbf{x}) (Interleaved
+        Gradient Noise):
+        \mathbf{c}_{\text{diffused}}(\mathbf{p}) = \frac{1}{M}\sum_{k=1}^{M} w_k \cdot \text{sample}\!\left(\mathbf{p}_{\text{refract}} + \mathbf{R}(\phi(\mathbf{x})) \cdot \mathbf{o}_k\right)
+        \mathbf{c}_{\text{glass}} = \text{mix}\!\left(\mathbf{c}_{\text{sharp}}(\mathbf{p}_{\text{refract}}),\; \mathbf{c}_{\text{diffused}},\; \text{scatterWeight}\right)
+
+Stage 5: Dynamic-Range Tone Compression, tracksLuma & Edge Bleed
+
+This is the single biggest visual separator between Apple and copycats:
+
+1.  Adaptive Luminance (tracksLuma / lumaSubrect): Sample average backdrop
+    luminance \bar{Y} beneath lumaSubrect (filtered exponentially at
+    lumaUpdateRate).
+      - Small controls (tab bar pills, nav buttons): smoothly transition or flip
+        appearance when \bar{Y} crosses threshold
+        (\bar{Y} \approx 0.5\text{--}0.6).
+      - Large surfaces (sheets, sidebars, menus): do not flip; instead modulate
+        tint opacity and dim/lift smoothly.
+2.  Floor + Ceiling Compression (NO White Veil): Apply two clamping passes to
+    \mathbf{c}_{\text{glass}}:
+      - Light Glass (panelLight principle — compress luminance upward and cap
+        highlights):
+        \mathbf{c}_1 = \text{lerp}(\mathbf{c}_{\text{glass}},\; c_{\text{bgLight}},\; \alpha_{\text{bg}}) \quad \text{(lifts darks / raises floor)}
+        \mathbf{c}_2 = \min(\mathbf{c}_1,\; c_{\text{ceilLight}}) \quad \text{(darkenBlendMode / lowers ceiling)}
+        \mathbf{c}_{\text{final}} = \text{lerp}(\mathbf{c}_1,\; \mathbf{c}_2,\; \alpha_{\text{tint}}) + \Delta_{\text{brightness}}
+      - Dark Glass (panelDark principle — cap whites and prevent pure black
+        holes):
+        \mathbf{c}_1 = \text{lerp}(\mathbf{c}_{\text{glass}},\; c_{\text{bgDark}},\; \alpha_{\text{bg}}) \quad \text{(lowers ceiling)}
+        \mathbf{c}_2 = \max(\mathbf{c}_1,\; c_{\text{floorDark}}) \quad \text{(lightenBlendMode / raises floor)}
+        \mathbf{c}_{\text{final}} = \text{lerp}(\mathbf{c}_1,\; \mathbf{c}_2,\; \alpha_{\text{tint}}) \cdot \big(1 - k_{\text{dim}} \cdot Y(\mathbf{c}_{\text{glass}})\big)
+        (That k_{\text{dim}} \cdot Y term dims bright white pages behind dark
+        glass while leaving dark areas untouched so white text stays legible.)
+3.  Edge Color Bleed (inputBleed*): Sample a wide-radius blur
+    (inputBleedBlurRadius) near the glass perimeter (u < inputBleedHeight) and
+    mix/darken-blend into the bezel (inputBleedOpacity) so colorful nearby
+    UI/wallpapers spill light onto the curved edge.
+4.  HDR / EDR Headroom Clamp (inputSDRHoldingToneEnabled): Preserve hue while
+    clamping peak luminance to inputMaxHeadroom (or 1.0 SDR) so HDR photos
+    behind glass don't blow out white foreground glyphs.
+
+Stage 6: Dual-Angle Specular, Fresnel & Two-Stroke Concentric Rim
+
+Apple builds edge lighting using two opposite-angle CASDFLayer passes (@1, @2) +
+vibrantColorMatrix:
+
+1.  Directional Opposite-Angle Specular (CASDFGlassHighlightEffect): Given
+    primary light direction \mathbf{L}_1 = (\cos\theta_L, \sin\theta_L, L_z)
+    (typically \theta_L \approx -60^\circ / -\pi/4, not mirrored in RTL!) and
+    opposite secondary light \mathbf{L}_2 = (-\cos\theta_L, -\sin\theta_L, L_z):
+      - Let rim mask m_{\text{rim}} = \text{smoothstep}(w_{\text{rim}}, 0, u).
+      - Directional alignment on 2D edge normal \mathbf{n}_{2D}:
+        s_1 = \max(\text{dot}(\mathbf{n}_{2D}, \mathbf{L}_{1,xy}), 0)^{p_1}, \qquad s_2 = \max(\text{dot}(\mathbf{n}_{2D}, \mathbf{L}_{2,xy}), 0)^{p_2}
+      - Blinn-Phong surface specular with half-vector
+        \mathbf{H} = \text{normalize}(\mathbf{L} + (0,0,1)):
+        s_{\text{spec}} = k_s \cdot \max(\text{dot}(\mathbf{N}, \mathbf{H}), 0)^{48\text{--}90} \cdot m_{\text{rim}}
+      - Modulate highlight color by the vibrant backdrop color
+        (vibrantColorMatrix 4×5 matrix) instead of dead #FFFFFF.
+2.  Fresnel Grazing Glow: F = k_F \cdot (1 - |N_z|)^3 \text{ to } (1 - |N_z|)^4
+3.  Two-Stroke Concentric Hairline:
+      - Outer Contour (0.5pt, radius r + 0.5\text{pt}): Separates glass from
+        background (dark alpha in light mode/Golden Gate, black α0.8 in dark
+        mode).
+      - Inner Specular Stroke (1.0pt, radius r): Variable perimeter brightness
+        (α0.65 -> α0.25 light, α0.35 -> α0.08 dark, brightest at top-left / top
+        & bottom faces, dimmest at sides).
+
+Stage 7: Content-Aware Adaptive Shadow (inputShadow*)
+
+Evaluate strictly outside the glass (d > 0 only—never let glass blur its own
+drop shadow):
+\alpha_{\text{shadow}}(d) = \left(0.65\, e^{-d^2 / \sigma^2} + 0.35\, e^{-0.08 d / \max(0.04\sigma, 0.01)}\right) \cdot \left(o_{\text{base}} + k_{\text{vib}} \cdot \text{highFreqOrTextScore}\right)
+where d is evaluated at \mathbf{p} - (0, \Delta y), and
+inputShadowVibrancyContribution boosts shadow opacity automatically when
+high-contrast text scrolls underneath.
+
+Stage 8: Interactive Gel Motion & Decoupled Touch Envelope
+
+Measured frame-by-frame against SwiftUI recordings:
+
+  - Constant-Area Press Growth: Small buttons grow more than large buttons:
+      - General rule:
+        s_{\text{press}} = \min\!\left(s_{\max},\; \sqrt{1 + \frac{A_{\text{grow}}}{w \cdot h}}\right)
+      - Small controls (\max(w, h) < 112\text{pt}): grow by fixed
+        \sim 15.7\text{pt}.
+  - Decoupled Touch Frost & Glow Envelope:
+      - Geometry uses a bouncy spring (release: response ≈ 0.40, damping ≈ 0.35)
+        + velocity directional squash/stretch.
+      - Touch frost & illumination follow a non-oscillating envelope: snaps on
+        within 1–2 frames, holds light \sim 0.66\text{s} past release while
+        finger radial glow fades, and eases off over ~14 frames with zero spring
+        rebound.
+
+4. Full Condition-by-Condition Recipe Table
+
+(Values synthesized from CoreUI reverse engineering, LiquidGlassKit Metal
+uniforms, adaptive_liquid_glass / liquid_glass_shader simulator fits, and
+kube.io optical profiles.)
+
+| Condition / Variant                                                            | Optical Bevel & Refraction                                                                                                                                     | Blur / Diffusion                                                                                                                                       | Dynamic Tone Compression (Floor + Ceiling)                                                                                                                             | Rim / Highlight / Shadow                                                                                                                                                   |
+| :----------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1. Regular — Light Backdrop** *(Default UI chrome, bars, cards)*             | Convex squircle bevel; $n_2 = 1.45\text{--}1.50$; rim thickness $W \approx 10\text{--}20\text{pt}$; strong inward edge mirroring; dispersion $\approx 0$.      | Pre-sat $1.8\text{--}2.5$ $\to$ **1/3 sharp + 2/3 scattered** ($\sim 14\text{pt}$ rotated 32-tap) or subtle $2.5\text{--}8\text{pt}$ progressive blur. | **Lift floor:** grey `0.9647` @ $\alpha\,0.45$ (`0.902, 0.951, 1.0` tint).<br>**Cap ceiling:** `darkenBlendMode` (`min`) with `0.9333` @ $\alpha\,0.50$.               | **Outer:** `0.5pt` contour (dark $\alpha\,0.10$ or white $\alpha\,0.50$ depending on backdrop).<br>**Inner:** `1.0pt` directional (`-60°`, white $\alpha\,0.65 \to 0.25$). |
+| **2. Regular — Dark Backdrop** *(Dark mode chrome / over dark UI)*             | Same squircle bevel; $n_2 = 1.45\text{--}1.50$; rim reflection slightly attenuated.                                                                            | Pre-sat $1.6\text{--}2.0$ $\to$ scattered diffusion + **luma-proportional dim** on bright content.                                                     | **Cap ceiling:** grey `0.2157` @ $\alpha\,0.45$ (`0, 0.05, 0.10` tint).<br>**Lift floor:** `lightenBlendMode` (`max`) with `0.08627` @ $\alpha\,0.50$.                 | **Outer:** `0.5pt` black $\alpha\,0.80$.<br>**Inner:** `1.0pt` white $\alpha\,0.35 \to 0.08$ (neutral grey \~`83/255` on dark lenses).                                     |
+| **3. Clear Variant** *(Only over media/photos with bold white content)*        | Stronger visible lensing: higher `RefractionOpacity`, thin crisp bevel; dispersion $0\text{--}0.02$.                                                           | Very light frost ($1\text{--}2.5\text{pt}$ Gaussian or 16-tap local frost); **no** heavy milky face matrix.                                            | Minimal face opacity; add **35% dark dimming scrim** behind glass if underlying media is bright (HIG rule).                                                            | Brighter rim (`Specular Opacity ~0.40–0.50`) + deeper adaptive shadow for separation.                                                                                      |
+| **4. Tinted / Prominent CTA** *(Primary actions only)*                         | Regular squircle bevel; `inputBleedAmount` lowered so accent tint stays pure.                                                                                  | Regular scatter + pre-saturation $2.2$ (`emphasized` state = base sat $\times 1.2$).                                                                   | Tint mixed in `inputFaceColorMatrixFillColor` (around `0.18` alpha light / `0.25` dark for secondary, solid vibrant fill for prominent).                               | Specular tint shifts toward vibrant foreground hue; never tint every button.                                                                                               |
+| **5. Size Scaling Condition** *(Small Pill vs. Large Sheet/Sidebar)*           | **Small:** thin bevel, lower blur.<br>**Large:** wider bevel, thicker apparent slab, softer light scatter.                                                     | Larger surfaces apply wider progressive blur bands & higher opacity.                                                                                   | **Small (`tracksLuma`):** flips Light $\leftrightarrow$ Dark dynamically.<br>**Large:** adapts tone smoothly, **never flips** Light $\leftrightarrow$ Dark.            | **Large:** deeper, richer adaptive shadow (`inputShadowRadius` scales with size).                                                                                          |
+| **6. Lifted Liquid Lens** *(`_UILiquidLensView`: Tab Bar, Switch, Slider)*     | **Rest:** flat semi-transparent pill (`white α0.3`).<br>**Lifted:** convex circle (`n2 ≈ 1.10–1.11` for magnification) or Lip profile for Switch (`n2 ≈ 1.5`). | **0 blur** inside lifted lens (`blur = 0`); pure clear optical magnification ($\times 1.14\text{--}1.25$).                                             | **Crucial:** Lens samples **only the bar/track layer** (`backdropInset` / `CAPortalLayer` + dest-out punchout), **not** the scrolling page underneath\!                | **Chromatic dispersion ON** at round lens ends (`dispersionStrength` elevated); thin crescent rim + lifted drop shadow.                                                    |
+| **7. Interactive Touch / Press State** *(Buttons with `.interactive()`)*       | Bevel flattens slightly / swells outward; area grows by $\sqrt{1 + A_{\text{grow}}/(w\cdot h)}$ (`+15.7pt` if $< 112\text{pt}$).                               | Press **frost envelope** turns on in 1–2 frames (frosts toward grey) and eases off over \~14 frames.                                                   | Radial finger glow centered at `touchPoint` (`0.08` flat lift + `0.15` radial falloff over $r = 1.5 \cdot \min(w, h)$), held `0.66s`.                                  | Rim flares brightly on press; velocity stretches capsule along drag axis (`squeeze/stretch`).                                                                              |
+| **8. Nested / Stacked Elements** *(Rows/icons inside glass panel)*             | **NO lensing, NO `CABackdropLayer` inside glass** ("Never glass on glass").                                                                                    | Zero blur pass; inherits parent glass backdrop.                                                                                                        | Use **vibrant fills** (`labelColor`, `secondaryLabelColor`, or translucent alpha fills) — never `systemGray*`.                                                         | **Concentricity mandatory:** $r_{\text{inner}} = \max(r_{\text{outer}} - \text{padding},\; 0)$.                                                                            |
+| **9. Accessibility Overrides** *(`Reduce Transparency` / `Increase Contrast`)* | Disable refraction (`refraction = 0`, `bleed = 0`); flat surface.                                                                                              | Disable blur & backdrop sampling completely.                                                                                                           | **Reduce Transparency:** opaque Light `0.8784` ($\alpha\,1.0$), Dark `0.12` ($\alpha\,1.0$).<br>**Increase Contrast:** Light `0.8235`, Dark `0.09804` ($\alpha\,1.0$). | Force both rim strokes to **`1.0pt` width at `α = 1.0`**; hide directional sheen.                                                                                          |
+| **10. iOS/macOS 26 $\to$ 27 ("Golden Gate") Calibration**                      | Tighten dispersion to \~0 on static chrome; strengthen edge mirroring bend in the thin rim band.                                                               | Move from milky 7–8pt multi-band frost toward sparse **diffusion scatter** (1/3 sharp + 2/3 wide scatter).                                             | Increase baseline opacity slightly + add user-facing `Clear <-> Tinted` interpolation (`tinting ∈ [0, 1]`).                                                            | **Darken outer edges** (`inputBleedDarkenBlend` / darker outer contour) + brighten top/bottom specular strokes.                                                            |
+
+5. Practical Implementation Checklist (To Immediately Kill the "Copycat" Look)
+
+If you are implementing this in Metal, GLSL/SkSL, AGSL, or WebGPU right now,
+make these exact 5 changes to your current shader:
+
+1.  Order your pipeline strictly as: Capture (with padding = 2*blur + |refract|)
+    \to Saturate (1.8x) \to Diffusion / Progressive Blur \to Squircle SDF +
+    Convex Squircle Bevel Lensing (with rim inward reflection) \to Floor +
+    Ceiling Clamp (min in light / max + luma-dim in dark) \to Bleed \to Dual
+    Opposite-Angle Vibrant Specular + Two-Stroke Concentric Rim \to Outside-Only
+    Adaptive Shadow.
+2.  Keep the center 70–85% flat (\nabla h = 0): Do not bulge the whole card like
+    a water balloon. Refraction belongs in the outer bezel band
+    (10\text{--}25\text{pt}).
+3.  Never write color += white * 0.15 for light glass: Implement
+    min(liftedColor, ceilingGrey) (darkenBlendMode). That single line stops your
+    glass from turning into cheap milky plastic over bright wallpapers.
+4.  Split your border into two concentric strokes: A razor-thin 0.5pt outer
+    contour (dark in light mode, black in dark mode) + a 1.0pt inner directional
+    specular stroke whose alpha drops around the perimeter relative to a fixed
+    -60° light.
+5.  Decouple touch frost from spring bounce: When pressed, animate the scale
+    with a spring, but animate the frost/white-glow with a smooth one-way
+    ease-in/ease-out envelope so the light doesn't awkwardly flicker/bounce at
+    the end of a tap.

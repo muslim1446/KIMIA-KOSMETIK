@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Check, Pencil, RotateCcw, X } from 'lucide-react';
 import { AnnotationTool, getRootSlideScope } from '../utils/annotationEngine';
+import { APPLE_SPRINGS } from '../utils/applePhysics';
 import { useUiText } from '../utils/uiLanguage';
 
 interface InvisibleTextEditorProps {
@@ -130,23 +132,28 @@ export const InvisibleTextEditor: React.FC<InvisibleTextEditorProps> = ({
   isRemoteProjector = false,
 }) => {
   const t = useUiText();
+  const shouldReduceMotion = useReducedMotion();
   const [active, setActive] = useState<ActiveTextMenu | null>(null);
   const [draftValue, setDraftValue] = useState('');
-  const originalTextsRef = useRef<Map<string, string>>(new Map());
+  // Tracks true React text ONLY for keys currently overridden by textEdits
+  const overriddenOriginalsRef = useRef<Map<string, string>>(new Map());
   const isApplyingRef = useRef(false);
 
-  // Close editor when switching slides or tools
+  // Close editor when switching slides
   useEffect(() => {
     setActive(null);
   }, [slideIndex]);
 
-  // Apply text overrides to DOM without breaking React reconciliation
+  // Apply text overrides to the matching slide panel DOM without breaking React reconciliation
   const applyOverrides = useCallback(() => {
     const root = slideRootRef.current;
     if (!root || isApplyingRef.current) return;
+    const panel = root.querySelector<HTMLElement>(`[data-slide-panel-index="${slideIndex}"]`);
+    if (!panel) return;
+
     isApplyingRef.current = true;
     try {
-      const allEls = root.querySelectorAll('*');
+      const allEls = panel.querySelectorAll('*');
       allEls.forEach((el) => {
         const tag = el.tagName.toUpperCase();
         if (SKIP_TAGS.has(tag)) return;
@@ -154,14 +161,16 @@ export const InvisibleTextEditor: React.FC<InvisibleTextEditorProps> = ({
 
         const key = computeDeterministicTextKey(el, root, slideIndex);
         if (key.startsWith('__')) return;
-        if (!originalTextsRef.current.has(key)) {
-          originalTextsRef.current.set(key, getEditableTextValue(el));
-        }
 
         if (Object.prototype.hasOwnProperty.call(textEdits, key)) {
+          const currentVal = getEditableTextValue(el);
+          if (!overriddenOriginalsRef.current.has(key) && currentVal !== textEdits[key]) {
+            overriddenOriginalsRef.current.set(key, currentVal);
+          }
           setElementLeafText(el, textEdits[key]);
-        } else {
-          const orig = originalTextsRef.current.get(key);
+        } else if (overriddenOriginalsRef.current.has(key)) {
+          const orig = overriddenOriginalsRef.current.get(key);
+          overriddenOriginalsRef.current.delete(key);
           if (orig !== undefined && getEditableTextValue(el) !== orig) {
             setElementLeafText(el, orig);
           }
@@ -194,6 +203,8 @@ export const InvisibleTextEditor: React.FC<InvisibleTextEditorProps> = ({
 
     const openMenuForEvent = (e: MouseEvent) => {
       if (tool === 'pen' || tool === 'eraser') return;
+      const panel = root.querySelector<HTMLElement>(`[data-slide-panel-index="${slideIndex}"]`);
+      if (!panel || !(e.target instanceof Node) || !panel.contains(e.target)) return;
       const targetEl = findEditableElement(e.target, root);
       if (!targetEl) return;
 
@@ -201,11 +212,11 @@ export const InvisibleTextEditor: React.FC<InvisibleTextEditorProps> = ({
       e.stopPropagation();
 
       const key = computeDeterministicTextKey(targetEl, root, slideIndex);
-      if (!originalTextsRef.current.has(key)) {
-        originalTextsRef.current.set(key, getEditableTextValue(targetEl));
-      }
       const currentText = getEditableTextValue(targetEl);
       const hasOverride = Object.prototype.hasOwnProperty.call(textEdits, key);
+      if (hasOverride && !overriddenOriginalsRef.current.has(key)) {
+        overriddenOriginalsRef.current.set(key, currentText);
+      }
 
       const safeX = Math.min(window.innerWidth - 310, Math.max(12, e.clientX));
       const safeY = Math.min(window.innerHeight - 160, Math.max(12, e.clientY));
@@ -271,8 +282,11 @@ export const InvisibleTextEditor: React.FC<InvisibleTextEditorProps> = ({
   };
 
   return (
-    <div
+    <motion.div
       data-text-editor-ui="true"
+      initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.94, y: 4 }}
+      animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
+      transition={shouldReduceMotion ? { duration: 0.12 } : APPLE_SPRINGS.popover}
       style={{ left: `${active.x}px`, top: `${active.y}px` }}
       className="fixed z-50"
     >
@@ -341,6 +355,6 @@ export const InvisibleTextEditor: React.FC<InvisibleTextEditorProps> = ({
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 };

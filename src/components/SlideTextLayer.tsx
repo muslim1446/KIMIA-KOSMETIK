@@ -374,8 +374,17 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
         const isSelected = selectedId === item.id;
         const showControls = isSelected && interactive && !isRemoteProjector;
         const toolbarAbove = topLeft.y > 80;
-        const toolbarOnRight = topLeft.x > window.innerWidth - 340;
+        const toolbarOnRight = typeof window !== 'undefined' && topLeft.x > window.innerWidth - 340;
         const textBackground = item.bgColor && item.bgColor !== 'transparent' ? item.bgColor : 'transparent';
+        const isLightInk = ['#ffffff', '#fef08a', '#bae6fd', '#bbf7d0'].includes(
+          item.color.toLowerCase(),
+        );
+        const editorBg =
+          textBackground === 'transparent'
+            ? isLightInk
+              ? 'rgba(28, 28, 30, 0.92)'
+              : 'var(--slide-card-bg)'
+            : textBackground;
         const fontStyle: React.CSSProperties = {
           fontSize: `${Math.max(8, item.fontSize * screenScale)}px`,
           color: item.color,
@@ -406,9 +415,9 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
             }}
             className={`absolute select-none rounded-[12px] transition-shadow ${
               isEditing
-                ? 'ring-2 ring-[var(--apple-green)] bg-white/10 shadow-md'
+                ? 'ring-2 ring-[var(--apple-green)] shadow-[0_1px_6px_rgba(0,0,0,0.16),0_14px_34px_-6px_rgba(0,0,0,0.22)]'
                 : isSelected
-                ? 'ring-2 ring-[var(--apple-blue)] shadow-md'
+                ? 'ring-2 ring-[var(--apple-blue)] shadow-[0_1px_4px_rgba(0,0,0,0.12),0_12px_28px_-6px_rgba(0,0,0,0.18)]'
                 : ''
             }`}
           >
@@ -432,8 +441,7 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
                 placeholder={t('text.newPlaceholder')}
                 style={{
                   ...fontStyle,
-                  background:
-                    textBackground === 'transparent' ? 'rgba(255, 255, 255, 0.92)' : textBackground,
+                  background: editorBg,
                   caretColor: item.color,
                 }}
                 className="absolute inset-0 w-full h-full resize-none rounded-[12px] p-1.5 outline-none border-0 select-text"
@@ -462,7 +470,7 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
                     left: toolbarOnRight ? 'auto' : 0,
                     right: toolbarOnRight ? 0 : 'auto',
                   }}
-                  className="apple-hud-glass apple-ui apple-squircle absolute flex items-center gap-0.5 rounded-[14px] px-1.5 py-1 text-[11px] font-semibold whitespace-nowrap z-20"
+                  className="apple-hud-glass apple-ui apple-squircle absolute flex items-center gap-0.5 rounded-[14px] px-1.5 py-1 text-[11px] font-semibold whitespace-nowrap max-w-[calc(100vw-16px)] z-20"
                 >
                   <button
                     type="button"

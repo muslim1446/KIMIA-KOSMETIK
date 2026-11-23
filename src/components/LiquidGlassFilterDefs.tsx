@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
 import { APPLE_TOUCH_FROST_ENVELOPE } from '../utils/applePhysics';
+import { triggerHaptic } from '../utils/haptics';
 import { generateSnellDisplacementDataUrl } from '../utils/liquidGlassEngine';
 
 /**
- * Mounts invisible SVG Snell-Descartes + Inward Rim Mirroring displacement
- * filter definitions and drives the decoupled 660ms touch-frost illumination
- * envelope (`data-frost="active"`, `--touch-x`, `--touch-y`) on `.apple-pressable`.
+ * Mounts invisible SVG QuartzCore-aligned filter definitions:
+ * - #apple-glass-refract-pill & #apple-glass-refract-sheet (kCACornerCurveContinuous Snell displacement + pre-blur saturate)
+ * - #apple-gooey-merge (Blur + Alpha-Threshold matrix with gain=18, bias=-7 to avoid 8-bit banding)
+ *
+ * Also drives the decoupled 660ms touch-frost illumination envelope (`data-frost="active"`,
+ * `--touch-x`, `--touch-y`) and progressive tactile detent triggers on `.apple-pressable`.
  */
 export function LiquidGlassFilterDefs() {
   const [maps, setMaps] = useState<{ pill: string; sheet: string }>({ pill: '', sheet: '' });
@@ -69,6 +73,7 @@ export function LiquidGlassFilterDefs() {
 
       pressable.setAttribute('data-frost', 'active');
       activeElements.add(pressable);
+      triggerHaptic('detent');
     };
 
     const onPointerRelease = () => {
@@ -144,6 +149,17 @@ export function LiquidGlassFilterDefs() {
             />
           </filter>
         )}
+        {/* Subsystem 5: Gooey Metaball Bridge (blur 9px + alpha threshold 18*a - 7, gain <= 19 prevents 8-bit banding) */}
+        <filter id="apple-gooey-merge" x="-35%" y="-35%" width="170%" height="170%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="blurred" />
+          <feColorMatrix
+            in="blurred"
+            type="matrix"
+            values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7"
+            result="crushed"
+          />
+          <feComposite in="SourceGraphic" in2="crushed" operator="atop" />
+        </filter>
       </defs>
     </svg>
   );

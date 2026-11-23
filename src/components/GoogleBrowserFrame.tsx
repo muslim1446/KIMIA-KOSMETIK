@@ -529,7 +529,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
             title={t('google.resize')}
             className="absolute bottom-0 right-0 w-5 h-5 cursor-se-resize z-30"
           >
-            <div className="absolute bottom-2 right-2 w-2.5 h-2.5 border-r-2 border-b-2 border-[var(--apple-secondary-label)] rounded-br-[6px]" />
+            <div className="absolute bottom-2 right-2 w-2.5 h-2.5 border-r-2 border-b-2 border-[var(--apple-secondary-label)] rounded-br-[18px]" />
           </div>
           <div
             onPointerDown={(e) => startResize('sw', e)}

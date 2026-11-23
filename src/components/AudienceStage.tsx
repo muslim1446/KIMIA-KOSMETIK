@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { User } from 'firebase/auth';
-import { APPLE_SPRINGS } from '../utils/applePhysics';
+import { APPLE_DECELERATION_RATES, APPLE_SPRINGS, uikitScrollDecelerate } from '../utils/applePhysics';
 import { SLIDES_META } from '../data/slidesData';
 import { LaserPoint, SharedSlideInteractions } from '../hooks/usePresentationSync';
 import { BoardSyncStatus, LiveStrokeMap } from '../hooks/useCollaborativeBoard';
@@ -254,11 +254,41 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
     let prevSingleX = 0;
     let prevSingleY = 0;
     let singlePanEnabled = false;
+    let vx = 0;
+    let vy = 0;
+    let lastMoveTime = 0;
+    let momentumRafId: number | null = null;
+
+    const cancelMomentum = () => {
+      if (momentumRafId !== null) {
+        window.cancelAnimationFrame(momentumRafId);
+        momentumRafId = null;
+      }
+    };
+
+    const startTouchMomentum = (startX: number, startY: number, v0x: number, v0y: number) => {
+      cancelMomentum();
+      if (Math.hypot(v0x, v0y) < 40) return;
+      const tStart = performance.now();
+      const step = (now: number) => {
+        const tSec = Math.max(0, (now - tStart) / 1000);
+        const decX = uikitScrollDecelerate(tSec, startX, v0x, APPLE_DECELERATION_RATES.normal);
+        const decY = uikitScrollDecelerate(tSec, startY, v0y, APPLE_DECELERATION_RATES.normal);
+        setPanOffset({ x: decX.x, y: decY.x });
+        if (Math.hypot(decX.v, decY.v) < 12 || tSec > 2.5) {
+          momentumRafId = null;
+          return;
+        }
+        momentumRafId = window.requestAnimationFrame(step);
+      };
+      momentumRafId = window.requestAnimationFrame(step);
+    };
 
     const dist2 = (a: { x: number; y: number }, b: { x: number; y: number }) =>
       Math.hypot(b.x - a.x, b.y - a.y);
 
     const onStart = (e: TouchEvent) => {
+      cancelMomentum();
       for (let i = 0; i < e.changedTouches.length; i++) {
         const t = e.changedTouches[i];
         pts.set(t.identifier, { x: t.clientX, y: t.clientY });
@@ -276,6 +306,9 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
         const [point] = pts.values();
         prevSingleX = point.x;
         prevSingleY = point.y;
+        vx = 0;
+        vy = 0;
+        lastMoveTime = performance.now();
       } else {
         singlePanEnabled = false;
       }
@@ -299,8 +332,14 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
         const [point] = pts.values();
         e.preventDefault();
         setIsPinchingOrPanning(true);
+        const now = performance.now();
+        const dt = Math.max(0.004, (now - lastMoveTime) / 1000);
         const dx = point.x - prevSingleX;
         const dy = point.y - prevSingleY;
+        // Exponentially smoothed velocity (pt/s) matching UIScrollView gesture tracker
+        vx = vx * 0.4 + (dx / dt) * 0.6;
+        vy = vy * 0.4 + (dy / dt) * 0.6;
+        lastMoveTime = now;
         prevSingleX = point.x;
         prevSingleY = point.y;
         setPanOffset((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
@@ -323,8 +362,8 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
         const zRatio = nextZ / prevZ;
 
         // Anchor zoom at the touch midpoint; pan freely 360° with midpoint movement
-        const vx = curMidX - window.innerWidth / 2;
-        const vy = curMidY - window.innerHeight / 2;
+        const vxMid = curMidX - window.innerWidth / 2;
+        const vyMid = curMidY - window.innerHeight / 2;
         const panX = panOffsetRef.current.x;
         const panY = panOffsetRef.current.y;
         const dx = curMidX - prevMidX;
@@ -332,8 +371,8 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
 
         setZoomScale(nextZ);
         setPanOffset({
-          x: vx * (1 - zRatio) + panX * zRatio + dx,
-          y: vy * (1 - zRatio) + panY * zRatio + dy,
+          x: vxMid * (1 - zRatio) + panX * zRatio + dx,
+          y: vyMid * (1 - zRatio) + panY * zRatio + dy,
         });
       }
 
@@ -344,6 +383,13 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
 
     const onEnd = (e: TouchEvent) => {
       for (let i = 0; i < e.changedTouches.length; i++) pts.delete(e.changedTouches[i].identifier);
+      if (pts.size === 0 && singlePanEnabled) {
+        singlePanEnabled = false;
+        const staleMs = performance.now() - lastMoveTime;
+        if (staleMs < 90) {
+          startTouchMomentum(panOffsetRef.current.x, panOffsetRef.current.y, vx, vy);
+        }
+      }
       if (pts.size < 2) {
         prevDist = 0;
         // Safety cooldown (120ms): prevents stray drawing stroke if one finger lifts slightly before the other
@@ -359,6 +405,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
     document.addEventListener('touchend', onEnd, { passive: true });
     document.addEventListener('touchcancel', onEnd, { passive: true });
     return () => {
+      cancelMomentum();
       document.removeEventListener('touchstart', onStart);
       document.removeEventListener('touchmove', onMove);
       document.removeEventListener('touchend', onEnd);

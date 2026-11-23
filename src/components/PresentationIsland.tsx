@@ -43,6 +43,7 @@ import {
 } from '../utils/annotationEngine';
 import { BoardSyncStatus } from '../hooks/useCollaborativeBoard';
 import { APPLE_SPRINGS } from '../utils/applePhysics';
+import { triggerHaptic } from '../utils/haptics';
 import {
   PresenceLocation,
   PresenceUser,
@@ -213,18 +214,24 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
   // ── Collapsed Liquid Glass Orb (44x44pt Apple hit target) ──────────────────
   if (islandHidden) {
     return (
-      <button
+      <motion.button
         type="button"
         data-presentation-island="true"
         aria-label={t('island.show')}
         title={t('island.showTitle')}
-        onClick={() => setIslandHidden(false)}
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={APPLE_SPRINGS.snappy}
+        onClick={() => {
+          triggerHaptic('toggle');
+          setIslandHidden(false);
+        }}
         className="apple-ui apple-pressable fixed bottom-[max(12px,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-40 flex h-11 w-11 items-center justify-center rounded-full pointer-events-auto cursor-pointer"
       >
         <span className="apple-glass w-6 h-6 rounded-full flex items-center justify-center">
           <span className="w-2 h-2 rounded-full bg-[var(--apple-label)] opacity-80" />
         </span>
-      </button>
+      </motion.button>
     );
   }
 
@@ -258,13 +265,13 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
               </button>
             </div>
 
-            {/* Apple Segmented Control: Permanent vs Temporary */}
-            <div className="grid grid-cols-2 gap-1 bg-[var(--apple-fill)] p-1 rounded-[12px]">
+            {/* Apple Segmented Control: 26px outer - 16px p-4 = 10px concentric */}
+            <div className="grid grid-cols-2 gap-1 bg-[var(--apple-fill)] p-1 rounded-[10px]">
               <button
                 type="button"
                 data-testid="pen-mode-permanent"
                 onClick={() => onPenModeChange('permanent')}
-                className={`apple-pressable min-h-[36px] py-1.5 px-3 rounded-[8px] text-[12px] font-semibold whitespace-nowrap cursor-pointer ${
+                className={`apple-pressable min-h-[36px] py-1.5 px-3 rounded-[6px] text-[12px] font-semibold whitespace-nowrap cursor-pointer ${
                   penMode === 'permanent'
                     ? 'bg-[var(--apple-bg-tertiary)] text-[var(--apple-label)] shadow-sm'
                     : 'text-[var(--apple-secondary-label)] hover:text-[var(--apple-label)]'
@@ -276,7 +283,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
                 type="button"
                 data-testid="pen-mode-temporary"
                 onClick={() => onPenModeChange('temporary')}
-                className={`apple-pressable min-h-[36px] py-1.5 px-3 rounded-[8px] text-[12px] font-semibold whitespace-nowrap cursor-pointer ${
+                className={`apple-pressable min-h-[36px] py-1.5 px-3 rounded-[6px] text-[12px] font-semibold whitespace-nowrap cursor-pointer ${
                   penMode === 'temporary'
                     ? 'bg-[var(--apple-orange)] text-white shadow-sm'
                     : 'text-[var(--apple-secondary-label)] hover:text-[var(--apple-label)]'
@@ -288,7 +295,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
 
             {/* Temporary fade duration */}
             {penMode === 'temporary' && (
-              <div className="flex items-center justify-between gap-2 bg-[var(--apple-fill)] rounded-[14px] px-3 py-2">
+              <div className="flex items-center justify-between gap-2 bg-[var(--apple-fill)] rounded-[10px] px-3 py-2">
                 <span className="text-[12px] font-medium text-[var(--apple-orange-fg)]">
                   {t('pen.fade')}
                 </span>
@@ -439,7 +446,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
               </button>
             </div>
 
-            <div className="rounded-[14px] bg-[var(--apple-fill)] px-3.5 py-2.5 space-y-0.5">
+            <div className="rounded-[10px] bg-[var(--apple-fill)] px-3.5 py-2.5 space-y-0.5">
               <div className="text-[12px] font-semibold text-[var(--apple-label)]">
                 {t('sync.openGuest')}
               </div>
@@ -578,7 +585,7 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
               </div>
             )}
 
-            <div className="rounded-[14px] bg-[var(--apple-fill)] p-3 space-y-2">
+            <div className="rounded-[10px] bg-[var(--apple-fill)] p-3 space-y-2">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="text-[11px] font-medium text-[var(--apple-secondary-label)]">
@@ -1086,7 +1093,10 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
           {/* Dark Mode & Fullscreen */}
           <button
             type="button"
-            onClick={onToggleDark}
+            onClick={() => {
+              triggerHaptic('toggle');
+              onToggleDark();
+            }}
             aria-label={t('island.dark')}
             title={t('island.dark')}
             className="apple-pressable flex items-center justify-center min-h-[40px] min-w-[40px] max-sm:min-h-[44px] max-sm:min-w-[44px] sm:min-h-[38px] sm:min-w-[38px] rounded-full hover:bg-[var(--apple-fill)] cursor-pointer"
@@ -1106,7 +1116,10 @@ export const PresentationIsland: React.FC<PresentationIslandProps> = ({
           {/* Collapse island */}
           <button
             type="button"
-            onClick={() => setIslandHidden(true)}
+            onClick={() => {
+              triggerHaptic('toggle');
+              setIslandHidden(true);
+            }}
             aria-label={t('island.hide')}
             title={t('island.hideTitle')}
             className="apple-pressable flex items-center justify-center min-h-[40px] min-w-[40px] max-sm:min-h-[44px] max-sm:min-w-[44px] sm:min-h-[38px] sm:min-w-[38px] rounded-full hover:bg-[var(--apple-fill)] text-[var(--apple-secondary-label)] hover:text-[var(--apple-label)] cursor-pointer"

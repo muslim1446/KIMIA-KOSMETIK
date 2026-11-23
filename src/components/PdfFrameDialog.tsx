@@ -301,8 +301,8 @@ export const PdfFrameDialog: React.FC<PdfFrameDialogProps> = ({
             transition={APPLE_SPRINGS.sheet}
             className="apple-sheet apple-squircle w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-[28px] text-[var(--apple-label)]"
           >
-            {/* Sheet Header */}
-            <div className="flex items-center justify-between gap-3 border-b border-[var(--apple-separator)] px-5 py-4">
+            {/* Sticky Frosted Sheet Header */}
+            <div className="sticky top-0 z-10 backdrop-blur-md bg-[var(--apple-glass-sheet-bg)] flex items-center justify-between gap-3 border-b border-[var(--apple-separator)] px-5 py-4">
               <div className="flex items-center gap-3 min-w-0">
                 <span className="flex items-center justify-center w-10 h-10 rounded-[12px] bg-[var(--apple-red)]/12 text-[var(--apple-red-fg)] shrink-0">
                   <FileText className="w-5 h-5" />

@@ -33,6 +33,12 @@ test('clampFloatingFrameRect keeps draggable and resizable Gemini frame inside v
   assert.equal(clamped.height, 260);
   assert.equal(clamped.y, 12);
   assert.equal(clamped.x, 1280 - 780 - 12);
+
+  const mobile = clampFloatingFrameRect({ x: 200, y: 500, width: 390, height: 470 }, 320, 568);
+  assert.equal(mobile.width, 304);
+  assert.equal(mobile.x, 8);
+  assert.ok(mobile.x + mobile.width <= 320 - 8);
+  assert.ok(mobile.y + mobile.height <= 568 - 8);
 });
 
 test('buildPresentationDigest includes entire deck outline, active sub-element, strokes, and text edits', () => {

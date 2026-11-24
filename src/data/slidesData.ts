@@ -57,7 +57,7 @@ export interface BannedChemical {
   productFoundIn: string;
   immediateEffect: string;
   severeHarm: string;
-  bodyTarget: 'sistem_saraf_ginjal' | 'melanosit_uv' | 'pigmentasi_epidermis' | 'lapisan_luar';
+  hazardProfile: 'penyerapan_toksik' | 'gangguan_pigmentasi_uv' | 'perubahan_pigmentasi' | 'kerengsaan_permukaan';
   explanation: string;
 }
 
@@ -85,10 +85,10 @@ export interface QuizQuestion {
 }
 
 export const TEAM_PRESENTERS: Record<PresenterId, { name: string; focus: string }> = {
-  1: { name: 'Pembentang 1', focus: 'Pengenalan & Ubat Tradisional' },
-  2: { name: 'Pembentang 2', focus: 'Ubat Moden & Penggunaan Ubat' },
-  3: { name: 'Pembentang 3', focus: 'Penyalahgunaan Ubat, NPRA & Jenis Kosmetik' },
-  4: { name: 'Pembentang 4', focus: 'Bahan Asas Kosmetik & Bahan Kimia Terlarang' },
+  1: { name: 'Pembentang 1', focus: 'Definisi Ubat & Ubat Tradisional (m.s. 181)' },
+  2: { name: 'Pembentang 2', focus: 'Ubat Moden & Jadual 5.7 (m.s. 182–183)' },
+  3: { name: 'Pembentang 3', focus: 'Keberkesanan, Penyalahgunaan, NPRA & Kosmetik (m.s. 183–185)' },
+  4: { name: 'Pembentang 4', focus: 'Bahan Asas Kosmetik & Bahan Kimia Terlarang (m.s. 185–186)' },
 };
 
 export const SLIDES_META: SlideMeta[] = [
@@ -96,21 +96,21 @@ export const SLIDES_META: SlideMeta[] = [
     index: 0,
     title: '5.4 Ubat-ubatan dan Bahan Kosmetik',
     subtitle:
-      'Ubat merawat atau mencegah penyakit; kosmetik digunakan secara luaran untuk membersih, melindungi atau mencantikkan.',
+      'Ubat ialah bahan kimia untuk membantu merawat atau mencegah penyakit; kosmetik ialah bahan atau produk kegunaan luaran untuk membersih, melindungi atau mencantikkan.',
     presenterLabel: 'Pembentang 1',
     presenters: [1],
     durationSeconds: 70,
     textbookRef: 'Kimia Tingkatan 5 · Bab 5.4 (m.s. 181–186)',
     presenterNotes: {
       simpleAnalogy:
-        'Ubat bertindak di dalam badan untuk merawat penyakit, manakala kosmetik kekal di permukaan luar badan.',
+        'Ubat ialah bahan kimia untuk merawat atau mencegah penyakit dan selamat jika diambil dengan betul.',
       talkingPoints: [
-        'Nyatakan definisi ubat (m.s. 181): bahan kimia untuk merawat atau mencegah penyakit.',
-        'Nyatakan dua kelas ubat: ubat tradisional dan ubat moden.',
-        'Ubat selamat jika diambil dengan betul; jika disalahgunakan boleh memudaratkan diri sendiri.',
+        'Nyatakan definisi ubat (m.s. 181): bahan kimia yang digunakan untuk membantu merawat atau mencegah penyakit.',
+        'Kelaskan ubat kepada ubat tradisional (tidak diproses secara kimia) dan ubat moden.',
+        'Tegaskan prinsip buku teks: selamat jika diambil dengan betul; menyalahgunakan ubat memudaratkan diri sendiri.',
       ],
-      questionForClass: 'Apakah perbezaan tujuan antara ubat dengan bahan kosmetik?',
-      reminder: 'Pastikan kelas memahami empat Standard Pembelajaran (5.4.1 hingga 5.4.4).',
+      questionForClass: 'Apakah maksud ubat dan bahan kosmetik mengikut buku teks?',
+      reminder: 'Rujuk Standard Pembelajaran 5.4.1 hingga 5.4.4.',
     },
   },
   {
@@ -124,98 +124,98 @@ export const SLIDES_META: SlideMeta[] = [
     textbookRef: '5.4.1 · Rajah 5.13 & Gambar foto 5.9 (m.s. 181)',
     presenterNotes: {
       simpleAnalogy:
-        'Herba ditumbuk dengan lesung atau direbus untuk patinya sebelum dijadikan pil atau kapsul moden.',
+        'Ubat tradisional tidak diproses secara kimia; disediakan dengan lesung, direbus untuk mendapatkan patinya, atau dalam bentuk pil dan kapsul.',
       talkingPoints: [
-        'Klik 4 tumbuhan dalam Rajah 5.13: Halia, Lidah buaya, Ginseng dan Asam jawa.',
-        'Tunjukkan 3 cara penyediaan: lesung, direbus dan dipasarkan sebagai pil atau kapsul.',
-        'Buka Cabaran Minda (Gambar foto 5.9 Daun ketum) dan bincangkan sebab penjualannya diharamkan.',
+        'Tunjukkan 4 contoh Rajah 5.13: Halia, Lidah buaya, Ginseng dan Asam jawa.',
+        'Nyatakan cara penyediaan: tidak diproses secara kimia, dihancurkan dengan lesung, direbus untuk mendapatkan patinya, dan evolusi pemprosesan kepada pil atau kapsul.',
+        'Buka Cabaran Minda (Gambar foto 5.9 Daun ketum): produk yang diproses daripada daun ketum diharamkan di sisi undang-undang.',
       ],
-      questionForClass: 'Mengapakah penjualan produk daripada daun ketum diharamkan di sisi undang-undang?',
-      reminder: 'Ikut contoh dan kegunaan tepat dalam Rajah 5.13.',
+      questionForClass: 'Mengapakah penjualan produk yang diproses daripada daun ketum diharamkan di sisi undang-undang?',
+      reminder: 'Kekalkan fakta tepat Rajah 5.13 (m.s. 181).',
     },
   },
   {
     index: 2,
     title: 'Ubat Moden',
     subtitle:
-      'Dihasilkan melalui bioteknologi, nanoteknologi dan kejuruteraan genetik dalam bentuk pil, kapsul, serbuk dan larutan.',
+      'Berasal daripada tumbuhan dan mikroorganisma ataupun bahan kimia sintetik melalui bioteknologi, nanoteknologi dan kejuruteraan genetik.',
     presenterLabel: 'Pembentang 2',
     presenters: [2],
     durationSeconds: 150,
     textbookRef: '5.4.1 & 5.4.2 · Rajah 5.14 & Jadual 5.7 (m.s. 182–183)',
     presenterNotes: {
       simpleAnalogy:
-        'Setiap jenis ubat moden ada fungsi khusus dan peraturan penggunaannya supaya selamat dan berkesan.',
+        'Setiap ubat moden mempunyai sifat dan peraturan khusus dalam Jadual 5.7 seperti sifat asid aspirin serta had dos parasetamol.',
       talkingPoints: [
-        'Sebutkan 5 jenis ubat moden (Rajah 5.14): Analgesik, Antimikrob, Ubat psikotik, Antialergi, Kortikosteroid.',
-        'Terangkan contoh, fungsi, cara penggunaan dan kesan sampingan daripada Jadual 5.7.',
-        'Uji kesesuaian ubat bagi pesakit gastrik, kanak-kanak, alahan penisilin dan luka luar.',
+        'Nyatakan 5 jenis ubat moden (Rajah 5.14): Analgesik, Antimikrob, Ubat psikotik, Antialergi dan Kortikosteroid.',
+        'Bandingkan Jadual 5.7: Aspirin bersifat asid, Parasetamol melebihi dos merosakkan hati, Antiseptik (luar badan) dan Disinfektan (objek bukan hidup).',
+        'Uji kesesuaian berdasarkan Jadual 5.7.',
       ],
-      questionForClass: 'Mengapakah aspirin tidak sesuai untuk pesakit gastrik dan kanak-kanak?',
-      reminder: 'Tekankan peranan Ibnu Sina sebagai Bapa Perubatan Moden.',
+      questionForClass: 'Mengapakah aspirin tidak sesuai bagi pesakit gastrik atau kanak-kanak?',
+      reminder: 'Sebutkan Ibnu Sina (Bapa Perubatan Moden) serta bentuk pil, kapsul, serbuk dan larutan.',
     },
   },
   {
     index: 3,
     title: 'Mewajarkan Penggunaan Ubat',
     subtitle:
-      'Antibiotik perlu dihabiskan, parasetamol diambil mengikut dos, dan plasebo tiada nilai terapeutik.',
+      'Antibiotik perlu dihabiskan, parasetamol melebihi dos merosakkan hati, dan plasebo tiada nilai terapeutik.',
     presenterLabel: 'Pembentang 2 & 3',
     presenters: [2, 3],
     durationSeconds: 150,
     textbookRef: '5.4.2 · Jadual 5.7 & Tahukah Anda (m.s. 182–184)',
     presenterNotes: {
       simpleAnalogy:
-        'Berhenti makan antibiotik separuh jalan membiarkan bakteria yang belum mati membina ketahanan.',
+        'Penggunaan ubat memerlukan dos yang tepat dan ujian klinikal; plasebo pula tidak mempunyai nilai terapeutik.',
       talkingPoints: [
-        'Tab 1: Tunjukkan sebab antibiotik perlu dihabiskan — jika tidak, bakteria menjadi imun dan penyakit berulang.',
-        'Tab 2: Terangkan parasetamol melebihi dos boleh menyebabkan kerosakan hati.',
-        'Tab 3: Terangkan maksud plasebo (m.s. 184) — menyerupai ubat sebenar tetapi tiada nilai terapeutik.',
+        'Tab 1: Antibiotik perlu dihabiskan supaya semua bakteria dibunuh dan tidak menjadi imun kepada antibiotik.',
+        'Tab 2: Parasetamol melebihi dos dapat menyebabkan kerosakan hati.',
+        'Tab 3: Ubat moden menjalani ujian klinikal; plasebo tidak mempunyai sebarang nilai terapeutik walaupun menyerupai ubat sebenar.',
       ],
-      questionForClass: 'Apakah yang berlaku jika pesakit berhenti mengambil antibiotik selepas rasa sihat?',
-      reminder: 'Kekalkan istilah ringkas mengikut Jadual 5.7 dan kotak Tahukah Anda.',
+      questionForClass: 'Apakah maksud plasebo mengikut kotak Tahukah Anda?',
+      reminder: 'Gunakan fakta tepat Jadual 5.7 dan m.s. 183–184.',
     },
   },
   {
     index: 4,
     title: 'Keberkesanan, Penyalahgunaan Ubat & NPRA',
     subtitle:
-      'Dos tidak tepat menjurus kepada penyalahgunaan ubat; NPRA menyelia kualiti dan keselamatan ubat serta kosmetik.',
+      'Ketiadaan data kajian menyukarkan pemantauan dos yang betul dan boleh menjurus kepada penyalahgunaan ubat-ubatan.',
     presenterLabel: 'Pembentang 3',
     presenters: [3],
     durationSeconds: 120,
     textbookRef: '5.4.2 · Gambar foto 5.10 & Kawalan KKM (m.s. 183–184)',
     presenterNotes: {
       simpleAnalogy:
-        'Ubat moden melalui ujian klinikal; sesetengah ubat tradisional tiada data kajian untuk mengesahkan dos yang betul.',
+        'Penyalahgunaan melibatkan kedua-dua ubat moden dan ubat tradisional; NPRA menyelia kualiti dan keselamatan ubat dan kosmetik.',
       talkingPoints: [
-        'Tunjukkan 3 contoh penyalahgunaan dalam Gambar foto 5.10: Antibiotik, Ubat tradisional berasaskan herba, Kodeina.',
-        'Terangkan Akta PT&K 2016, Dasar PT&K Kebangsaan dan peranan NPRA (m.s. 184).',
-        'Tunjukkan cara menyemak nombor pendaftaran ubat (MAL) dan notifikasi kosmetik (NOT).',
+        'Tunjukkan 3 contoh Gambar foto 5.10: Antibiotik (rintangan antibiotik), Ubat tradisional berasaskan herba (kegagalan fungsi hati dan buah pinggang) dan Kodeina (ketagihan).',
+        'Terangkan Akta Perubatan Tradisional dan Komplementari 2016, Dasar PT&K Kebangsaan dan peranan NPRA.',
+        'Tunjukkan semakan pendaftaran Kementerian Kesihatan.',
       ],
-      questionForClass: 'Apakah kesan penyalahgunaan ubat tradisional berasaskan herba tanpa kawalan dos?',
-      reminder: 'Ingatkan kelas untuk menyemak pendaftaran KKM sebelum membeli produk.',
+      questionForClass: 'Mengapakah sesetengah ubat tradisional boleh membawa risiko kesan sampingan jika tidak mempunyai data kajian?',
+      reminder: 'Pastikan istilah tepat mengikut m.s. 183–184.',
     },
   },
   {
     index: 5,
     title: 'Bahan Kosmetik & Jenis-jenis Kosmetik',
     subtitle:
-      'Kosmetik digunakan secara luaran dan dikelaskan kepada kosmetik rias, kosmetik perawatan dan pewangi.',
+      'Kosmetik ialah bahan atau produk yang digunakan secara luaran untuk membersih, melindungi atau mencantikkan penampilan seseorang.',
     presenterLabel: 'Pembentang 3 & 4',
     presenters: [3, 4],
     durationSeconds: 100,
     textbookRef: '5.4.3 · Rajah 5.16 & Peraturan 1984 (m.s. 184–185)',
     presenterNotes: {
       simpleAnalogy:
-        'Kosmetik rias mencantikkan wajah, kosmetik perawatan merawat tubuh, dan pewangi memberikan haruman.',
+        'Kosmetik terbahagi kepada kosmetik rias, kosmetik perawatan dan pewangi serta dikawal oleh Peraturan 1984.',
       talkingPoints: [
-        'Bacakan definisi kosmetik (m.s. 184): digunakan secara luaran untuk membersih, melindungi atau mencantikkan.',
-        'Tunjukkan 3 kumpulan utama dalam Rajah 5.16 bersama contohnya.',
+        'Nyatakan definisi kosmetik (m.s. 184).',
+        'Kelaskan tiga kumpulan utama Rajah 5.16: Kosmetik rias, Kosmetik perawatan dan Pewangi.',
         'Nyatakan Peraturan-peraturan Kawalan Dadah dan Kosmetik 1984 (m.s. 185).',
       ],
-      questionForClass: 'Berikan contoh produk bagi setiap tiga jenis kosmetik utama.',
-      reminder: 'Rujuk semua contoh produk tepat dalam Rajah 5.16.',
+      questionForClass: 'Berikan tiga jenis kosmetik berserta contohnya mengikut Rajah 5.16.',
+      reminder: 'Rujuk semua contoh produk dalam Rajah 5.16.',
     },
   },
   {
@@ -229,56 +229,54 @@ export const SLIDES_META: SlideMeta[] = [
     textbookRef: '5.4.3 · Rajah 5.15 (m.s. 184–185)',
     presenterNotes: {
       simpleAnalogy:
-        'Air dan minyak tidak bercampur secara semula jadi; pengemulsi menyatukannya menjadi campuran homogen.',
+        'Air bertindak sebagai pelarut manakala pengemulsi seperti lesitin dan asid stearik membentuk campuran homogen antara air dan minyak.',
       talkingPoints: [
-        'Tunjukkan 7 bahan asas kosmetik dalam Rajah 5.15 bersama fungsi dan contoh setiap satunya.',
-        'Klik butang "Fasa Terpisah" lalu tambahkan Pengemulsi untuk menunjukkan campuran homogen.',
-        'Tunjukkan kepentingan Pengawet untuk mengelakkan kerosakan kosmetik.',
+        'Tunjukkan 7 bahan asas dalam Rajah 5.15: Air, Pengemulsi, Pemekat, Pelembap, Pewangi, Pengawet dan Pewarna.',
+        'Sebutkan contoh tepat: lesitin, asid stearik, gliserin, xanthan gum, natrium laktat, minyak pati, paraben, formaldehid dan ferum(III) oksida.',
       ],
-      questionForClass: 'Apakah fungsi pengemulsi dan pengawet dalam pembuatan kosmetik?',
-      reminder: 'Gunakan contoh tepat daripada Rajah 5.15 seperti lesitin, gliserin dan ferum(III) oksida.',
+      questionForClass: 'Apakah fungsi pengemulsi dan pengawet dalam penghasilan kosmetik?',
+      reminder: 'Gunakan fungsi dan contoh tepat daripada Rajah 5.15.',
     },
   },
   {
     index: 7,
     title: 'Mewajarkan Penggunaan Kosmetik & Bahan Terlarang',
     subtitle:
-      'Kebaikan kosmetik buatan sendiri berbanding keburukan kosmetik komersial serta kesan bahan kimia terlarang.',
+      'Kebaikan kosmetik buatan sendiri berbanding keburukan kosmetik komersial serta kesan sampingan bahan kimia terlarang Jadual 5.8.',
     presenterLabel: 'Pembentang 4',
     presenters: [4],
     durationSeconds: 140,
     textbookRef: '5.4.4 · Rajah 5.17 & Jadual 5.8 (m.s. 185–186)',
     presenterNotes: {
       simpleAnalogy:
-        'Kosmetik buatan sendiri murah dan selamat; kosmetik haram pula mencampurkan bahan beracun untuk kesan pantas.',
+        'Pengguna perlu memastikan kosmetik bebas bahan kimia terlarang dalam Jadual 5.8 dan berdaftar dengan NPRA.',
       talkingPoints: [
-        'Bandingkan Kebaikan Kosmetik Buatan Sendiri dengan Keburukan Kosmetik Komersial (Rajah 5.17).',
-        'Terangkan 4 bahan kimia terlarang dalam Jadual 5.8: Merkuri, Hidrokuinon, Betamethasone valerate dan Tretinoin.',
-        'Tegaskan supaya memilih kosmetik yang berdaftar dengan Bahagian Regulatori Farmasi Negara (NPRA).',
+        'Bandingkan Rajah 5.17: Kebaikan Kosmetik Buatan Sendiri vs Keburukan Kosmetik Komersial.',
+        'Terangkan 4 bahan kimia terlarang Jadual 5.8: Merkuri, Hidrokuinon, Betamethasone valerate dan Tretinoin.',
+        'Tegaskan nasihat pengguna m.s. 186: pastikan kosmetik berdaftar dengan Bahagian Regulatori Farmasi Negara.',
       ],
-      questionForClass: 'Apakah kesan sampingan merkuri dan hidrokuinon dalam krim pemutih tidak sah?',
-      reminder: 'Pastikan semua catatan dan kesan sampingan mengikut Jadual 5.8.',
+      questionForClass: 'Apakah kesan sampingan merkuri dan hidrokuinon apabila dimasukkan ke dalam kosmetik secara tidak sah?',
+      reminder: 'Gunakan catatan tepat mengikut Jadual 5.8.',
     },
   },
   {
     index: 8,
     title: 'Uji Diri 5.4 & Rumusan Bab',
     subtitle:
-      'Menjawab empat soalan Uji Diri 5.4 bagi merumuskan keseluruhan topik Ubat-ubatan dan Bahan Kosmetik.',
+      'Menjawab empat soalan Uji Diri 5.4 berpandukan fakta kimia dalam Bab 5.4 (m.s. 181–186).',
     presenterLabel: 'Semua Ahli',
     presenters: [1, 2, 3, 4],
     durationSeconds: 120,
     textbookRef: '5.4.1–5.4.4 · Uji Diri 5.4 (m.s. 186)',
     presenterNotes: {
       simpleAnalogy:
-        'Empat soalan Uji Diri 5.4 menguji empat Standard Pembelajaran utama topik ini.',
+        'Empat soalan Uji Diri 5.4 merangkumkan keseluruhan subtopik 5.4.1 hingga 5.4.4.',
       talkingPoints: [
         'Bincangkan setiap soalan Uji Diri 5.4 bersama rakan sekelas.',
-        'Minta kelas memilih jawapan dahulu sebelum mendedahkan penerangan buku teks.',
-        'Rumuskan keseluruhan topik 5.4 dengan kemas.',
+        'Dedahkan jawapan buku teks selepas perbincangan.',
       ],
       questionForClass: 'Aida berasa sakit kepala. Apakah jenis ubat yang sesuai untuk meredakan kesakitannya?',
-      reminder: 'Pastikan jawapan ringkas dan tepat mengikut buku teks.',
+      reminder: 'Kekalkan jawapan ringkas dan tepat mengikut buku teks.',
     },
   },
 ];
@@ -288,18 +286,18 @@ export const TRADITIONAL_HERBS: TraditionalHerb[] = [
     id: 'halia',
     name: 'Halia',
     scientificName: 'Zingiber officinale',
-    partUsed: 'Rizom',
+    partUsed: 'Rizom (tumbuhan herba)',
     uses: [
-      'Menyingkirkan angin dalam badan.',
-      'Mencegah selesema.',
-      'Membantu memanaskan badan.',
+      'Diperoleh daripada tumbuh-tumbuhan herba dan tidak diproses secara kimia.',
+      'Disediakan dengan menghancurkan bahagian tumbuhan menggunakan lesung atau direbus untuk mendapatkan patinya dan diminum.',
+      'Mengalami evolusi pemprosesan dan dipasarkan dalam bentuk pil atau kapsul.',
     ],
     explanation:
-      'Diperoleh daripada tumbuhan herba tanpa pemprosesan kimia untuk kegunaan kesihatan tradisional.',
+      'Kegunaan (Rajah 5.13): Menyingkirkan angin dalam badan, mencegah selesema dan membantu memanaskan badan.',
     prepNotes: {
-      lesung: 'Dihancurkan menggunakan lesung dan disapu pada anggota badan yang sakit.',
-      rebusan: 'Direbus untuk mendapatkan patinya dan diminum.',
-      kapsul: 'Dipasarkan dalam bentuk pil atau kapsul melalui evolusi pemprosesan masa ini.',
+      lesung: 'Disediakan dengan menghancurkan rizom halia menggunakan lesung dan disapukan pada bahagian badan.',
+      rebusan: 'Rizom halia direbus untuk mendapatkan patinya dan diminum.',
+      kapsul: 'Telah mengalami evolusi pemprosesan dan dipasarkan dalam bentuk pil atau kapsul.',
     },
     accentColor: '#B45309',
   },
@@ -307,17 +305,18 @@ export const TRADITIONAL_HERBS: TraditionalHerb[] = [
     id: 'lidah_buaya',
     name: 'Lidah buaya',
     scientificName: 'Aloe barbadensis miller',
-    partUsed: 'Daun',
+    partUsed: 'Daun (tumbuhan herba)',
     uses: [
-      'Merawat penyakit kulit.',
-      'Melegakan luka pada kulit akibat melecur atau terbakar.',
+      'Diperoleh daripada tumbuh-tumbuhan herba dan tidak diproses secara kimia.',
+      'Disediakan dengan menghancurkan bahagian tumbuhan menggunakan lesung dan disapukan pada anggota badan.',
+      'Mengalami evolusi pemprosesan dan dipasarkan dalam bentuk pil atau kapsul.',
     ],
     explanation:
-      'Lendir daun digunakan secara tradisional untuk merawat masalah dan kecederaan kulit.',
+      'Kegunaan (Rajah 5.13): Merawat penyakit kulit dan melegakan luka pada kulit akibat melecur atau terbakar.',
     prepNotes: {
-      lesung: 'Bahagian daun dihancurkan menggunakan lesung lalu disapu pada kulit yang sakit atau melecur.',
-      rebusan: 'Ekstrak tumbuhan direbus untuk kegunaan tradisional.',
-      kapsul: 'Dipasarkan dalam bentuk pil atau kapsul serta produk sapuan moden.',
+      lesung: 'Disediakan dengan menghancurkan daun lidah buaya menggunakan lesung untuk disapukan pada kulit.',
+      rebusan: 'Bahagian tumbuhan boleh direbus untuk mendapatkan patinya mengikut kaedah tradisional.',
+      kapsul: 'Telah mengalami evolusi pemprosesan dan dipasarkan dalam bentuk pil atau kapsul.',
     },
     accentColor: '#15803D',
   },
@@ -325,17 +324,18 @@ export const TRADITIONAL_HERBS: TraditionalHerb[] = [
     id: 'ginseng',
     name: 'Ginseng',
     scientificName: 'Panax ginseng',
-    partUsed: 'Akar',
+    partUsed: 'Akar (tumbuhan herba)',
     uses: [
-      'Membina pertahanan badan terhadap jangkitan.',
-      'Merendahkan tekanan darah dan paras kolesterol.',
+      'Diperoleh daripada tumbuh-tumbuhan herba dan tidak diproses secara kimia.',
+      'Bahagian tertentu tumbuhan direbus untuk mendapatkan patinya dan diminum.',
+      'Mengalami evolusi pemprosesan dan dipasarkan dalam bentuk pil atau kapsul.',
     ],
     explanation:
-      'Akar ginseng digunakan sebagai ubat tradisional untuk menyokong daya tahan badan.',
+      'Kegunaan (Rajah 5.13): Membina pertahanan badan terhadap jangkitan serta merendahkan tekanan darah dan paras kolesterol.',
     prepNotes: {
-      lesung: 'Akar dihancurkan menggunakan lesung sebelum disediakan.',
-      rebusan: 'Akar direbus untuk mendapatkan patinya dan diminum.',
-      kapsul: 'Dipasarkan dalam bentuk pil atau kapsul supaya mudah diambil.',
+      lesung: 'Akar ginseng dihancurkan menggunakan lesung.',
+      rebusan: 'Akar ginseng direbus untuk mendapatkan patinya dan diminum.',
+      kapsul: 'Telah mengalami evolusi pemprosesan dan dipasarkan dalam bentuk pil atau kapsul.',
     },
     accentColor: '#92400E',
   },
@@ -343,17 +343,18 @@ export const TRADITIONAL_HERBS: TraditionalHerb[] = [
     id: 'asam_jawa',
     name: 'Asam jawa',
     scientificName: 'Tamarindus indica',
-    partUsed: 'Buah',
+    partUsed: 'Buah (tumbuhan herba)',
     uses: [
-      'Jus buahnya dapat melegakan batuk.',
-      'Mencerahkan kulit.',
+      'Diperoleh daripada tumbuh-tumbuhan herba dan tidak diproses secara kimia.',
+      'Disediakan melalui penghancuran lesung untuk sapuan atau direbus untuk mendapatkan patinya.',
+      'Mengalami evolusi pemprosesan dan dipasarkan dalam bentuk pil atau kapsul.',
     ],
     explanation:
-      'Buah asam jawa dimanfaatkan secara tradisional secara dalaman untuk batuk dan luaran pada kulit.',
+      'Kegunaan (Rajah 5.13): Jus buahnya dapat melegakan batuk dan mencerahkan kulit.',
     prepNotes: {
-      lesung: 'Isi buah dilumatkan menggunakan lesung untuk disapu secara luaran pada kulit.',
-      rebusan: 'Jus buah dibancuh atau direbus untuk mendapatkan pati minuman bagi melegakan batuk.',
-      kapsul: 'Diproses menjadi serbuk, pil atau kapsul untuk kegunaan mudah.',
+      lesung: 'Dihancurkan menggunakan lesung untuk disapukan.',
+      rebusan: 'Direbus atau dibancuh jus buahnya untuk mendapatkan patinya dan diminum.',
+      kapsul: 'Telah mengalami evolusi pemprosesan dan dipasarkan dalam bentuk pil atau kapsul.',
     },
     accentColor: '#7C2D12',
   },
@@ -365,12 +366,12 @@ export const MODERN_DRUGS: ModernDrugItem[] = [
     name: 'Aspirin',
     categoryId: 'analgesik',
     categoryName: 'Analgesik',
-    examples: ['Aspirin'],
-    functionDesc: 'Melegakan sakit dalam keadaan sedar.',
-    usageRule: 'Perlu diambil mengikut preskripsi doktor.',
+    examples: ['Aspirin (asid asetilsalisilik)'],
+    functionDesc: 'Melegakan sakit dalam keadaan sedar (dan meredakan demam serta bengkak).',
+    usageRule: 'Diambil mengikut preskripsi doktor selepas makan; jangan ambil ubat tamat tarikh luput.',
     sideEffects:
-      'Bersifat asid; tidak sesuai bagi pesakit gastrik atau kanak-kanak kerana dapat menyebabkan ulser perut.',
-    summaryNote: 'Sifat asidnya dapat melukakan dinding perut bagi pesakit gastrik atau kanak-kanak.',
+      'Aspirin bersifat asid, tidak sesuai bagi pesakit gastrik atau kanak-kanak kerana dapat menyebabkan pendarahan dalaman dan ulser perut.',
+    summaryNote: 'Sifat berasid menyebabkan sakit perut jika diambil pesakit gastrik atau kanak-kanak.',
   },
   {
     id: 'parasetamol',
@@ -378,10 +379,10 @@ export const MODERN_DRUGS: ModernDrugItem[] = [
     categoryId: 'analgesik',
     categoryName: 'Analgesik',
     examples: ['Parasetamol'],
-    functionDesc: 'Melegakan sakit dalam keadaan sedar.',
-    usageRule: 'Perlu diambil mengikut preskripsi doktor atau sukatan dos yang betul.',
-    sideEffects: 'Melebihi dos dapat menyebabkan kerosakan hati.',
-    summaryNote: 'Selamat pada dos biasa; dos berlebihan memudaratkan hati.',
+    functionDesc: 'Alternatif bagi aspirin untuk melegakan sakit dalam keadaan sedar dan meredakan demam.',
+    usageRule: 'Perlu diambil mengikut preskripsi doktor; boleh diambil oleh kanak-kanak dengan dos betul.',
+    sideEffects: 'Parasetamol melebihi dos dapat menyebabkan kerosakan hati.',
+    summaryNote: 'Sesuai untuk meredakan sakit kepala, sakit sendi bengkak dan demam (Jadual 5.7).',
   },
   {
     id: 'kodeina',
@@ -391,8 +392,8 @@ export const MODERN_DRUGS: ModernDrugItem[] = [
     examples: ['Kodeina'],
     functionDesc: 'Melegakan sakit, rawatan batuk dan cirit birit.',
     usageRule: 'Perlu diambil mengikut preskripsi doktor.',
-    sideEffects: 'Menyebabkan berasa mengantuk dan risiko ketagihan jika disalah guna.',
-    summaryNote: 'Penyalahgunaan kodeina boleh menyebabkan ketagihan (Gambar foto 5.10).',
+    sideEffects: 'Kodeina menyebabkan seseorang itu berasa mengantuk; penyalahgunaan menyebabkan ketagihan.',
+    summaryNote: 'Gambar foto 5.10: Penyalahgunaan kodeina menyebabkan ketagihan.',
   },
   {
     id: 'antibiotik',
@@ -400,12 +401,12 @@ export const MODERN_DRUGS: ModernDrugItem[] = [
     categoryId: 'antimikrob',
     categoryName: 'Antimikrob',
     examples: ['Penisilin', 'Streptomisin'],
-    functionDesc: 'Membunuh atau merencatkan pertumbuhan bakteria.',
+    functionDesc: 'Antibiotik membunuh atau merencatkan pertumbuhan bakteria (bukan virus dan bukan untuk melegakan kesakitan).',
     usageRule:
-      'Perlu dihabiskan supaya semua bakteria dibunuh; pesakit alahan penisilin diberi Kad Alahan Ubat.',
+      'Antibiotik perlu dihabiskan supaya semua bakteria dibunuh. Pesakit dengan alahan penisilin diberikan Kad Alahan Ubat.',
     sideEffects:
-      'Jika tidak dihabiskan, bakteria menjadi imun dan penyakit berulang. Alahan serius boleh membawa maut.',
-    summaryNote: 'Dos penuh memastikan semua bakteria dibunuh tanpa membina rintangan antibiotik.',
+      'Jika tidak dihabiskan, bakteria menjadi imun kepada antibiotik, penyakit berulang semula dan memerlukan dos lebih tinggi; alahan dapat membawa maut.',
+    summaryNote: 'Jadual 5.7 & Gambar foto 5.10: Dos tidak dihabiskan menyebabkan rintangan antibiotik.',
   },
   {
     id: 'antiseptik',
@@ -413,10 +414,10 @@ export const MODERN_DRUGS: ModernDrugItem[] = [
     categoryId: 'antimikrob',
     categoryName: 'Antimikrob',
     examples: ['Hidrogen peroksida', 'Iodin', 'Asid borik'],
-    functionDesc: 'Digunakan di bahagian luar badan.',
-    usageRule: 'Hanya disapu pada bahagian luaran sahaja dan tidak dimakan.',
-    sideEffects: 'Berbahaya sekiranya dimakan atau ditelan.',
-    summaryNote: 'Kegunaan luaran pada luka badan sahaja.',
+    functionDesc: 'Antiseptik digunakan di bahagian luar badan.',
+    usageRule: 'Antiseptik hanya disapu pada bahagian luaran sahaja dan tidak dimakan.',
+    sideEffects: 'Tidak boleh dimakan.',
+    summaryNote: 'Kegunaan kimia antimikrob pada bahagian luaran sahaja (Jadual 5.7).',
   },
   {
     id: 'disinfektan',
@@ -425,22 +426,22 @@ export const MODERN_DRUGS: ModernDrugItem[] = [
     categoryName: 'Antimikrob',
     examples: ['Alkohol', 'Formaldehid'],
     functionDesc:
-      'Memusnahkan patogen pada objek bukan hidup seperti lantai dan sistem perparitan.',
-    usageRule: 'Untuk objek bukan hidup sahaja; tidak boleh digunakan pada manusia.',
-    sideEffects: 'Merbahaya jika disapu pada kulit, luka atau ditelan.',
-    summaryNote: 'Khusus untuk permukaan dan objek bukan hidup.',
+      'Disinfektan memusnahkan patogen yang terdapat pada objek bukan hidup seperti lantai dan sistem perparitan.',
+    usageRule: 'Digunakan pada objek bukan hidup seperti lantai dan sistem perparitan.',
+    sideEffects: 'Bukan untuk kegunaan pada tubuh manusia.',
+    summaryNote: 'Memusnahkan patogen pada objek bukan hidup sahaja (Jadual 5.7).',
   },
   {
     id: 'psikotik',
     name: 'Ubat psikotik',
     categoryId: 'psikotik',
     categoryName: 'Ubat psikotik',
-    examples: ['Haloperidol', 'Klorpromazin', 'Klozapin'],
+    examples: ['Haloperidol', 'Klorpromazin', 'Klozapin', 'Trankuiliser'],
     functionDesc:
-      'Merawat psikosis (gejala penyakit mental seperti melihat, mendengar atau mempercayai perkara tidak nyata).',
+      'Merawat psikosis, iaitu gejala penyakit mental yang menyebabkan pesakit melihat, mendengar atau mempercayai perkara yang tidak nyata (trankuiliser mengurangkan bimbang dan gelisah).',
     usageRule: 'Diambil atas preskripsi doktor.',
     sideEffects: 'Mengakibatkan pergerakan muka dan badan yang tidak normal, kejang dan menggeletar.',
-    summaryNote: 'Rawatan terkawal di bawah pengawasan doktor.',
+    summaryNote: 'Contoh Jadual 5.7: haloperidol, klorpromazin, klozapin (modul turut merangkumi trankuiliser & barbiturat).',
   },
   {
     id: 'antialergi',
@@ -448,11 +449,11 @@ export const MODERN_DRUGS: ModernDrugItem[] = [
     categoryId: 'antialergi',
     categoryName: 'Antialergi',
     examples: ['Antihistamin'],
-    functionDesc: 'Melegakan hidung berair dan kegatalan.',
+    functionDesc: 'Dapat melegakan hidung berair dan kegatalan.',
     usageRule: 'Hanya boleh diambil atas preskripsi doktor.',
     sideEffects:
-      'Mengantuk; dos tinggi menyebabkan mulut terasa kering (xerostomia), gangguan penglihatan dan sembelit.',
-    summaryNote: 'Mengawal tindak balas alergi mengikut preskripsi doktor.',
+      'Mengakibatkan mengantuk; juga menyebabkan mulut terasa kering (xerostomia), gangguan penglihatan dan sembelit jika diambil pada dos yang tinggi.',
+    summaryNote: 'Kesan sampingan berlaku apabila diambil pada dos yang tinggi (Jadual 5.7).',
   },
   {
     id: 'kortikosteroid',
@@ -461,11 +462,11 @@ export const MODERN_DRUGS: ModernDrugItem[] = [
     categoryName: 'Kortikosteroid',
     examples: ['Betamethasone valerate', 'Prednisolone'],
     functionDesc:
-      'Melegakan kawasan radang; mengurangkan bengkak, kemerahan, gatal, alergi, asma dan artritis.',
+      'Memberikan kelegaan bagi kawasan yang radang serta mengurangkan bengkak, kemerahan, gatal-gatal dan tindak balas alergi, asma serta artritis.',
     usageRule: 'Hanya boleh diambil atas preskripsi doktor.',
     sideEffects:
-      'Pengambilan jangka panjang menyebabkan muka sembap (moon face), tekanan darah tinggi dan kenaikan gula darah.',
-    summaryNote: 'Hanya diambil atas preskripsi doktor dan elakkan penggunaan jangka panjang tanpa kawalan.',
+      'Pengambilan jangka panjang menyebabkan muka sembap (moon face), tekanan darah tinggi dan meningkatkan kandungan gula darah.',
+    summaryNote: 'Kesan sampingan muncul akibat pengambilan jangka panjang (Jadual 5.7).',
   },
 ];
 
@@ -475,49 +476,49 @@ export const COSMETIC_INGREDIENTS: CosmeticIngredient[] = [
     name: 'Air',
     role: 'Bahan pelarut dalam penghasilan kosmetik.',
     examples: 'Air',
-    simpleNote: 'Melarutkan bahan asas lain dalam penghasilan produk kosmetik.',
+    simpleNote: 'Bahan pelarut dalam penghasilan kosmetik (Rajah 5.15).',
   },
   {
     id: 'pengemulsi',
     name: 'Pengemulsi',
     role: 'Membentuk campuran homogen antara air dan minyak.',
     examples: 'Lesitin dan asid stearik',
-    simpleNote: 'Menyatukan fasa air dan fasa minyak supaya campuran menjadi sekata.',
+    simpleNote: 'Membentuk campuran homogen antara air dan minyak (Rajah 5.15).',
   },
   {
     id: 'pemekat',
     name: 'Pemekat',
     role: 'Memekatkan produk kosmetik.',
     examples: 'Gliserin dan xanthan gum',
-    simpleNote: 'Memberikan kelikatan yang sesuai agar kosmetik mudah disapu.',
+    simpleNote: 'Memekatkan produk kosmetik (Rajah 5.15).',
   },
   {
     id: 'pelembap',
     name: 'Pelembap',
     role: 'Mengekalkan kelembapan bahan kosmetik.',
     examples: 'Gliserin dan natrium laktat',
-    simpleNote: 'Menghalang produk kosmetik dan kulit daripada cepat kering.',
+    simpleNote: 'Mengekalkan kelembapan bahan kosmetik (Rajah 5.15).',
   },
   {
     id: 'pewangi',
     name: 'Pewangi',
     role: 'Memberikan aroma yang menyenangkan kepada produk kosmetik.',
     examples: 'Minyak pati',
-    simpleNote: 'Menghasilkan bau yang wangi pada produk kosmetik.',
+    simpleNote: 'Memberikan aroma yang menyenangkan kepada produk kosmetik (Rajah 5.15).',
   },
   {
     id: 'pengawet',
     name: 'Pengawet',
     role: 'Mengelakkan kerosakan kosmetik.',
     examples: 'Paraben dan formaldehid',
-    simpleNote: 'Menghalang kerosakan produk kosmetik supaya tahan lebih lama.',
+    simpleNote: 'Mengelakkan kerosakan kosmetik (Rajah 5.15).',
   },
   {
     id: 'pewarna',
     name: 'Pewarna',
     role: 'Memberikan warna agar kosmetik lebih menarik.',
     examples: 'Ferum(III) oksida',
-    simpleNote: 'Menambahkan warna yang menarik pada kosmetik rias dan produk lain.',
+    simpleNote: 'Memberikan warna agar kosmetik lebih menarik (Rajah 5.15).',
   },
 ];
 
@@ -525,41 +526,42 @@ export const BANNED_CHEMICALS: BannedChemical[] = [
   {
     id: 'merkuri',
     name: 'Merkuri',
-    productFoundIn: 'Dimasukkan ke dalam krim pemutih serta produk kosmetik lain secara tidak sah',
+    productFoundIn: 'Biasanya dimasukkan ke dalam krim pemutih serta produk kosmetik lain secara tidak sah.',
     immediateEffect: 'Kulit merengsa.',
     severeHarm: 'Kerosakan buah pinggang dan sistem saraf jika diserap ke dalam salur darah.',
-    bodyTarget: 'sistem_saraf_ginjal',
+    hazardProfile: 'penyerapan_toksik',
     explanation:
       'Kulit merengsa serta kerosakan buah pinggang dan sistem saraf jika diserap ke dalam salur darah.',
   },
   {
     id: 'hidrokuinon',
     name: 'Hidrokuinon',
-    productFoundIn: 'Dimasukkan ke dalam krim pemutih serta produk kosmetik lain secara tidak sah',
+    productFoundIn: 'Biasanya dimasukkan ke dalam krim pemutih serta produk kosmetik lain secara tidak sah.',
     immediateEffect: 'Kulit menjadi hipersensitif dan pengurangan pigmentasi.',
     severeHarm: 'Pendedahan kulit kepada sinar UV yang merbahaya.',
-    bodyTarget: 'melanosit_uv',
+    hazardProfile: 'gangguan_pigmentasi_uv',
     explanation:
       'Kulit menjadi hipersensitif dan pengurangan pigmentasi yang mengakibatkan pendedahan kulit kepada sinar UV yang merbahaya.',
   },
   {
     id: 'betamethasone',
     name: 'Betamethasone valerate',
-    productFoundIn: 'Dimasukkan ke dalam krim pemutih serta produk kosmetik lain secara tidak sah',
+    productFoundIn: 'Biasanya dimasukkan ke dalam krim pemutih serta produk kosmetik lain secara tidak sah.',
     immediateEffect: 'Kulit merengsa.',
     severeHarm: 'Perubahan pigmentasi kulit.',
-    bodyTarget: 'pigmentasi_epidermis',
+    hazardProfile: 'perubahan_pigmentasi',
     explanation:
-      'Kulit merengsa dan perubahan pigmentasi kulit apabila dimasukkan ke dalam kosmetik secara tidak sah.',
+      'Kulit merengsa dan perubahan pigmentasi kulit.',
   },
   {
     id: 'tretinoin',
     name: 'Tretinoin',
-    productFoundIn: 'Krim jerawat',
+    productFoundIn: 'Krim jerawat.',
     immediateEffect: 'Kulit kemerahan.',
     severeHarm: 'Kulit kemerahan dan mengelupas.',
-    bodyTarget: 'lapisan_luar',
-    explanation: 'Menyebabkan kulit kemerahan dan mengelupas jika digunakan tanpa pengawasan.',
+    hazardProfile: 'kerengsaan_permukaan',
+    explanation:
+      'Kulit kemerahan dan mengelupas.',
   },
 ];
 
@@ -568,105 +570,105 @@ export const DAILY_MYSTERIES: DailyMystery[] = [
     id: 'u1',
     title: 'Uji Diri 5.4 (Soalan 1): Contoh Ubat Tradisional & Kegunaannya',
     dailySituation:
-      'Berikan tiga contoh ubat tradisional dan kegunaannya dalam kehidupan harian di Malaysia.',
-    questionWhy: 'Manakah padanan tumbuhan herba dan kegunaan yang tepat mengikut Rajah 5.13?',
+      'Berikan tiga contoh ubat tradisional dan kegunaannya.',
+    questionWhy: 'Manakah contoh ubat tradisional dan kegunaannya mengikut Rajah 5.13?',
     hypotheses: [
       {
         id: 'h1',
-        label: 'Halia merawat penyakit mental; Ginseng memusnahkan patogen di lantai.',
-        discussionNote: 'Kurang tepat — ubat psikotik dan disinfektan ialah kategori ubat moden, bukan herba tradisional.',
+        label: 'Halia merawat psikosis; Ginseng memusnahkan patogen pada lantai.',
+        discussionNote: 'Tidak tepat — merawat psikosis ialah ubat psikotik manakala memusnahkan patogen pada lantai ialah disinfektan (ubat moden).',
       },
       {
         id: 'h2',
-        label: 'Halia menyingkirkan angin; Lidah buaya melegakan luka melecur; Ginseng membina pertahanan badan.',
-        discussionNote: 'Tepat sekali! Ketiga-tiga contoh dan kegunaan ini menepati Rajah 5.13 (m.s. 181).',
+        label: 'Halia menyingkirkan angin dalam badan; Lidah buaya melegakan luka melecur; Ginseng membina pertahanan badan.',
+        discussionNote: 'Tepat! Ketiga-tiga ubat tradisional ini diperoleh daripada tumbuhan herba dan tidak diproses secara kimia (Rajah 5.13, m.s. 181).',
       },
       {
         id: 'h3',
-        label: 'Asam jawa hanya untuk melegakan sakit kepala dalam keadaan sedar.',
-        discussionNote: 'Tidak tepat — jus buah asam jawa melegakan batuk dan mencerahkan kulit.',
+        label: 'Asam jawa ialah ubat sintetik untuk melegakan sakit dalam keadaan sedar.',
+        discussionNote: 'Tidak tepat — asam jawa ialah ubat tradisional tanpa pemprosesan kimia; ubat moden untuk sakit ialah analgesik.',
       },
     ],
     causalChain: {
-      step1Fact: 'Halia: menyingkirkan angin dalam badan, mencegah selesema dan memanaskan badan.',
-      step2Reason: 'Lidah buaya: merawat penyakit kulit dan melegakan luka melecur. Ginseng: membina pertahanan badan dan menurunkan tekanan darah/kolesterol.',
-      step3Principle: 'Ubat tradisional diperoleh daripada tumbuhan herba atau haiwan tanpa pemprosesan kimia.',
+      step1Fact: 'Halia (menyingkirkan angin dalam badan, mencegah selesema, membantu memanaskan badan), Lidah buaya (merawat penyakit kulit, melegakan luka melecur) dan Ginseng (membina pertahanan badan, merendahkan tekanan darah dan paras kolesterol).',
+      step2Reason: 'Disediakan dengan lesung, direbus untuk mendapatkan patinya, atau dipasarkan dalam bentuk pil dan kapsul.',
+      step3Principle: 'Ubat tradisional diperoleh daripada tumbuh-tumbuhan herba atau haiwan dan tidak diproses secara kimia (m.s. 181).',
     },
     kssmRef: 'Uji Diri 5.4 No. 1 · Rajah 5.13 (m.s. 181, 186)',
   },
   {
     id: 'u2',
     title: 'Uji Diri 5.4 (Soalan 2): Lima Jenis Ubat Moden',
-    dailySituation: 'Nyatakan lima jenis ubat moden seperti yang dikelaskan dalam Rajah 5.14.',
-    questionWhy: 'Apakah lima kumpulan utama ubat moden dalam sukatan Kimia Tingkatan 5?',
+    dailySituation: 'Nyatakan lima jenis ubat moden.',
+    questionWhy: 'Apakah lima jenis ubat moden yang disenaraikan dalam Rajah 5.14?',
     hypotheses: [
       {
         id: 'h1',
         label: 'Aspirin, Parasetamol, Kodeina, Penisilin dan Streptomisin.',
-        discussionNote: 'Itu ialah nama contoh ubat bagi Analgesik dan Antibiotik, bukan lima jenis utama ubat moden.',
+        discussionNote: 'Tidak tepat — itu ialah nama contoh ubat bagi analgesik dan antibiotik.',
       },
       {
         id: 'h2',
         label: 'Analgesik, Antimikrob, Ubat psikotik, Antialergi dan Kortikosteroid.',
-        discussionNote: 'Tepat sekali! Inilah lima jenis ubat moden dalam Rajah 5.14 (m.s. 182).',
+        discussionNote: 'Tepat! Itulah lima jenis ubat moden dalam Rajah 5.14 (m.s. 182).',
       },
       {
         id: 'h3',
         label: 'Kosmetik rias, Kosmetik perawatan, Pewangi, Pengemulsi dan Pengawet.',
-        discussionNote: 'Tidak tepat — itu ialah pengelasan dan bahan asas kosmetik.',
+        discussionNote: 'Tidak tepat — itu ialah jenis kosmetik dan bahan asas kosmetik.',
       },
     ],
     causalChain: {
-      step1Fact: 'Analgesik (contoh: aspirin, parasetamol, kodeina) dan Antimikrob (antibiotik, antiseptik, disinfektan).',
-      step2Reason: 'Ubat psikotik (contoh: haloperidol), Antialergi (antihistamin) dan Kortikosteroid (contoh: prednisolone).',
-      step3Principle: 'Ubat moden dihasilkan melalui teknologi baharu dan digunakan mengikut preskripsi.',
+      step1Fact: 'Analgesik (aspirin, parasetamol, kodeina) dan Antimikrob (antibiotik, antiseptik, disinfektan).',
+      step2Reason: 'Ubat psikotik (haloperidol, klorpromazin, klozapin), Antialergi (antihistamin) dan Kortikosteroid (betamethasone valerate, prednisolone).',
+      step3Principle: 'Ubat moden berasal daripada tumbuhan dan mikroorganisma ataupun bahan kimia sintetik (m.s. 182).',
     },
     kssmRef: 'Uji Diri 5.4 No. 2 · Rajah 5.14 (m.s. 182, 186)',
   },
   {
     id: 'u3',
-    title: 'Uji Diri 5.4 (Soalan 3): Ubat Sesuai untuk Sakit Kepala Aida',
+    title: 'Uji Diri 5.4 (Soalan 3): Ubat Sesuai untuk Aida',
     dailySituation: 'Aida berasa sakit kepala.',
     questionWhy: 'Apakah jenis ubat yang sesuai untuk meredakan kesakitannya?',
     hypotheses: [
       {
         id: 'h1',
-        label: 'Antibiotik seperti penisilin untuk membunuh bakteria di kepala.',
-        discussionNote: 'Tidak sesuai — antibiotik membunuh atau merencatkan bakteria, bukan meredakan sakit kepala.',
+        label: 'Antibiotik seperti penisilin dan streptomisin.',
+        discussionNote: 'Tidak tepat — antibiotik membunuh atau merencatkan pertumbuhan bakteria.',
       },
       {
         id: 'h2',
-        label: 'Analgesik seperti parasetamol atau aspirin untuk melegakan sakit dalam keadaan sedar.',
-        discussionNote: 'Tepat! Analgesik melegakan sakit dalam keadaan sedar; jika Aida ada gastrik, elakkan aspirin.',
+        label: 'Analgesik seperti parasetamol atau aspirin.',
+        discussionNote: 'Tepat! Analgesik melegakan sakit dalam keadaan sedar; aspirin bersifat asid (tidak sesuai bagi pesakit gastrik atau kanak-kanak), manakala parasetamol tidak boleh melebihi dos.',
       },
       {
         id: 'h3',
-        label: 'Antiseptik seperti iodin disapu pada dahi.',
-        discussionNote: 'Tidak sesuai — antiseptik hanya untuk membunuh kuman pada luka luaran badan.',
+        label: 'Antiseptik seperti hidrogen peroksida, iodin dan asid borik.',
+        discussionNote: 'Tidak tepat — antiseptik hanya disapu pada bahagian luaran sahaja dan tidak dimakan.',
       },
     ],
     causalChain: {
-      step1Fact: 'Analgesik berfungsi melegakan sakit dalam keadaan sedar (contoh: parasetamol atau aspirin).',
-      step2Reason: 'Parasetamol perlu diambil mengikut sukatan dos yang betul; aspirin dielakkan bagi pesakit gastrik atau kanak-kanak.',
-      step3Principle: 'Pemilihan ubat mesti menepati fungsi, dos dan keadaan pesakit (5.4.2).',
+      step1Fact: 'Analgesik seperti parasetamol atau aspirin melegakan sakit dalam keadaan sedar.',
+      step2Reason: 'Aspirin bersifat asid (dapat menyebabkan ulser perut bagi pesakit gastrik atau kanak-kanak) manakala parasetamol melebihi dos dapat menyebabkan kerosakan hati.',
+      step3Principle: 'Perlu diambil mengikut preskripsi doktor (Jadual 5.7, m.s. 182).',
     },
     kssmRef: 'Uji Diri 5.4 No. 3 · Jadual 5.7 (m.s. 182, 186)',
   },
   {
     id: 'u4',
     title: 'Uji Diri 5.4 (Soalan 4): Tiga Jenis Kosmetik',
-    dailySituation: 'Berikan tiga jenis kosmetik beserta contoh dan cara memilih produk yang selamat.',
-    questionWhy: 'Apakah tiga pengelasan utama bahan kosmetik mengikut Rajah 5.16?',
+    dailySituation: 'Berikan tiga jenis kosmetik.',
+    questionWhy: 'Apakah tiga jenis kosmetik mengikut Rajah 5.16?',
     hypotheses: [
       {
         id: 'h1',
         label: 'Air, Pengemulsi dan Pengawet.',
-        discussionNote: 'Kurang tepat — air, pengemulsi dan pengawet ialah bahan asas kosmetik (Rajah 5.15), bukan jenis kosmetik.',
+        discussionNote: 'Tidak tepat — air, pengemulsi dan pengawet ialah bahan-bahan asas kosmetik (Rajah 5.15).',
       },
       {
         id: 'h2',
         label: 'Kosmetik rias, Kosmetik perawatan dan Pewangi.',
-        discussionNote: 'Tepat sekali! Pastikan juga produk berdaftar dengan NPRA dan bebas merkuri serta hidrokuinon.',
+        discussionNote: 'Tepat! Pastikan juga produk bebas bahan kimia terlarang Jadual 5.8 dan berdaftar dengan NPRA.',
       },
       {
         id: 'h3',
@@ -675,11 +677,127 @@ export const DAILY_MYSTERIES: DailyMystery[] = [
       },
     ],
     causalChain: {
-      step1Fact: 'Kosmetik rias (bedak, gincu, celak, maskara), Kosmetik perawatan (krim, pelembap kulit, masker muka) dan Pewangi (deodoran, minyak wangi).',
-      step2Reason: 'Kosmetik digunakan secara luaran sahaja; elakkan bahan terlarang seperti merkuri, hidrokuinon, betamethasone valerate dan tretinoin.',
-      step3Principle: 'Pastikan kosmetik berdaftar dengan Bahagian Regulatori Farmasi Negara (NPRA).',
+      step1Fact: 'Kosmetik rias (bedak, gincu, pensel alis, pemerah pipi, pembayang mata, celak, maskara), Kosmetik perawatan (krim, pelembap kulit, masker muka) dan Pewangi (deodoran, minyak wangi).',
+      step2Reason: 'Tertakluk kepada Peraturan-peraturan Kawalan Dadah dan Kosmetik 1984 serta bebas merkuri, hidrokuinon, betamethasone valerate dan tretinoin.',
+      step3Principle: 'Peka dengan kandungan bahan dan pastikan kosmetik berdaftar dengan Bahagian Regulatori Farmasi Negara (NPRA) (m.s. 185–186).',
     },
     kssmRef: 'Uji Diri 5.4 No. 4 · Rajah 5.16 & Jadual 5.8 (m.s. 185–186)',
+  },
+  {
+    id: 'f1',
+    title: 'Latihan Modul (m.s. 226): Pokok Halia Sebagai Ubat Tradisional',
+    dailySituation: 'Rajah menunjukkan satu pokok halia. Bahagian manakah (daun, batang, tunas atau rizom) digunakan sebagai sumber utama ubat, apakah penyakit yang diubati, dan bagaimanakah cara penyediaannya?',
+    questionWhy: 'Pilih jawapan lengkap yang sepadan dengan Latihan 22:',
+    hypotheses: [
+      {
+        id: 'h1',
+        label: 'Bahagian daun; merawat kencing manis; disapu terus tanpa diproses.',
+        discussionNote: 'Tidak tepat — daun merujuk kepada lidah buaya/serai, bukan halia.',
+      },
+      {
+        id: 'h2',
+        label: 'Bahagian rizom; menyingkirkan angin dalam badan & mencegah selesema; direbus untuk mendapatkan patinya dan diminum atau dihancurkan dengan lesung.',
+        discussionNote: 'Tepat! Halia menggunakan bahagian rizom untuk menyingkirkan angin dalam badan dan mencegah selesema.',
+      },
+      {
+        id: 'h3',
+        label: 'Bahagian buah; melegakan batuk; dicampur dengan bahan kimia sintetik.',
+        discussionNote: 'Tidak tepat — buah ialah bahagian asam jawa, dan ubat tradisional tidak diproses secara kimia.',
+      },
+    ],
+    causalChain: {
+      step1Fact: 'Sumber utama halia: bahagian rizom (m.s. 226 / Rajah 5.13).',
+      step2Reason: 'Menyingkirkan angin dalam badan, mencegah selesema dan membantu memanaskan badan.',
+      step3Principle: 'Disediakan dengan menghancurkan menggunakan lesung atau direbus untuk mendapatkan patinya lalu diminum.',
+    },
+    kssmRef: 'Latihan 22 (m.s. 226) · Rajah 5.13 (m.s. 181)',
+  },
+  {
+    id: 'f2',
+    title: 'Latihan Modul (m.s. 231): Mengapa Aspirin Mengakibatkan Sakit Perut?',
+    dailySituation: 'Aspirin ialah ubat untuk sakit kepala, tetapi ia juga boleh mengakibatkan sakit perut dan tidak boleh diambil oleh kanak-kanak.',
+    questionWhy: 'Mengapakah aspirin menyebabkan sakit perut dan pendarahan dalaman?',
+    hypotheses: [
+      {
+        id: 'h1',
+        label: 'Aspirin mengandungi asid (bersifat asid).',
+        discussionNote: 'Tepat! Aspirin bersifat asid yang menghakis dinding perut sehingga menyebabkan ulser perut dan pendarahan dalaman.',
+      },
+      {
+        id: 'h2',
+        label: 'Aspirin merangsang pertumbuhan bakteria di dalam perut.',
+        discussionNote: 'Tidak tepat — aspirin ialah analgesik yang bersifat asid, bukan mikrob.',
+      },
+      {
+        id: 'h3',
+        label: 'Aspirin hanya boleh disapu pada bahagian luar badan.',
+        discussionNote: 'Tidak tepat — ubat untuk bahagian luar badan ialah antiseptik, bukan aspirin.',
+      },
+    ],
+    causalChain: {
+      step1Fact: 'Aspirin mengandungi asid (asid asetilsalisilik / bersifat asid).',
+      step2Reason: 'Boleh menyebabkan pendarahan dalaman dan ulser perut bagi pesakit gastrik dan kanak-kanak.',
+      step3Principle: 'Gunakan parasetamol sebagai alternatif analgesik bagi kanak-kanak dan ambil mengikut preskripsi doktor selepas makan.',
+    },
+    kssmRef: 'Soalan 24 & Latihan 26(b) (m.s. 231–232) · Jadual 5.7',
+  },
+  {
+    id: 'f3',
+    title: 'Latihan Modul (m.s. 231): Kes Alex & Pelajar Sakit Sendi Bengkak',
+    dailySituation: '1) Alex ialah pesakit psikiatrik yang sukar tidur dan murung. 2) Sendi kaki seorang pelajar bengkak dan dalam keadaan sakit.',
+    questionWhy: 'Apakah pasangan ubat yang betul bagi (1) Alex dan (2) pelajar tersebut?',
+    hypotheses: [
+      {
+        id: 'h1',
+        label: '(1) Kodeina dan (2) Penisilin.',
+        discussionNote: 'Tidak tepat — kodeina ialah analgesik untuk batuk/sakit manakala penisilin ialah antibiotik untuk bakteria.',
+      },
+      {
+        id: 'h2',
+        label: '(1) Trankuiliser (Ubat psikotik) dan (2) Parasetamol (Analgesik).',
+        discussionNote: 'Tepat! Trankuiliser mengurangkan bimbang dan gelisah bagi pesakit psikiatrik; Parasetamol meredakan kesakitan.',
+      },
+      {
+        id: 'h3',
+        label: '(1) Parasetamol dan (2) Insulin.',
+        discussionNote: 'Tidak tepat — parasetamol melegakan kesakitan/demam, bukan merawat kemurungan psikiatrik.',
+      },
+    ],
+    causalChain: {
+      step1Fact: 'Alex (pesakit psikiatrik): Trankuiliser / Ubat psikotik mengurangkan perasaan bimbang, gelisah dan ketegangan.',
+      step2Reason: 'Pelajar sakit dan bengkak sendi: Parasetamol (Analgesik) melegakan kesakitan.',
+      step3Principle: 'Kenal pasti fungsi setiap jenis ubat moden sebelum memilih rawatan mengikut preskripsi doktor.',
+    },
+    kssmRef: 'Soalan 25 & Latihan 26(d) (m.s. 231–232)',
+  },
+  {
+    id: 'f4',
+    title: 'Latihan Modul (m.s. 232): Antibiotik Perlu Dihabiskan & Ciri Sebenar',
+    dailySituation: 'Seorang pesakit yang dirawat dengan antibiotik berhenti makan ubat sebaik sahaja rasa sembuh, dan rakannya menyangka antibiotik juga melegakan kesakitan.',
+    questionWhy: 'Apakah kesan jika antibiotik tidak dihabiskan dan kenyataan manakah TIDAK benar tentang antibiotik?',
+    hypotheses: [
+      {
+        id: 'h1',
+        label: 'Bakteria menjadi lebih imun terhadap antibiotik; TIDAK benar bahawa antibiotik berkesan mengurangkan kesakitan.',
+        discussionNote: 'Tepat! Jika tidak dihabiskan, bakteria menjadi imun dan perlukan dos lebih tinggi. Analgesik yang mengurangkan sakit, bukan antibiotik.',
+      },
+      {
+        id: 'h2',
+        label: 'Semua virus akan mati dengan cepat; antibiotik meredakan sakit kepala.',
+        discussionNote: 'Tidak tepat — antibiotik hanya membunuh/merencatkan bakteria (bukan virus dan bukan untuk kesakitan).',
+      },
+      {
+        id: 'h3',
+        label: 'Penyakit tidak akan berulang walaupun antibiotik dihentikan awal.',
+        discussionNote: 'Tidak tepat — baki bakteria yang imun menyebabkan penyakit berulang semula.',
+      },
+    ],
+    causalChain: {
+      step1Fact: 'Jika tidak semua bakteria dibunuh, bakteria menjadi lebih imun terhadap antibiotik.',
+      step2Reason: 'Pesakit memerlukan dos yang lebih tinggi untuk rawatan selanjutnya (m.s. 232).',
+      step3Principle: 'Antibiotik membunuh atau merencatkan bakteria sahaja — tidak mengurangkan kesakitan dan tidak merawat jangkitan virus.',
+    },
+    kssmRef: 'Soalan 4 & Latihan 26(c) (m.s. 232) · Jadual 5.7',
   },
 ];
 

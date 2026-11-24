@@ -11,20 +11,20 @@ interface Slide05Props {
 const MISUSE_CASES = [
   {
     title: 'Antibiotik',
-    cause: 'Tidak dihabiskan tempoh pengambilannya atau diambil tanpa arahan doktor.',
-    bodyProcess: 'Bakteria tidak dibunuh sepenuhnya lalu membina ketahanan.',
+    cause: 'Antibiotik tidak dihabiskan atau disalahgunakan tanpa preskripsi doktor.',
+    bodyProcess: 'Bakteria menjadi imun kepada antibiotik dan penyakit akan berulang semula.',
     impact: 'Rintangan antibiotik.',
   },
   {
     title: 'Ubat tradisional berasaskan herba',
-    cause: 'Tiada data kajian mengesahkan keberkesanan atau dos yang betul.',
-    bodyProcess: 'Dos yang tidak tepat membebankan fungsi hati dan buah pinggang.',
+    cause: 'Sesetengah ubat tradisional tidak mempunyai apa-apa data kajian untuk ditentusahkan akan keberkesanannya.',
+    bodyProcess: 'Ketiadaan data kajian menyukarkan pemantauan dan penggunaan dos rawatan yang betul.',
     impact: 'Kegagalan fungsi hati dan buah pinggang.',
   },
   {
     title: 'Kodeina',
-    cause: 'Diambil tidak mengikut preskripsi doktor atau disalah guna.',
-    bodyProcess: 'Pengambilan berterusan atau berlebihan menyebabkan kebergantungan ubat.',
+    cause: 'Penyalahgunaan ubat analgesik tanpa mengikut preskripsi doktor.',
+    bodyProcess: 'Penyalahgunaan melibatkan kedua-dua ubat moden dan ubat tradisional.',
     impact: 'Ketagihan.',
   },
 ];
@@ -40,7 +40,7 @@ export const Slide05AbuseNpra: React.FC<Slide05Props> = ({ interactions, onPatch
             5.4.2 · Keberkesanan, Penyalahgunaan Ubat &amp; Kawalan KKM (Gambar foto 5.10 · m.s. 183–184)
           </div>
           <h2 className="font-display text-[29px] font-bold text-[var(--apple-label)] mt-0.5 leading-tight">
-            Kesan Penyalahgunaan Ubat &amp; Penyeliaan NPRA
+            Keberkesanan, Penyalahgunaan Ubat &amp; Penyeliaan NPRA
           </h2>
         </div>
       </div>

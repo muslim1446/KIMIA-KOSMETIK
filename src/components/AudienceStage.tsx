@@ -6,6 +6,8 @@ import {
   APPLE_SPRINGS,
   APPLE_TOUCH_SLOP_PX,
   applyTouchSlop,
+  shouldAllowSingleFingerPan,
+  SINGLE_PAN_BLOCKED_SELECTOR,
   uikitScrollDecelerate,
 } from '../utils/applePhysics';
 import { SLIDES_META } from '../data/slidesData';
@@ -241,6 +243,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
 
   const [isPinchingOrPanning, setIsPinchingOrPanning] = useState(false);
   const gestureTimerRef = useRef<number | null>(null);
+  const cancelMomentumRef = useRef<(() => void) | null>(null);
 
   // ── Stable refs so event-handler closures always read fresh values ─────────
   const zoomScaleRef = useRef(zoomScale);
@@ -274,6 +277,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
         momentumRafId = null;
       }
     };
+    cancelMomentumRef.current = cancelMomentum;
 
     const startTouchMomentum = (startX: number, startY: number, v0x: number, v0y: number) => {
       cancelMomentum();
@@ -305,13 +309,11 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
       if (pts.size === 1) {
         const target = e.target as HTMLElement | null;
         const stage = slideContainerRef.current?.closest('main');
-        singlePanEnabled =
-          tool !== 'pen' &&
-          tool !== 'eraser' &&
-          Boolean(stage?.contains(target)) &&
-          !target?.closest(
-            'button, input, textarea, select, [role="button"], [data-testid*="popover"], [data-testid="google-browser-frame"], [data-testid="gemini-assistant-frame"], [data-presentation-island]',
-          );
+        singlePanEnabled = shouldAllowSingleFingerPan({
+          tool,
+          isTargetInsideStage: Boolean(stage?.contains(target)),
+          matchesBlockedSelector: Boolean(target?.closest(SINGLE_PAN_BLOCKED_SELECTOR)),
+        });
         singlePanLocked = false;
         const [point] = pts.values();
         singleStartX = point.x;
@@ -346,6 +348,10 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
         let dx = point.x - prevSingleX;
         let dy = point.y - prevSingleY;
         if (!singlePanLocked) {
+          if (document.querySelector('[data-text-editor-ui]')) {
+            singlePanEnabled = false;
+            return;
+          }
           const slop = applyTouchSlop(point.x - singleStartX, point.y - singleStartY, APPLE_TOUCH_SLOP_PX);
           if (!slop.locked) {
             return;
@@ -431,6 +437,9 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
     document.addEventListener('touchcancel', onEnd, { passive: true });
     return () => {
       cancelMomentum();
+      if (cancelMomentumRef.current === cancelMomentum) {
+        cancelMomentumRef.current = null;
+      }
       document.removeEventListener('touchstart', onStart);
       document.removeEventListener('touchmove', onMove);
       document.removeEventListener('touchend', onEnd);
@@ -438,6 +447,10 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
       if (gestureTimerRef.current) window.clearTimeout(gestureTimerRef.current);
     };
   }, [isRemoteProjector, tool]);
+
+  useEffect(() => {
+    cancelMomentumRef.current?.();
+  }, [slideIndex]);
 
   // ── Touchpad & Mouse Wheel: Pinch-to-Zoom (Ctrl/Meta) & Free 360° Pan ──────
   // Works on ALL laptop touchpads (Windows Precision, MacBook trackpad, Chromebook):
@@ -451,7 +464,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
       const target = e.target as HTMLElement | null;
       if (
         target?.closest(
-          'input, textarea, select, [data-testid="pen-settings-popover"], [data-testid="sync-settings-popover"], [data-testid="presence-popover"], [data-testid="google-browser-frame"], [data-testid="gemini-assistant-frame"]',
+          'input, textarea, select, [role="dialog"], [aria-modal="true"], [data-testid="pen-settings-popover"], [data-testid="sync-settings-popover"], [data-testid="presence-popover"], [data-testid="google-browser-frame"], [data-testid="gemini-floating-frame"], [data-testid="first-visit-guide"]',
         )
       ) {
         return;
@@ -879,6 +892,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
           isRemoteProjector={isRemoteProjector}
           zoomScale={zoomScale}
           panOffset={panOffset}
+          isPinchingOrPanning={isPinchingOrPanning}
         />
       )}
 
@@ -897,6 +911,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
           panOffset={panOffset}
           focusTextId={textFocusRequest?.id ?? null}
           focusToken={textFocusRequest?.token ?? 0}
+          isPinchingOrPanning={isPinchingOrPanning}
         />
       )}
 
@@ -910,6 +925,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
           textEdits={textEdits}
           onSaveTextEdit={onSaveTextEdit}
           isRemoteProjector={isRemoteProjector}
+          isPinchingOrPanning={isPinchingOrPanning}
         />
       )}
 
@@ -1080,6 +1096,7 @@ export const AudienceStage: React.FC<AudienceStageProps> = ({
           onZoomChange={(next) => {
             setZoomScale(next);
             if (next === 1) {
+              cancelMomentumRef.current?.();
               setPanOffset({ x: 0, y: 0 });
             }
           }}

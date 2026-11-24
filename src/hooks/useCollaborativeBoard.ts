@@ -333,6 +333,7 @@ export function useCollaborativeBoard({
   const clearedLegacyTextSlidesRef = useRef<Set<string>>(new Set());
   const lastLocalLaserPushRef = useRef<number>(0);
   const lastLocalLaserActiveRef = useRef<boolean>(false);
+  const lastLocalRoomPushRef = useRef<number>(0);
   const laserPushTimerRef = useRef<number | null>(null);
   const pendingLaserRef = useRef<LaserPoint | null>(null);
   const presentationStateRef = useRef(presentationState);
@@ -681,15 +682,18 @@ export function useCollaborativeBoard({
             if (!snap.exists()) return;
             const data = snap.data();
             if (!snap.metadata.hasPendingWrites) {
+              const suppressRoomEcho = Date.now() - lastLocalRoomPushRef.current < 900;
               const suppressLaserEcho =
                 lastLocalLaserActiveRef.current || Date.now() - lastLocalLaserPushRef.current < 450;
-              onRemotePresentationSync({
-                slideIndex: typeof data.slideIndex === 'number' ? data.slideIndex : 0,
-                blackout: Boolean(data.blackout),
-                projectorDark: Boolean(data.projectorDark),
-                ...(suppressLaserEcho ? {} : { laser: data.laser }),
-                interactions: data.interactions,
-              });
+              if (!suppressRoomEcho) {
+                onRemotePresentationSync({
+                  slideIndex: typeof data.slideIndex === 'number' ? data.slideIndex : 0,
+                  blackout: Boolean(data.blackout),
+                  projectorDark: Boolean(data.projectorDark),
+                  ...(suppressLaserEcho ? {} : { laser: data.laser }),
+                  interactions: data.interactions,
+                });
+              }
             }
 
             const nextIds: string[] = Array.isArray(data.imageIds) ? data.imageIds : [];
@@ -1079,6 +1083,7 @@ export function useCollaborativeBoard({
   const pushPresentationStateToFirebase = useCallback(
     async (next: SyncedPresentationState) => {
       if (!isFirebaseActive) return;
+      lastLocalRoomPushRef.current = Date.now();
       const path = `rooms/${roomId}`;
       try {
         // setDoc(merge) instead of updateDoc: never fails with "document not found"

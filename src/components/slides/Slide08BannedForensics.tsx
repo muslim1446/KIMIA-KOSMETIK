@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, ShieldAlert, Skull } from 'lucide-react';
+import { Ban, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { BANNED_CHEMICALS } from '../../data/slidesData';
 import { SharedSlideInteractions } from '../../hooks/usePresentationSync';
 
@@ -13,9 +13,9 @@ export const Slide08BannedForensics: React.FC<Slide08Props> = ({ interactions, o
     BANNED_CHEMICALS.find((c) => c.id === interactions.bannedChemicalId) ?? BANNED_CHEMICALS[0];
 
   const targetDepthY =
-    activeChemical.bodyTarget === 'sistem_saraf_ginjal'
+    activeChemical.hazardProfile === 'penyerapan_toksik'
       ? 156
-      : activeChemical.bodyTarget === 'melanosit_uv' || activeChemical.bodyTarget === 'pigmentasi_epidermis'
+      : activeChemical.hazardProfile === 'gangguan_pigmentasi_uv' || activeChemical.hazardProfile === 'perubahan_pigmentasi'
       ? 78
       : 40;
 
@@ -27,7 +27,7 @@ export const Slide08BannedForensics: React.FC<Slide08Props> = ({ interactions, o
             5.4.4 · Penggunaan Kosmetik &amp; Bahan Kimia Terlarang (Rajah 5.17 &amp; Jadual 5.8 · m.s. 185–186)
           </div>
           <h2 className="font-display text-[28px] font-bold text-[var(--apple-label)] mt-0.5 leading-tight">
-            Kosmetik Buatan Sendiri, Keburukan Komersial &amp; Kesan Bahan Terlarang
+            Kosmetik Buatan Sendiri vs Komersial &amp; Bahan Kimia Terlarang
           </h2>
         </div>
 
@@ -114,7 +114,7 @@ export const Slide08BannedForensics: React.FC<Slide08Props> = ({ interactions, o
               >
                 <div className="flex items-center justify-between">
                   <span className="font-display text-[19px] font-bold text-[var(--apple-label)]">{chem.name}</span>
-                  <Skull className={`w-5 h-5 shrink-0 ${active ? 'text-[var(--apple-red-fg)]' : 'text-[var(--apple-tertiary-label)]'}`} />
+                  <Ban className={`w-5 h-5 shrink-0 ${active ? 'text-[var(--apple-red-fg)]' : 'text-[var(--apple-tertiary-label)]'}`} />
                 </div>
                 <div className="text-[14px] text-[var(--apple-secondary-label)] mt-0.5 leading-snug">{chem.productFoundIn}</div>
               </button>
@@ -128,7 +128,7 @@ export const Slide08BannedForensics: React.FC<Slide08Props> = ({ interactions, o
         >
           <div className="grid grid-cols-12 gap-4 items-center">
             <div className="col-span-5 apple-slide-inset rounded-[18px] p-3">
-              <svg viewBox="0 0 215 190" className="w-full h-44" role="img" aria-label="Kesan bahan kimia terlarang pada kulit dan badan">
+              <svg viewBox="0 0 215 190" className="w-full h-44" role="img" aria-label="Tahap risiko bahan kimia terlarang Jadual 5.8">
                 <line
                   x1="18"
                   y1="14"
@@ -152,18 +152,18 @@ export const Slide08BannedForensics: React.FC<Slide08Props> = ({ interactions, o
                   height="32"
                   rx="7"
                   fill={
-                    activeChemical.bodyTarget === 'lapisan_luar' ||
-                    activeChemical.bodyTarget === 'melanosit_uv' ||
-                    activeChemical.bodyTarget === 'pigmentasi_epidermis' ||
-                    activeChemical.bodyTarget === 'sistem_saraf_ginjal'
+                    activeChemical.hazardProfile === 'kerengsaan_permukaan' ||
+                    activeChemical.hazardProfile === 'gangguan_pigmentasi_uv' ||
+                    activeChemical.hazardProfile === 'perubahan_pigmentasi' ||
+                    activeChemical.hazardProfile === 'penyerapan_toksik'
                       ? '#FCA5A5'
                       : 'var(--slide-svg-neutral-fill)'
                   }
                   stroke="#DC2626"
                   strokeWidth="1.5"
                 />
-                <text x="120" y="40" textAnchor="middle" fontSize="12" fill="#450A0A" fontWeight="800">
-                  1. Permukaan Kulit
+                <text x="120" y="40" textAnchor="middle" fontSize="11" fill="#450A0A" fontWeight="800">
+                  1. Kulit Merengsa / Mengelupas
                 </text>
 
                 <rect
@@ -173,12 +173,12 @@ export const Slide08BannedForensics: React.FC<Slide08Props> = ({ interactions, o
                   height="36"
                   rx="7"
                   fill={
-                    activeChemical.bodyTarget === 'melanosit_uv' || activeChemical.bodyTarget === 'pigmentasi_epidermis'
+                    activeChemical.hazardProfile === 'gangguan_pigmentasi_uv' || activeChemical.hazardProfile === 'perubahan_pigmentasi'
                       ? '#FECACA'
                       : 'var(--slide-svg-neutral-fill)'
                   }
                   stroke={
-                    activeChemical.bodyTarget === 'melanosit_uv' || activeChemical.bodyTarget === 'pigmentasi_epidermis'
+                    activeChemical.hazardProfile === 'gangguan_pigmentasi_uv' || activeChemical.hazardProfile === 'perubahan_pigmentasi'
                       ? '#DC2626'
                       : 'var(--slide-svg-ring)'
                   }
@@ -188,15 +188,15 @@ export const Slide08BannedForensics: React.FC<Slide08Props> = ({ interactions, o
                   x="120"
                   y="80"
                   textAnchor="middle"
-                  fontSize="11.5"
+                  fontSize="11"
                   fill={
-                    activeChemical.bodyTarget === 'melanosit_uv' || activeChemical.bodyTarget === 'pigmentasi_epidermis'
+                    activeChemical.hazardProfile === 'gangguan_pigmentasi_uv' || activeChemical.hazardProfile === 'perubahan_pigmentasi'
                       ? '#450A0A'
                       : 'var(--slide-svg-ink)'
                   }
                   fontWeight="800"
                 >
-                  2. Pigmentasi Kulit &amp; Sinar UV
+                  2. Pigmentasi &amp; Sinar UV
                 </text>
 
                 <rect
@@ -205,19 +205,19 @@ export const Slide08BannedForensics: React.FC<Slide08Props> = ({ interactions, o
                   width="172"
                   height="30"
                   rx="7"
-                  fill={activeChemical.bodyTarget === 'sistem_saraf_ginjal' ? '#FCA5A5' : 'var(--slide-svg-neutral-fill)'}
-                  stroke={activeChemical.bodyTarget === 'sistem_saraf_ginjal' ? '#DC2626' : 'var(--slide-svg-ring)'}
+                  fill={activeChemical.hazardProfile === 'penyerapan_toksik' ? '#FCA5A5' : 'var(--slide-svg-neutral-fill)'}
+                  stroke={activeChemical.hazardProfile === 'penyerapan_toksik' ? '#DC2626' : 'var(--slide-svg-ring)'}
                   strokeWidth="1.5"
                 />
                 <text
                   x="120"
                   y="119"
                   textAnchor="middle"
-                  fontSize="12"
-                  fill={activeChemical.bodyTarget === 'sistem_saraf_ginjal' ? '#450A0A' : 'var(--slide-svg-ink)'}
+                  fontSize="11"
+                  fill={activeChemical.hazardProfile === 'penyerapan_toksik' ? '#450A0A' : 'var(--slide-svg-ink)'}
                   fontWeight="800"
                 >
-                  3. Salur Darah
+                  3. Diserap ke Salur Darah
                 </text>
 
                 <rect
@@ -226,19 +226,19 @@ export const Slide08BannedForensics: React.FC<Slide08Props> = ({ interactions, o
                   width="172"
                   height="38"
                   rx="7"
-                  fill={activeChemical.bodyTarget === 'sistem_saraf_ginjal' ? '#C91D12' : 'var(--slide-svg-neutral-fill)'}
-                  stroke={activeChemical.bodyTarget === 'sistem_saraf_ginjal' ? '#991B1B' : 'var(--slide-svg-ring)'}
+                  fill={activeChemical.hazardProfile === 'penyerapan_toksik' ? '#C91D12' : 'var(--slide-svg-neutral-fill)'}
+                  stroke={activeChemical.hazardProfile === 'penyerapan_toksik' ? '#991B1B' : 'var(--slide-svg-ring)'}
                   strokeWidth="1.5"
                 />
                 <text
                   x="120"
                   y="159"
                   textAnchor="middle"
-                  fontSize="11.5"
-                  fill={activeChemical.bodyTarget === 'sistem_saraf_ginjal' ? '#FFFFFF' : 'var(--slide-svg-ink)'}
+                  fontSize="10.5"
+                  fill={activeChemical.hazardProfile === 'penyerapan_toksik' ? '#FFFFFF' : 'var(--slide-svg-ink)'}
                   fontWeight="800"
                 >
-                  4. Buah Pinggang &amp; Saraf
+                  4. Kerosakan Buah Pinggang &amp; Saraf
                 </text>
               </svg>
             </div>
@@ -252,7 +252,7 @@ export const Slide08BannedForensics: React.FC<Slide08Props> = ({ interactions, o
               </div>
 
               <div className="apple-slide-inset rounded-[14px] p-3">
-                <div className="text-[14px] font-bold text-[var(--apple-secondary-label)]">Kesan Sampingan</div>
+                <div className="text-[14px] font-bold text-[var(--apple-secondary-label)]">Kesan Sampingan (Jadual 5.8)</div>
                 <p className="text-[15px] text-[var(--apple-label)] mt-0.5 leading-snug">
                   {activeChemical.explanation}
                 </p>

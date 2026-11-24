@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertCircle, Atom, CheckCircle2, ShieldAlert, UserCheck } from 'lucide-react';
+import { AlertCircle, Atom, CheckCircle2, FlaskConical, ShieldAlert } from 'lucide-react';
 import { MODERN_DRUGS, ModernDrugItem } from '../../data/slidesData';
 import { SharedSlideInteractions } from '../../hooks/usePresentationSync';
 import { assessDrugForPatient, PatientProfileId } from '../../utils/presentationEngine';
@@ -22,11 +22,11 @@ const CATEGORIES: {
 ];
 
 const PATIENT_PROFILES: { id: PatientProfileId; label: string }[] = [
-  { id: 'dewasa_sihat', label: 'Dewasa Sihat' },
+  { id: 'dewasa_sihat', label: 'Pengambilan Biasa' },
   { id: 'pesakit_gastrik', label: 'Pesakit Gastrik' },
   { id: 'kanak_kanak', label: 'Kanak-kanak' },
   { id: 'alahan_penisilin', label: 'Alahan Penisilin' },
-  { id: 'luka_luaran', label: 'Luka Luaran' },
+  { id: 'luka_luaran', label: 'Bahagian Luar' },
 ];
 
 export const Slide03ModernDrugs: React.FC<Slide03Props> = ({ interactions, onPatch }) => {
@@ -41,7 +41,7 @@ export const Slide03ModernDrugs: React.FC<Slide03Props> = ({ interactions, onPat
             5.4.1 &amp; 5.4.2 · Ubat Moden (Rajah 5.14 &amp; Jadual 5.7 · m.s. 182–183)
           </div>
           <h2 className="font-display text-[29px] font-bold text-[var(--apple-label)] mt-0.5 leading-tight">
-            Lima Jenis Ubat Moden: Fungsi, Cara Penggunaan &amp; Kesan Sampingan
+            Ubat Moden: Jenis, Fungsi, Cara Penggunaan &amp; Kesan Sampingan
           </h2>
         </div>
 
@@ -120,7 +120,7 @@ export const Slide03ModernDrugs: React.FC<Slide03Props> = ({ interactions, onPat
           })}
 
           <div className="text-[14px] text-[var(--apple-secondary-label)] px-1 leading-snug">
-            <strong className="text-[var(--apple-label)]">Ibnu Sina</strong> (Bapa Perubatan Moden) · Bentuk: pil, kapsul, serbuk dan larutan
+            <strong className="text-[var(--apple-label)]">Ibnu Sina</strong> (Bapa Perubatan Moden) · Sumber tumbuhan, mikroorganisma atau bahan kimia sintetik · Bentuk: pil, kapsul, serbuk, larutan
           </div>
         </div>
 
@@ -153,7 +153,7 @@ export const Slide03ModernDrugs: React.FC<Slide03Props> = ({ interactions, onPat
 
               <div className="col-span-6 bg-amber-50/85 dark:bg-amber-950/30 border border-amber-300/60 dark:border-amber-700/50 rounded-[14px] p-3.5">
                 <div className="text-[14px] font-bold text-[var(--apple-orange-fg)]">
-                  Kesan Sampingan
+                  Kesan Sampingan (Jadual 5.7)
                 </div>
                 <p className="text-[15px] text-[var(--apple-label)] mt-1 leading-snug">
                   {activeDrug.sideEffects}
@@ -161,17 +161,22 @@ export const Slide03ModernDrugs: React.FC<Slide03Props> = ({ interactions, onPat
               </div>
             </div>
 
-            <div className="text-[15px] text-[var(--apple-secondary-label)]">
-              <strong className="text-[var(--apple-label)]">Cara Penggunaan:</strong> {activeDrug.usageRule}
+            <div className="space-y-1 text-[14.5px] text-[var(--apple-secondary-label)]">
+              <div>
+                <strong className="text-[var(--apple-label)]">Cara Penggunaan:</strong> {activeDrug.usageRule}
+              </div>
+              <div className="text-[var(--apple-blue-fg)] font-semibold">
+                {activeDrug.summaryNote}
+              </div>
             </div>
           </div>
 
           <div className="apple-slide-card rounded-[22px] p-4 flex-1 flex flex-col justify-between">
             <div>
               <div className="flex items-center gap-2 mb-2.5">
-                <UserCheck className="w-5 h-5 text-[var(--apple-blue-fg)]" />
+                <FlaskConical className="w-5 h-5 text-[var(--apple-blue-fg)]" />
                 <span className="font-display text-[18px] font-bold text-[var(--apple-label)]">
-                  Kesesuaian Mengikut Pesakit
+                  Semakan Kesesuaian Mengikut Jadual 5.7
                 </span>
               </div>
 

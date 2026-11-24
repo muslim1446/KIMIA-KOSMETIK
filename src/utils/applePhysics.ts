@@ -586,6 +586,58 @@ export function inwardRimMirrorOffset(
 
 /** UIKit UIScrollView touch-slop threshold (~10pt) before locking pan/scroll direction */
 export const APPLE_TOUCH_SLOP_PX = 10;
+export const APPLE_ELEMENT_DRAG_SLOP_TOUCH_PX = 6;
+export const APPLE_ELEMENT_DRAG_SLOP_MOUSE_PX = 2;
+
+export function getElementDragSlopPx(pointerType: string): number {
+  return pointerType === 'mouse' ? APPLE_ELEMENT_DRAG_SLOP_MOUSE_PX : APPLE_ELEMENT_DRAG_SLOP_TOUCH_PX;
+}
+
+export const SINGLE_PAN_BLOCKED_SELECTOR = [
+  'button',
+  'a',
+  'input',
+  'textarea',
+  'select',
+  'label',
+  'summary',
+  '[contenteditable="true"]',
+  '[role="button"]',
+  '[role="tab"]',
+  '[role="slider"]',
+  '[role="switch"]',
+  '[role="dialog"]',
+  '[aria-modal="true"]',
+  '[data-testid*="popover"]',
+  '[data-testid="google-browser-frame"]',
+  '[data-testid="gemini-floating-frame"]',
+  '[data-testid="first-visit-guide"]',
+  '[data-testid="laser-capture-surface"]',
+  '[data-presentation-island]',
+  '[data-slide-image-root]',
+  '[data-slide-text-root]',
+  '[data-slide-text-ui]',
+  '[data-slide-pdf-root]',
+  '[data-slide-pdf-ui]',
+  '[data-text-editor-ui]',
+].join(', ');
+
+export function shouldAllowSingleFingerPan(args: {
+  tool: string;
+  isTargetInsideStage: boolean;
+  matchesBlockedSelector: boolean;
+}): boolean {
+  if (args.tool === 'pen' || args.tool === 'eraser' || args.tool === 'laser') {
+    return false;
+  }
+  if (!args.isTargetInsideStage) {
+    return false;
+  }
+  if (args.matchesBlockedSelector) {
+    return false;
+  }
+  return true;
+}
 
 /**
  * Evaluates swipe hysteresis against cumulative finger delta from touch-down.

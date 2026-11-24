@@ -44,17 +44,21 @@ export function clampFloatingFrameRect(
   viewportW: number,
   viewportH: number,
 ): FloatingFrameRect {
-  const minW = 310;
-  const maxW = Math.max(minW, Math.min(780, viewportW - 24));
-  const minH = 260;
-  const maxH = Math.max(minH, Math.min(680, viewportH - 24));
+  const safeVw = Number.isFinite(viewportW) && viewportW > 0 ? viewportW : 1280;
+  const safeVh = Number.isFinite(viewportH) && viewportH > 0 ? viewportH : 720;
+  const margin = safeVw < 420 ? 8 : 12;
+
+  const minW = Math.min(310, Math.max(240, safeVw - margin * 2));
+  const maxW = Math.max(minW, Math.min(780, safeVw - margin * 2));
+  const minH = Math.min(260, Math.max(200, safeVh - margin * 2));
+  const maxH = Math.max(minH, Math.min(680, safeVh - margin * 2));
 
   const width = Math.round(Math.max(minW, Math.min(maxW, rect.width)));
   const height = Math.round(Math.max(minH, Math.min(maxH, rect.height)));
-  const maxX = Math.max(12, viewportW - width - 12);
-  const maxY = Math.max(12, viewportH - height - 12);
-  const x = Math.round(Math.max(12, Math.min(maxX, rect.x)));
-  const y = Math.round(Math.max(12, Math.min(maxY, rect.y)));
+  const maxX = Math.max(margin, safeVw - width - margin);
+  const maxY = Math.max(margin, safeVh - height - margin);
+  const x = Math.round(Math.max(margin, Math.min(maxX, rect.x)));
+  const y = Math.round(Math.max(margin, Math.min(maxY, rect.y)));
 
   return { x, y, width, height };
 }

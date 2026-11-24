@@ -18,6 +18,7 @@ import {
   edgeLeadingSprings,
   evaluateSpringProgress,
   evaluateSpringState,
+  getElementDragSlopPx,
   getSfProTrackingEm,
   inwardRimMirrorOffset,
   lipBevelProfile,
@@ -25,6 +26,8 @@ import {
   physicalHairlinePx,
   projectScrollEndpoint,
   sdfEdgeAlpha,
+  shouldAllowSingleFingerPan,
+  SINGLE_PAN_BLOCKED_SELECTOR,
   smoothMin,
   smootherstep,
   snellRefract2D,
@@ -278,4 +281,62 @@ test('UIKit 10pt touch-slop hysteresis and physical Retina 1px hairlines match s
   assert.equal(physicalHairlinePx(1), 1);
   assert.equal(physicalHairlinePx(2), 0.5);
   assert.equal(physicalHairlinePx(3), 0.333);
+});
+
+test('shouldAllowSingleFingerPan and getElementDragSlopPx enforce clean touch gesture mediation', () => {
+  assert.equal(getElementDragSlopPx('touch'), 6);
+  assert.equal(getElementDragSlopPx('pen'), 6);
+  assert.equal(getElementDragSlopPx('mouse'), 2);
+
+  assert.equal(
+    shouldAllowSingleFingerPan({
+      tool: 'pointer',
+      isTargetInsideStage: true,
+      matchesBlockedSelector: false,
+    }),
+    true,
+  );
+  assert.equal(
+    shouldAllowSingleFingerPan({
+      tool: 'laser',
+      isTargetInsideStage: true,
+      matchesBlockedSelector: false,
+    }),
+    false,
+  );
+  assert.equal(
+    shouldAllowSingleFingerPan({
+      tool: 'pen',
+      isTargetInsideStage: true,
+      matchesBlockedSelector: false,
+    }),
+    false,
+  );
+  assert.equal(
+    shouldAllowSingleFingerPan({
+      tool: 'eraser',
+      isTargetInsideStage: true,
+      matchesBlockedSelector: false,
+    }),
+    false,
+  );
+  assert.equal(
+    shouldAllowSingleFingerPan({
+      tool: 'pointer',
+      isTargetInsideStage: false,
+      matchesBlockedSelector: false,
+    }),
+    false,
+  );
+  assert.equal(
+    shouldAllowSingleFingerPan({
+      tool: 'pointer',
+      isTargetInsideStage: true,
+      matchesBlockedSelector: true,
+    }),
+    false,
+  );
+  assert.match(SINGLE_PAN_BLOCKED_SELECTOR, /\[data-slide-image-root\]/);
+  assert.match(SINGLE_PAN_BLOCKED_SELECTOR, /\[data-testid="gemini-floating-frame"\]/);
+  assert.match(SINGLE_PAN_BLOCKED_SELECTOR, /\[role="slider"\]/);
 });

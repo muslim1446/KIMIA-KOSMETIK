@@ -189,7 +189,7 @@ export function usePresentationSync(
           updatedAt: Date.now(),
           senderId: senderIdRef.current,
         };
-        broadcastState(next);
+        queueMicrotask(() => broadcastState(next));
         return next;
       });
     },

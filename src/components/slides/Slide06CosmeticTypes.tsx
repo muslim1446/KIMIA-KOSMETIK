@@ -14,7 +14,7 @@ interface CosmeticProductItem {
   categoryLabel: string;
   purpose: string;
   textbookNote: string;
-  actionZone: 'atas_kulit' | 'lapisan_epidermis' | 'udara';
+  actionZone: 'atas_kulit' | 'formulasi_perawatan' | 'udara';
 }
 
 const COSMETIC_ITEMS: CosmeticProductItem[] = [
@@ -23,8 +23,8 @@ const COSMETIC_ITEMS: CosmeticProductItem[] = [
     name: 'Bedak',
     category: 'rias',
     categoryLabel: 'Kosmetik rias',
-    purpose: 'Digunakan untuk mencantikkan wajah.',
-    textbookNote: 'Disapu secara luaran pada permukaan wajah.',
+    purpose: 'Digunakan untuk mencantikkan wajah (Rajah 5.16).',
+    textbookNote: 'Tergolong dalam kumpulan kosmetik rias bersama gincu, pensel alis, pemerah pipi, pembayang mata, celak dan maskara.',
     actionZone: 'atas_kulit',
   },
   {
@@ -32,8 +32,8 @@ const COSMETIC_ITEMS: CosmeticProductItem[] = [
     name: 'Gincu',
     category: 'rias',
     categoryLabel: 'Kosmetik rias',
-    purpose: 'Digunakan untuk mencantikkan wajah dengan memberi warna pada bibir.',
-    textbookNote: 'Contoh kosmetik rias untuk kegunaan luaran bibir.',
+    purpose: 'Digunakan untuk mencantikkan wajah (Rajah 5.16).',
+    textbookNote: 'Menggunakan bahan asas kosmetik seperti pewarna dan pelembap untuk kegunaan luaran (Rajah 5.15).',
     actionZone: 'atas_kulit',
   },
   {
@@ -41,8 +41,8 @@ const COSMETIC_ITEMS: CosmeticProductItem[] = [
     name: 'Pensel alis, celak & maskara',
     category: 'rias',
     categoryLabel: 'Kosmetik rias',
-    purpose: 'Digunakan untuk mencantikkan wajah di bahagian mata dan kening.',
-    textbookNote: 'Tersenarai sebagai contoh kosmetik rias dalam Rajah 5.16.',
+    purpose: 'Digunakan untuk mencantikkan wajah (Rajah 5.16).',
+    textbookNote: 'Dihasilkan daripada gabungan bahan asas kosmetik termasuk pewarna dan pemekat (Rajah 5.15).',
     actionZone: 'atas_kulit',
   },
   {
@@ -50,8 +50,8 @@ const COSMETIC_ITEMS: CosmeticProductItem[] = [
     name: 'Pemerah pipi & pembayang mata',
     category: 'rias',
     categoryLabel: 'Kosmetik rias',
-    purpose: 'Digunakan untuk mencantikkan wajah.',
-    textbookNote: 'Memberikan warna pada pipi dan kelopak mata secara luaran.',
+    purpose: 'Digunakan untuk mencantikkan wajah (Rajah 5.16).',
+    textbookNote: 'Tertakluk kepada Peraturan-peraturan Kawalan Dadah dan Kosmetik 1984 (m.s. 185).',
     actionZone: 'atas_kulit',
   },
   {
@@ -59,26 +59,26 @@ const COSMETIC_ITEMS: CosmeticProductItem[] = [
     name: 'Krim & pelembap kulit',
     category: 'perawatan',
     categoryLabel: 'Kosmetik perawatan',
-    purpose: 'Rawatan pada tubuh untuk menjaga kesihatan dan kelembapan kulit.',
-    textbookNote: 'Contoh kosmetik perawatan bagi kegunaan luaran tubuh.',
-    actionZone: 'lapisan_epidermis',
+    purpose: 'Rawatan pada tubuh (Rajah 5.16).',
+    textbookNote: 'Menggunakan pengemulsi (lesitin, asid stearik) bagi membentuk campuran homogen antara air dan minyak serta pelembap (Rajah 5.15).',
+    actionZone: 'formulasi_perawatan',
   },
   {
     id: 'masker',
     name: 'Masker muka',
     category: 'perawatan',
     categoryLabel: 'Kosmetik perawatan',
-    purpose: 'Rawatan pada tubuh untuk membersih dan menyegarkan kulit wajah.',
-    textbookNote: 'Contoh kosmetik perawatan dalam Rajah 5.16.',
-    actionZone: 'lapisan_epidermis',
+    purpose: 'Rawatan pada tubuh (Rajah 5.16).',
+    textbookNote: 'Gabungan air sebagai bahan pelarut bersama pemekat, pelembap serta pengawet untuk mengelakkan kerosakan kosmetik (Rajah 5.15).',
+    actionZone: 'formulasi_perawatan',
   },
   {
     id: 'deodoran',
     name: 'Deodoran',
     category: 'pewangi',
     categoryLabel: 'Pewangi',
-    purpose: 'Memberikan haruman dan membantu mengekalkan kesegaran badan.',
-    textbookNote: 'Contoh pewangi untuk kegunaan luaran dalam Rajah 5.16.',
+    purpose: 'Memberikan haruman (Rajah 5.16).',
+    textbookNote: 'Dikelaskan dalam kumpulan pewangi bersama minyak wangi (Rajah 5.16, m.s. 185).',
     actionZone: 'udara',
   },
   {
@@ -86,8 +86,8 @@ const COSMETIC_ITEMS: CosmeticProductItem[] = [
     name: 'Minyak wangi',
     category: 'pewangi',
     categoryLabel: 'Pewangi',
-    purpose: 'Memberikan haruman yang menyenangkan.',
-    textbookNote: 'Mengandungi bahan pewangi bagi menghasilkan aroma menyenangkan.',
+    purpose: 'Memberikan haruman (Rajah 5.16).',
+    textbookNote: 'Menggunakan pewangi seperti minyak pati untuk memberikan aroma yang menyenangkan kepada produk kosmetik (Rajah 5.15).',
     actionZone: 'udara',
   },
 ];
@@ -243,8 +243,8 @@ export const Slide06CosmeticTypes: React.FC<Slide06Props> = ({ interactions, onP
                   width="260"
                   height="25"
                   rx="7"
-                  fill={selectedItem.actionZone === 'lapisan_epidermis' ? '#DBEAFE' : 'var(--slide-svg-neutral-fill)'}
-                  stroke={selectedItem.actionZone === 'lapisan_epidermis' ? '#0066D6' : 'var(--slide-svg-ring)'}
+                  fill={selectedItem.actionZone === 'formulasi_perawatan' ? '#DBEAFE' : 'var(--slide-svg-neutral-fill)'}
+                  stroke={selectedItem.actionZone === 'formulasi_perawatan' ? '#0066D6' : 'var(--slide-svg-ring)'}
                   strokeWidth="1.8"
                 />
                 <text
@@ -253,7 +253,7 @@ export const Slide06CosmeticTypes: React.FC<Slide06Props> = ({ interactions, onP
                   textAnchor="middle"
                   fontSize="12.5"
                   fontWeight="700"
-                  fill={selectedItem.actionZone === 'lapisan_epidermis' ? '#1E3A8A' : 'var(--slide-svg-ink)'}
+                  fill={selectedItem.actionZone === 'formulasi_perawatan' ? '#1E3A8A' : 'var(--slide-svg-ink)'}
                 >
                   Kosmetik Perawatan (Rawatan pada Tubuh)
                 </text>

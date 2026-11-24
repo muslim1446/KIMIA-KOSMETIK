@@ -10,6 +10,7 @@ import {
   TEXT_BACKGROUNDS,
   TEXT_COLORS,
 } from '../utils/annotationEngine';
+import { getElementDragSlopPx } from '../utils/applePhysics';
 import { useUiText } from '../utils/uiLanguage';
 
 interface SlideTextLayerProps {
@@ -25,6 +26,7 @@ interface SlideTextLayerProps {
   panOffset?: { x: number; y: number };
   focusTextId?: string | null;
   focusToken?: number;
+  isPinchingOrPanning?: boolean;
 }
 
 type ResizeCorner = 'nw' | 'ne' | 'sw' | 'se';
@@ -50,6 +52,7 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
   panOffset = { x: 0, y: 0 },
   focusTextId = null,
   focusToken = 0,
+  isPinchingOrPanning = false,
 }) => {
   const t = useUiText();
   const [slideRect, setSlideRect] = useState<LogicalRect>({
@@ -67,10 +70,15 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
   const lastFocusTokenRef = useRef(0);
   const textsRef = useRef(slideTexts);
   textsRef.current = slideTexts;
+  const lastTapRef = useRef<{ id: string; time: number; x: number; y: number } | null>(null);
 
   const actionRef = useRef<{
     type: 'drag' | 'resize';
     textId: string;
+    pointerId: number;
+    pointerType: string;
+    slopPx: number;
+    hasMoved: boolean;
     corner?: ResizeCorner;
     startClientX: number;
     startClientY: number;
@@ -144,10 +152,17 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
 
   useEffect(() => {
     if (!interactive) {
+      actionRef.current = null;
       setSelectedId(null);
       setEditingId(null);
     }
   }, [interactive]);
+
+  useEffect(() => {
+    if (isPinchingOrPanning) {
+      actionRef.current = null;
+    }
+  }, [isPinchingOrPanning]);
 
   useEffect(() => {
     if (selectedId && !visibleTexts.some((t) => t.id === selectedId)) {
@@ -210,12 +225,19 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
   useEffect(() => {
     const onPointerMove = (e: PointerEvent) => {
       const act = actionRef.current;
-      if (!act) return;
+      if (!act || e.pointerId !== act.pointerId) return;
+
+      const rawDx = e.clientX - act.startClientX;
+      const rawDy = e.clientY - act.startClientY;
+      if (!act.hasMoved) {
+        if (Math.hypot(rawDx, rawDy) < act.slopPx) return;
+        act.hasMoved = true;
+      }
 
       const scaleX = LOGICAL_WIDTH / (slideRect.width || LOGICAL_WIDTH);
       const scaleY = LOGICAL_HEIGHT / (slideRect.height || LOGICAL_HEIGHT);
-      const dx = (e.clientX - act.startClientX) * scaleX;
-      const dy = (e.clientY - act.startClientY) * scaleY;
+      const dx = rawDx * scaleX;
+      const dy = rawDy * scaleY;
 
       let patch: Partial<SlideTextItem>;
       if (act.type === 'drag') {
@@ -261,22 +283,44 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
       onUpdateSlideText(act.textId, patch, false);
     };
 
-    const onPointerUp = () => {
+    const onPointerUp = (e: PointerEvent) => {
       const act = actionRef.current;
-      if (!act) return;
+      if (!act || e.pointerId !== act.pointerId) return;
       actionRef.current = null;
+
+      if (!act.hasMoved && act.type === 'drag' && e.type === 'pointerup' && act.pointerType !== 'mouse') {
+        const now = Date.now();
+        const prev = lastTapRef.current;
+        if (
+          prev &&
+          prev.id === act.textId &&
+          now - prev.time <= 380 &&
+          Math.hypot(e.clientX - prev.x, e.clientY - prev.y) < 28
+        ) {
+          lastTapRef.current = null;
+          const tapped = textsRef.current.find((t) => t.id === act.textId);
+          if (tapped) beginEditing(tapped);
+          return;
+        }
+        lastTapRef.current = { id: act.textId, time: now, x: e.clientX, y: e.clientY };
+        return;
+      }
+
+      if (!act.hasMoved || !act.latestPatch) return;
       const item = textsRef.current.find((t) => t.id === act.textId);
       if (!item) return;
-      onUpdateSlideText(act.textId, act.latestPatch ?? {}, true);
+      onUpdateSlideText(act.textId, act.latestPatch, true);
     };
 
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
     return () => {
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerUp);
     };
-  }, [slideRect, onUpdateSlideText]);
+  }, [slideRect, onUpdateSlideText, beginEditing]);
 
   // Click outside deselects and commits an active text edit.
   useEffect(() => {
@@ -321,14 +365,23 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
   }, [selectedId, isRemoteProjector, onDeleteSlideText]);
 
   const startDrag = (item: SlideTextItem, e: React.PointerEvent) => {
-    if (!interactive || editingId === item.id) return;
+    if (!interactive || isPinchingOrPanning || editingId === item.id) return;
     if (e.button !== 0 && e.pointerType === 'mouse') return;
     e.stopPropagation();
     e.preventDefault();
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {
+      // Synthetic events in tests may not support pointer capture
+    }
     setSelectedId(item.id);
     actionRef.current = {
       type: 'drag',
       textId: item.id,
+      pointerId: e.pointerId,
+      pointerType: e.pointerType,
+      slopPx: getElementDragSlopPx(e.pointerType),
+      hasMoved: false,
       startClientX: e.clientX,
       startClientY: e.clientY,
       startX: item.x,
@@ -343,13 +396,22 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
     item: SlideTextItem,
     corner: ResizeCorner,
   ) => {
-    if (!interactive) return;
+    if (!interactive || isPinchingOrPanning) return;
     e.stopPropagation();
     e.preventDefault();
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {
+      // Ignore synthetic pointer capture error
+    }
     setSelectedId(item.id);
     actionRef.current = {
       type: 'resize',
       textId: item.id,
+      pointerId: e.pointerId,
+      pointerType: e.pointerType,
+      slopPx: 0,
+      hasMoved: false,
       corner,
       startClientX: e.clientX,
       startClientY: e.clientY,
@@ -410,6 +472,7 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
               width: `${screenW}px`,
               height: `${screenH}px`,
               pointerEvents: interactive ? 'auto' : 'none',
+              touchAction: interactive && !isEditing ? 'none' : 'auto',
               cursor: interactive ? (isEditing ? 'text' : 'grab') : 'default',
               zIndex: isSelected ? 28 : 26,
             }}
@@ -601,7 +664,7 @@ export const SlideTextLayer: React.FC<SlideTextLayerProps> = ({
                     tabIndex={0}
                     aria-label={t('text.resize', { corner })}
                     onPointerDown={(e) => startResize(e, item, corner)}
-                    className={`apple-pressable apple-touch-halo absolute w-3.5 h-3.5 bg-white border-2 border-[var(--apple-blue)] rounded-full shadow-md ${cls}`}
+                    className={`apple-pressable apple-touch-halo touch-none absolute w-3.5 h-3.5 bg-white border-2 border-[var(--apple-blue)] rounded-full shadow-md ${cls}`}
                   />
                 ))}
               </>

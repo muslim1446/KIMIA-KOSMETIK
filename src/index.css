@@ -414,18 +414,24 @@
   }
 }
 
-/* Ergonomic 44x44pt touch target floor on coarse touchscreens */
-@media (pointer: coarse) {
+/* Ergonomic 44x44pt touch target floor on coarse or hybrid touchscreens */
+.apple-touch-halo {
+  position: relative;
+  touch-action: none;
+}
+
+.apple-touch-halo::after {
+  content: "";
+  position: absolute;
+  inset: -10px;
+}
+
+@media (pointer: coarse), (any-pointer: coarse) {
   .apple-tap-target {
     min-height: 44px;
     min-width: 44px;
   }
-  .apple-touch-halo {
-    position: relative;
-  }
   .apple-touch-halo::after {
-    content: "";
-    position: absolute;
     inset: -14px;
   }
 }

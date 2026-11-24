@@ -261,6 +261,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const actionRef = useRef<{
     type: 'drag' | 'resize';
+    pointerId: number;
     corner?: ResizeCorner;
     startClientX: number;
     startClientY: number;
@@ -300,7 +301,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
   useEffect(() => {
     const onPointerMove = (e: PointerEvent) => {
       const act = actionRef.current;
-      if (!act) return;
+      if (!act || e.pointerId !== act.pointerId) return;
 
       const dx = e.clientX - act.startClientX;
       const dy = e.clientY - act.startClientY;
@@ -320,6 +321,11 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
           ),
         );
       } else if (act.type === 'resize' && act.corner) {
+        const margin = vw < 420 ? 8 : 12;
+        const minW = Math.min(310, Math.max(240, vw - margin * 2));
+        const maxW = Math.max(minW, Math.min(780, vw - margin * 2));
+        const minH = Math.min(260, Math.max(200, vh - margin * 2));
+        const maxH = Math.max(minH, Math.min(680, vh - margin * 2));
         let { x, y, width, height } = act.startRect;
         if (act.corner === 'se') {
           width = act.startRect.width + dx;
@@ -327,30 +333,34 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
         } else if (act.corner === 'sw') {
           width = act.startRect.width - dx;
           height = act.startRect.height + dy;
-          x = act.startRect.x + (act.startRect.width - Math.max(310, Math.min(780, width)));
+          x = act.startRect.x + (act.startRect.width - Math.max(minW, Math.min(maxW, width)));
         } else if (act.corner === 'ne') {
           width = act.startRect.width + dx;
           height = act.startRect.height - dy;
-          y = act.startRect.y + (act.startRect.height - Math.max(260, Math.min(680, height)));
+          y = act.startRect.y + (act.startRect.height - Math.max(minH, Math.min(maxH, height)));
         } else if (act.corner === 'nw') {
           width = act.startRect.width - dx;
           height = act.startRect.height - dy;
-          x = act.startRect.x + (act.startRect.width - Math.max(310, Math.min(780, width)));
-          y = act.startRect.y + (act.startRect.height - Math.max(260, Math.min(680, height)));
+          x = act.startRect.x + (act.startRect.width - Math.max(minW, Math.min(maxW, width)));
+          y = act.startRect.y + (act.startRect.height - Math.max(minH, Math.min(maxH, height)));
         }
         setFrameRect(clampFloatingFrameRect({ x, y, width, height }, vw, vh));
       }
     };
 
-    const onPointerUp = () => {
+    const onPointerUp = (e: PointerEvent) => {
+      const act = actionRef.current;
+      if (!act || e.pointerId !== act.pointerId) return;
       actionRef.current = null;
     };
 
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
     return () => {
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerUp);
     };
   }, []);
 
@@ -597,13 +607,20 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
 
   if (!open) return null;
 
-  const startDrag = (e: React.PointerEvent | React.MouseEvent) => {
+  const startDrag = (e: React.PointerEvent) => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
     const target = e.target as HTMLElement | null;
-    if (target?.closest('button')) return;
+    if (target?.closest('button, input, a')) return;
     e.preventDefault();
     e.stopPropagation();
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {
+      // Ignore synthetic pointer capture error
+    }
     actionRef.current = {
       type: 'drag',
+      pointerId: e.pointerId,
       startClientX: e.clientX,
       startClientY: e.clientY,
       startRect: frameRect,
@@ -611,10 +628,17 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
   };
 
   const startResize = (e: React.PointerEvent, corner: ResizeCorner) => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
     e.preventDefault();
     e.stopPropagation();
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {
+      // Ignore synthetic pointer capture error
+    }
     actionRef.current = {
       type: 'resize',
+      pointerId: e.pointerId,
       corner,
       startClientX: e.clientX,
       startClientY: e.clientY,
@@ -643,9 +667,12 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
       <div
         data-testid="gemini-drag-handle"
         onPointerDown={startDrag}
-        onDoubleClick={startDrag}
+        onDoubleClick={(e) => {
+          if ((e.target as HTMLElement | null)?.closest('button, input, a')) return;
+          setMinimized((m) => !m);
+        }}
         title={t('gemini.drag')}
-        className="flex items-center justify-between gap-2 px-3.5 py-2.5 apple-hairline-b rounded-t-[26px] cursor-grab active:cursor-grabbing select-none"
+        className="touch-none flex items-center justify-between gap-2 px-3.5 py-2.5 apple-hairline-b rounded-t-[26px] cursor-grab active:cursor-grabbing select-none"
       >
         <div className="flex items-center gap-2 min-w-0">
           <GripHorizontal className="w-4 h-4 text-[var(--apple-tertiary-label)] shrink-0" />
@@ -661,7 +688,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="relative z-40 flex items-center gap-1 shrink-0">
           <button
             type="button"
             data-testid="gemini-prove-toggle"
@@ -962,7 +989,7 @@ export const GeminiAssistantFrame: React.FC<GeminiAssistantFrameProps> = ({
               key={corner}
               data-testid={`gemini-resize-${corner}`}
               onPointerDown={(e) => startResize(e, corner)}
-              className={`apple-pressable apple-touch-halo absolute w-3.5 h-3.5 bg-white dark:bg-[#2C2C2E] border-2 border-[var(--apple-blue)] rounded-full shadow-md ${cls}`}
+              className={`apple-pressable apple-touch-halo touch-none absolute z-30 w-3.5 h-3.5 bg-white dark:bg-[#2C2C2E] border-2 border-[var(--apple-blue)] rounded-full shadow-md ${cls}`}
             />
           ))}
         </>

@@ -17,27 +17,27 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
       <div className="shrink-0 flex items-end justify-between gap-3 apple-hairline-b pb-3">
         <div>
           <div className="text-[15px] font-bold text-[var(--apple-blue-fg)] tabular-nums-clean">
-            5.4.1–5.4.4 · Uji Diri 5.4 (m.s. 186)
+            5.4.1–5.4.4 · Uji Diri 5.4 (S1–S4) &amp; Latihan Modul (S5–S8)
           </div>
-          <h2 className="font-display text-[28px] font-bold text-[var(--apple-label)] mt-0.5 leading-tight">
-            Uji Diri 5.4 &amp; Rumusan Topik Ubat-ubatan dan Bahan Kosmetik
+          <h2 className="font-display text-[26px] font-bold text-[var(--apple-label)] mt-0.5 leading-tight">
+            Uji Diri, Latihan Modul PdPC &amp; Rumusan Topik
           </h2>
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0 p-1 rounded-[15px] apple-slide-inset">
+        <div className="flex items-center gap-1 shrink-0 p-1 rounded-[15px] apple-slide-inset">
           {DAILY_MYSTERIES.map((m, idx) => (
             <button
               key={m.id}
               type="button"
               aria-selected={idx === interactions.quizIndex}
               onClick={() => onPatch({ quizIndex: idx, quizSelectedOption: null, explanationRevealed: false })}
-              className={`apple-pressable apple-tap-target px-3.5 py-2 rounded-[11px] text-[15px] font-bold cursor-pointer tabular-nums-clean ${
+              className={`apple-pressable apple-tap-target px-2.5 py-2 rounded-[11px] text-[14px] font-bold cursor-pointer tabular-nums-clean ${
                 idx === interactions.quizIndex
                   ? 'bg-[var(--apple-label)] text-[var(--apple-bg-base)] shadow-sm'
                   : 'text-[var(--apple-secondary-label)] hover:bg-[var(--apple-fill)]'
               }`}
             >
-              Soalan {idx + 1}
+              S{idx + 1}
             </button>
           ))}
         </div>
@@ -66,12 +66,12 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
 
           <div className="pt-3 apple-hairline-t space-y-1.5">
             <div className="text-[14px] font-bold text-[var(--apple-green-fg)] tabular-nums-clean">
-              Rumusan Standard Pembelajaran 5.4:
+              Rumusan Bab 5.4 (m.s. 181–186):
             </div>
             <div className="text-[14px] text-[var(--apple-secondary-label)] leading-snug tabular-nums-clean">
-              1. <strong className="text-[var(--apple-label)]">Jenis &amp; Fungsi Ubat (5.4.1)</strong> · 2.{' '}
-              <strong className="text-[var(--apple-label)]">Penggunaan Selamat (5.4.2)</strong> · 3.{' '}
-              <strong className="text-[var(--apple-label)]">Bahan &amp; Keselamatan Kosmetik (5.4.3–5.4.4)</strong>
+              1. <strong className="text-[var(--apple-label)]">Ubat Tradisional &amp; Moden (5.4.1)</strong> · 2.{' '}
+              <strong className="text-[var(--apple-label)]">Penggunaan Ubat, Plasebo &amp; NPRA (5.4.2)</strong> · 3.{' '}
+              <strong className="text-[var(--apple-label)]">Kosmetik &amp; Bahan Terlarang Jadual 5.8 (5.4.3–5.4.4)</strong>
             </div>
           </div>
         </div>

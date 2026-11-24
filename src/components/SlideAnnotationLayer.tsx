@@ -27,6 +27,7 @@ import {
   toSlideGlobalPoints,
 } from '../utils/annotationEngine';
 import { LiveStrokeMap } from '../hooks/useCollaborativeBoard';
+import { getElementDragSlopPx } from '../utils/applePhysics';
 import { useUiText } from '../utils/uiLanguage';
 
 interface SlideAnnotationLayerProps {
@@ -98,9 +99,9 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
   const [eraserPos, setEraserPos] = useState<Point2D | null>(null);
   const [nowMs, setNowMs] = useState<number>(() => Date.now());
 
-  // Image interaction state
+  // Image interaction state (unlocked for direct 1-finger drag by default; optional lock toggle)
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
-  const [unlockedDragId, setUnlockedDragId] = useState<string | null>(null);
+  const [lockedImageIds, setLockedImageIds] = useState<Set<string>>(() => new Set());
   const [pinnedToSlideIds, setPinnedToSlideIds] = useState<Set<string>>(() => new Set());
 
   const activePointerIdRef = useRef<number | null>(null);
@@ -113,11 +114,13 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
   const lastLiveEmitRef = useRef<number>(0);
   const isErasingRef = useRef<boolean>(false);
   const eraserBatchIdRef = useRef<string | null>(null);
-  const lastImagePointerRef = useRef<{ id: string; time: number } | null>(null);
 
   const imageActionRef = useRef<{
     type: 'drag' | 'resize';
     imageId: string;
+    pointerId: number;
+    slopPx: number;
+    hasMoved: boolean;
     corner?: ResizeCorner;
     startClientX: number;
     startClientY: number;
@@ -219,7 +222,6 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
   // Clear image selection when switching slides
   useEffect(() => {
     setSelectedImageId(null);
-    setUnlockedDragId(null);
   }, [slideIndex]);
 
   // Smooth 60fps fade animation loop ONLY when temporary strokes are still fading
@@ -249,10 +251,8 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
         e.preventDefault();
         onDeleteImage(selectedImageId);
         setSelectedImageId(null);
-        setUnlockedDragId(null);
       } else if (e.key === 'Escape') {
         setSelectedImageId(null);
-        setUnlockedDragId(null);
       }
     };
     window.addEventListener('keydown', onKeyDown);
@@ -422,6 +422,7 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
   };
 
   const handleCanvasPointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
+    if (isPinchingOrPanning) return;
     if (tool === 'eraser') {
       setEraserPos({ x: e.clientX, y: e.clientY });
       if (isErasingRef.current && activePointerIdRef.current === e.pointerId) {
@@ -494,12 +495,19 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
   useEffect(() => {
     const onPointerMove = (e: PointerEvent) => {
       const act = imageActionRef.current;
-      if (!act) return;
+      if (!act || e.pointerId !== act.pointerId) return;
+
+      const rawDx = e.clientX - act.startClientX;
+      const rawDy = e.clientY - act.startClientY;
+      if (!act.hasMoved) {
+        if (Math.hypot(rawDx, rawDy) < act.slopPx) return;
+        act.hasMoved = true;
+      }
 
       const scaleX = LOGICAL_WIDTH / (slideRect.width || LOGICAL_WIDTH);
       const scaleY = LOGICAL_HEIGHT / (slideRect.height || LOGICAL_HEIGHT);
-      const dxLogical = (e.clientX - act.startClientX) * scaleX;
-      const dyLogical = (e.clientY - act.startClientY) * scaleY;
+      const dxLogical = rawDx * scaleX;
+      const dyLogical = rawDy * scaleY;
 
       if (act.type === 'drag') {
         const nextGlobalX = act.startGlobalX + dxLogical;
@@ -546,16 +554,17 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
       }
     };
 
-    const onPointerUp = () => {
+    const onPointerUp = (e: PointerEvent) => {
       const act = imageActionRef.current;
-      if (!act) return;
+      if (!act || e.pointerId !== act.pointerId) return;
       imageActionRef.current = null;
+      if (!act.hasMoved || !act.latestPatch) return;
 
       const currentImg = slideImages.find((img) => img.id === act.imageId);
       if (!currentImg) return;
 
       const curOrigin = getScopeOrigin(currentImg.scopeKey);
-      const patch = act.latestPatch ?? {};
+      const patch = act.latestPatch;
       const finalX = patch.x ?? currentImg.x;
       const finalY = patch.y ?? currentImg.y;
       const finalW = patch.width ?? currentImg.width;
@@ -598,9 +607,11 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
 
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
     return () => {
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerUp);
     };
   }, [slideRect, slideImages, getScopeOrigin, pinnedToSlideIds, scopeRects, slideIndex, onUpdateImage]);
 
@@ -611,19 +622,26 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
       const target = e.target as HTMLElement | null;
       if (target?.closest('[data-slide-image-root]')) return;
       setSelectedImageId(null);
-      setUnlockedDragId(null);
     };
     window.addEventListener('pointerdown', onDocDown);
     return () => window.removeEventListener('pointerdown', onDocDown);
   }, [selectedImageId]);
 
-  const startImageDrag = (img: SlideImageItem, clientX: number, clientY: number) => {
+  const startImageDrag = (img: SlideImageItem, e: React.PointerEvent) => {
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {
+      // Ignore synthetic pointer capture error
+    }
     const origin = getScopeOrigin(img.scopeKey);
     imageActionRef.current = {
       type: 'drag',
       imageId: img.id,
-      startClientX: clientX,
-      startClientY: clientY,
+      pointerId: e.pointerId,
+      slopPx: getElementDragSlopPx(e.pointerType),
+      hasMoved: false,
+      startClientX: e.clientX,
+      startClientY: e.clientY,
       startGlobalX: origin.x + img.x,
       startGlobalY: origin.y + img.y,
       startW: img.width,
@@ -638,12 +656,22 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
     img: SlideImageItem,
     corner: ResizeCorner,
   ) => {
+    if (isPinchingOrPanning) return;
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
     e.stopPropagation();
     e.preventDefault();
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {
+      // Ignore synthetic pointer capture error
+    }
     const origin = getScopeOrigin(img.scopeKey);
     imageActionRef.current = {
       type: 'resize',
       imageId: img.id,
+      pointerId: e.pointerId,
+      slopPx: 0,
+      hasMoved: false,
       corner,
       startClientX: e.clientX,
       startClientY: e.clientY,
@@ -713,7 +741,7 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
           const screenW = Math.max(24, botRight.x - topLeft.x);
           const screenH = Math.max(24, botRight.y - topLeft.y);
           const isSelected = !isRemoteProjector && selectedImageId === img.id;
-          const isUnlocked = !isRemoteProjector && unlockedDragId === img.id;
+          const isUnlocked = !isRemoteProjector && !lockedImageIds.has(img.id);
           const isSubScoped = img.scopeKey !== getRootSlideScope(slideIndex);
           const hudAbove = topLeft.y > 60;
           const hudOnRight = typeof window !== 'undefined' && topLeft.x > window.innerWidth - 280;
@@ -726,19 +754,14 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
               data-image-unlocked={isUnlocked ? 'true' : 'false'}
               data-slide-image-root="true"
               onPointerDown={(e) => {
-                if (isRemoteProjector || isDrawingTool) return;
+                if (isRemoteProjector || isDrawingTool || isPinchingOrPanning) return;
+                if (e.button !== 0 && e.pointerType === 'mouse') return;
                 e.stopPropagation();
                 setSelectedImageId(img.id);
-                const now = Date.now();
-                const prevTap = lastImagePointerRef.current;
-                const isDoubleTapHold =
-                  prevTap !== null && prevTap.id === img.id && now - prevTap.time <= 380;
-                lastImagePointerRef.current = { id: img.id, time: now };
 
-                if (isUnlocked || isDoubleTapHold) {
+                if (isUnlocked) {
                   e.preventDefault();
-                  if (!isUnlocked) setUnlockedDragId(img.id);
-                  startImageDrag(img, e.clientX, e.clientY);
+                  startImageDrag(img, e);
                 }
               }}
               onDoubleClick={(e) => {
@@ -746,7 +769,11 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
                 e.stopPropagation();
                 e.preventDefault();
                 setSelectedImageId(img.id);
-                setUnlockedDragId(img.id);
+                setLockedImageIds((cur) => {
+                  const next = new Set(cur);
+                  next.delete(img.id);
+                  return next;
+                });
               }}
               style={{
                 left: `${topLeft.x}px`,
@@ -754,10 +781,11 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
                 width: `${screenW}px`,
                 height: `${screenH}px`,
                 pointerEvents: isRemoteProjector || isDrawingTool ? 'none' : 'auto',
+                touchAction: isRemoteProjector || isDrawingTool ? 'auto' : 'none',
                 cursor: isUnlocked ? 'grab' : isSelected ? 'pointer' : 'default',
               }}
               className={`absolute select-none rounded-[14px] transition-shadow ${
-                isUnlocked
+                isSelected && isUnlocked
                   ? 'ring-2 ring-[var(--apple-green)] shadow-[0_1px_6px_rgba(0,0,0,0.16),0_14px_34px_-6px_rgba(0,0,0,0.22)]'
                   : isSelected
                   ? 'ring-2 ring-[var(--apple-blue)] shadow-[0_1px_4px_rgba(0,0,0,0.12),0_12px_28px_-6px_rgba(0,0,0,0.18)]'
@@ -786,7 +814,15 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
                     <button
                       type="button"
                       onClick={() =>
-                        setUnlockedDragId((cur) => (cur === img.id ? null : img.id))
+                        setLockedImageIds((cur) => {
+                          const next = new Set(cur);
+                          if (next.has(img.id)) {
+                            next.delete(img.id);
+                          } else {
+                            next.add(img.id);
+                          }
+                          return next;
+                        })
                       }
                       title={isUnlocked ? t('image.dragEnabled') : t('image.dragEnable')}
                       className={`apple-pressable apple-tap-target flex items-center gap-1 min-h-[28px] px-2 py-0.5 rounded-full cursor-pointer ${
@@ -826,7 +862,11 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
                       onClick={() => {
                         onDeleteImage(img.id);
                         setSelectedImageId(null);
-                        setUnlockedDragId(null);
+                        setLockedImageIds((cur) => {
+                          const next = new Set(cur);
+                          next.delete(img.id);
+                          return next;
+                        });
                       }}
                       className="apple-pressable apple-tap-target min-h-[28px] min-w-[28px] flex items-center justify-center p-1 rounded-full hover:bg-[var(--apple-red)] text-[#FF6961] hover:text-white cursor-pointer"
                     >
@@ -850,7 +890,7 @@ export const SlideAnnotationLayer: React.FC<SlideAnnotationLayerProps> = ({
                       tabIndex={0}
                       aria-label={t('image.resize', { corner })}
                       onPointerDown={(e) => startImageResize(e, img, corner)}
-                      className={`apple-pressable apple-touch-halo absolute w-3.5 h-3.5 bg-white border-2 border-[var(--apple-blue)] rounded-full shadow-[0_1px_4px_rgba(0,0,0,0.22)] ${cls}`}
+                      className={`apple-pressable apple-touch-halo touch-none absolute w-3.5 h-3.5 bg-white border-2 border-[var(--apple-blue)] rounded-full shadow-[0_1px_4px_rgba(0,0,0,0.22)] ${cls}`}
                     />
                   ))}
                 </>

@@ -413,7 +413,7 @@ export function removeStrokesFromList(
 }
 
 export const TEXT_EDIT_EPOCH_KEY = '__kssmRev';
-export const TEXT_EDIT_EPOCH_VALUE = '2026-kssm-audit-v1';
+export const TEXT_EDIT_EPOCH_VALUE = '2026-kssm-strict-pdf-v4';
 
 export function filterCurrentTextEdits(
   raw: Record<string, string> | undefined | null,

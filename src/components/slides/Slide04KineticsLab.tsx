@@ -25,10 +25,10 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
 
   const doseLabel =
     para.status === 'rendah'
-      ? 'Dos Rendah'
+      ? 'Dos rendah'
       : para.status === 'terapeutik'
-      ? 'Dos Betul (Preskripsi)'
-      : 'Melebihi Dos';
+      ? 'Dos betul'
+      : 'Melebihi dos';
 
   return (
     <div className="h-full w-full flex flex-col gap-4 px-10 py-6 select-none">
@@ -96,7 +96,7 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
             >
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <div className="text-[15px] font-semibold text-[var(--apple-secondary-label)]">Kesan Pengambilan Antibiotik</div>
+                  <div className="text-[15px] font-semibold text-[var(--apple-secondary-label)]">Antibiotik: Penisilin &amp; Streptomisin (Jadual 5.7, m.s. 182)</div>
                   <h3 className="font-display text-[23px] font-bold text-[var(--apple-label)]">
                     Antibiotik Perlu Dihabiskan Supaya Semua Bakteria Dibunuh
                   </h3>
@@ -130,7 +130,7 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
               </div>
 
               <div className="my-2 apple-slide-inset rounded-[16px] p-3">
-                <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-48" role="img" aria-label="Graf populasi bakteria">
+                <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-48" role="img" aria-label="Graf keberkesanan dos bahan kimia antibiotik">
                   <line x1="38" y1="14" x2="38" y2={chartH - 28} stroke="var(--slide-svg-axis)" strokeWidth="2" />
                   <line x1="38" y1={chartH - 28} x2={chartW - 14} y2={chartH - 28} stroke="var(--slide-svg-axis)" strokeWidth="2" />
 
@@ -146,7 +146,7 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
                         strokeWidth="2.5"
                       />
                       <text x={mapX(3) + 8} y="26" fontSize="13" fill="var(--apple-red-fg)" fontWeight="700">
-                        Berhenti Awal
+                        Dos Dihentikan
                       </text>
                     </g>
                   )}
@@ -164,7 +164,7 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
                   ))}
                 </svg>
                 <div className="flex items-center justify-between text-[15px] font-semibold text-[var(--apple-label)] px-2">
-                  <span>Biru: Jumlah bakteria · Merah putus: Bakteria imun</span>
+                  <span>Biru: Bakteria belum dibunuh · Merah putus: Bakteria menjadi imun</span>
                   <span className="tabular-nums-clean font-bold">Hari ke-{currentDayPoint.day}</span>
                 </div>
               </div>
@@ -181,7 +181,7 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
                   step={1}
                   value={interactions.antibioticDay}
                   onChange={(e) => onPatch({ antibioticDay: Number(e.target.value) })}
-                  className="w-full accent-[var(--apple-blue)] cursor-pointer h-2.5"
+                  className="w-full accent-[var(--apple-blue)] cursor-pointer touch-none min-h-[36px] py-2"
                 />
               </div>
             </div>
@@ -192,7 +192,7 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
             >
               <div className="text-center">
                 <div className="text-[17px] font-bold text-[var(--apple-label)] tabular-nums-clean">
-                  Keadaan Bakteria (Hari ke-{currentDayPoint.day})
+                  Bakteria vs Imun kepada Antibiotik (Hari ke-{currentDayPoint.day})
                 </div>
                 <svg viewBox="0 0 180 170" className="w-48 h-44 mx-auto my-1" aria-hidden="true">
                   <circle cx="90" cy="85" r="76" fill="var(--slide-svg-plate)" stroke="var(--slide-svg-ring)" strokeWidth="3.5" />
@@ -226,7 +226,7 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
                   })}
                 </svg>
                 <div className="text-[15px] font-semibold text-[var(--apple-secondary-label)]">
-                  Biru: Biasa · Merah: Imun kepada antibiotik
+                  Biru: Sensitif antibiotik · Merah: Imun kepada antibiotik
                 </div>
               </div>
 
@@ -246,7 +246,7 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
                   <div className="text-[17px] font-bold mb-1">
                     {sim.outcome === 'sembuh_sepenuhnya'
                       ? 'Semua bakteria dibunuh'
-                      : 'Bakteria menjadi imun dan penyakit berulang!'}
+                      : 'Bakteria menjadi imun dan penyakit akan berulang semula'}
                   </div>
                   <p>{sim.summary}</p>
                   {interactions.molecularLens && (
@@ -266,17 +266,17 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
                   Analgesik: Parasetamol (Jadual 5.7, m.s. 182)
                 </div>
                 <h3 className="font-display text-[30px] font-bold text-[var(--apple-label)] mt-1 leading-tight">
-                  Mengapa Parasetamol Perlu Diambil Mengikut Dos?
+                  Penggunaan Parasetamol Mengikut Dos
                 </h3>
                 <p className="text-[17px] text-[var(--apple-secondary-label)] mt-2 leading-relaxed">
-                  Parasetamol melegakan sakit dalam keadaan sedar dan perlu diambil mengikut preskripsi doktor. Pengambilan <strong className="text-[var(--apple-label)]">melebihi dos</strong> dapat menyebabkan <strong className="text-[var(--apple-label)]">kerosakan hati</strong>.
+                  Parasetamol melegakan sakit dalam keadaan sedar dan perlu diambil mengikut preskripsi doktor. Parasetamol <strong className="text-[var(--apple-label)]">melebihi dos</strong> dapat menyebabkan <strong className="text-[var(--apple-label)]">kerosakan hati</strong> (Jadual 5.7, m.s. 182).
                 </p>
               </div>
 
               <div className="apple-slide-inset rounded-[18px] p-5 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-[17px] font-bold text-[var(--apple-secondary-label)]">
-                    Tahap Pengambilan Dos
+                    Pengambilan Dos
                   </span>
                   <span className="text-[20px] font-bold text-[var(--apple-label)]">
                     {doseLabel}
@@ -284,9 +284,9 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { label: 'Dos Rendah', value: 500 },
-                    { label: 'Dos Betul', value: 2000 },
-                    { label: 'Melebihi Dos', value: 6000 },
+                    { label: 'Dos rendah', value: 500 },
+                    { label: 'Dos betul', value: 2000 },
+                    { label: 'Melebihi dos', value: 6000 },
                   ].map((opt) => {
                     const isPicked =
                       (opt.value === 500 && para.status === 'rendah') ||
@@ -314,11 +314,11 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
 
             <div className="col-span-6 apple-slide-inset rounded-[18px] p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-[18px] font-bold text-[var(--apple-label)]">Kesan Pada Hati</span>
+                <span className="text-[18px] font-bold text-[var(--apple-label)]">Kesan Penggunaan Dos (Jadual 5.7)</span>
                 <Activity className="w-6 h-6 text-[var(--apple-blue-fg)]" />
               </div>
 
-              <svg viewBox="0 0 360 135" className="w-full h-36" aria-label="Gambar rajah kesan dos parasetamol pada hati">
+              <svg viewBox="0 0 360 135" className="w-full h-36" aria-label="Gambar rajah kawalan dos bahan kimia parasetamol">
                 <rect x="12" y="24" width="100" height="86" rx="14" fill="#DBEAFE" stroke="#0066D6" strokeWidth="2" />
                 <text x="62" y="60" textAnchor="middle" fontSize="14" fontWeight="700" fill="#1E3A8A">
                   Parasetamol
@@ -348,7 +348,7 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
                   fontWeight="700"
                   fill={para.status === 'amaran_hati' ? '#7F1D1D' : '#14532D'}
                 >
-                  Keadaan Hati
+                  Kawalan Dos
                 </text>
                 <text
                   x="203"
@@ -358,7 +358,7 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
                   fontWeight="800"
                   fill={para.status === 'amaran_hati' ? '#C91D12' : '#1F7A36'}
                 >
-                  {para.status === 'amaran_hati' ? 'Terbeban' : 'Selamat'}
+                  {para.status === 'amaran_hati' ? 'Berlebihan' : 'Terkawal'}
                 </text>
 
                 <path d="M254,67 L278,67" stroke="var(--slide-svg-axis)" strokeWidth="3.5" strokeLinecap="round" />
@@ -380,7 +380,7 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
                   fontWeight="800"
                   fill={para.status === 'amaran_hati' ? '#FFFFFF' : '#14532D'}
                 >
-                  {para.status === 'amaran_hati' ? 'Hati' : 'Sakit'}
+                  {para.status === 'amaran_hati' ? 'Kerosakan' : 'Dos'}
                 </text>
                 <text
                   x="319"
@@ -390,7 +390,7 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
                   fontWeight="800"
                   fill={para.status === 'amaran_hati' ? '#FFFFFF' : '#14532D'}
                 >
-                  {para.status === 'amaran_hati' ? 'ROSAK!' : 'Lega'}
+                  {para.status === 'amaran_hati' ? 'HATI!' : 'Selamat'}
                 </text>
               </svg>
 
@@ -435,7 +435,7 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
                   <span className="tabular-nums-clean">Ujian Klinikal Ubat Moden (m.s. 183–184)</span>
                 </div>
                 <p className="text-[var(--apple-secondary-label)]">
-                  Ubat moden menjalani pelbagai ujian klinikal sebelum boleh digunakan untuk mengesahkan keberkesanan dan keselamatan rawatan.
+                  Ubat moden telah menjalani pelbagai ujian klinikal sebelum boleh digunakan untuk merawat penyakit.
                 </p>
               </div>
             </div>
@@ -447,10 +447,10 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
                   <span>Ubat Sebenar</span>
                 </div>
                 <div className="text-[22px] font-bold text-[var(--apple-label)] leading-snug">
-                  Ada Nilai Terapeutik
+                  Menjalani Ujian Klinikal
                 </div>
                 <p className="text-[16px] text-[var(--apple-secondary-label)] leading-relaxed">
-                  Mengandungi bahan ubat untuk merawat atau mencegah penyakit.
+                  Bahan kimia yang digunakan untuk membantu merawat atau mencegah penyakit selepas melalui pelbagai ujian klinikal.
                 </p>
               </div>
 
@@ -463,7 +463,7 @@ export const Slide04KineticsLab: React.FC<Slide04Props> = ({ interactions, onPat
                   Tiada Nilai Terapeutik
                 </div>
                 <p className="text-[16px] text-[var(--apple-secondary-label)] leading-relaxed">
-                  Hanya menyerupai ubat sebenar tanpa sebarang kesan rawatan ubat.
+                  Plasebo tidak mempunyai sebarang nilai terapeutik walaupun menyerupai ubat sebenar.
                 </p>
               </div>
             </div>

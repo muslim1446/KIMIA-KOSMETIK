@@ -71,7 +71,7 @@ export const Slide02Traditional: React.FC<Slide02Props> = ({ interactions, onPat
             5.4.1 · Ubat Tradisional (Rajah 5.13 &amp; Gambar foto 5.9 · m.s. 181)
           </div>
           <h2 className="font-display text-[30px] font-bold text-[var(--apple-label)] mt-0.5 leading-tight">
-            Ubat Tradisional: Daripada Tumbuh-tumbuhan Herba atau Haiwan
+            Ubat Tradisional: Sumber Semula Jadi Tanpa Pemprosesan Kimia
           </h2>
         </div>
       </div>
@@ -139,22 +139,22 @@ export const Slide02Traditional: React.FC<Slide02Props> = ({ interactions, onPat
                 </h3>
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <div className="apple-slide-inset rounded-[16px] p-5">
-                    <div className="text-[15px] font-bold text-[var(--apple-secondary-label)]">Kegunaan Tradisional</div>
+                    <div className="text-[15px] font-bold text-[var(--apple-secondary-label)]">Penggunaan Tradisional (Gambar foto 5.9)</div>
                     <p className="text-[17px] text-[var(--apple-label)] mt-2 leading-relaxed">
-                      Digunakan secara tradisional untuk melegakan sakit belakang dan pemulih tenaga.
+                      Daun ketum digunakan secara tradisional untuk melegakan sakit belakang dan pemulih tenaga.
                     </p>
                   </div>
                   <div className="rounded-[16px] p-5 bg-red-50/85 dark:bg-red-950/35 border border-red-200 dark:border-red-900/60">
-                    <div className="text-[15px] font-bold text-[var(--apple-red-fg)]">Sebab Diharamkan</div>
+                    <div className="text-[15px] font-bold text-[var(--apple-red-fg)]">Cabaran Minda · Status Undang-undang</div>
                     <p className="text-[17px] text-[var(--apple-label)] mt-2 leading-relaxed">
-                      Penjualan produk yang diproses daripada daun ketum diharamkan di sisi undang-undang kerana mengandungi bahan yang menyebabkan <strong>ketagihan dan penyalahgunaan</strong>.
+                      <strong>Penjualan produk yang diproses daripada daun ketum diharamkan di sisi undang-undang</strong> (m.s. 181).
                     </p>
                   </div>
                 </div>
               </div>
               <div className="pt-4 apple-hairline-t flex items-center justify-between gap-4">
                 <span className="text-[16px] font-semibold text-[var(--apple-secondary-label)]">
-                  Ubat tradisional tidak diproses secara kimia, tetapi masih boleh memudaratkan jika disalahgunakan.
+                  Menyalahgunakan ubat hanya akan memudaratkan diri sendiri (m.s. 181).
                 </span>
                 <button
                   type="button"
@@ -188,18 +188,18 @@ export const Slide02Traditional: React.FC<Slide02Props> = ({ interactions, onPat
                     <h3 className="font-display text-[28px] font-bold text-[var(--apple-label)] leading-tight">{activeHerb.name}</h3>
                   </div>
 
+                  <div className="apple-slide-inset rounded-[14px] px-4 py-2 text-[15.5px] font-medium text-[var(--apple-label)] leading-snug">
+                    {activeHerb.explanation}
+                  </div>
+
                   <ul className="space-y-1">
                     {activeHerb.uses.map((u) => (
-                      <li key={u} className="text-[17px] font-semibold text-[var(--apple-label)] flex items-start gap-2.5">
-                        <span className="mt-2.5 w-2.5 h-2.5 rounded-full bg-[var(--apple-green-fg)] shrink-0" />
+                      <li key={u} className="text-[16px] font-semibold text-[var(--apple-label)] flex items-start gap-2.5 leading-snug">
+                        <span className="mt-2 w-2.5 h-2.5 rounded-full bg-[var(--apple-green-fg)] shrink-0" />
                         <span>{u}</span>
                       </li>
                     ))}
                   </ul>
-
-                  <div className="apple-slide-inset rounded-[14px] px-4 py-2.5 text-[16px] text-[var(--apple-label)] leading-snug">
-                    {activeHerb.explanation}
-                  </div>
                 </div>
               </div>
 

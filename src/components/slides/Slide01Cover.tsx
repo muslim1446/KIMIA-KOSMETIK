@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, useReducedMotion } from 'motion/react';
-import { ShieldAlert, Sparkles, Stethoscope } from 'lucide-react';
+import { FlaskConical, ShieldAlert, Sparkles } from 'lucide-react';
 import { SharedSlideInteractions } from '../../hooks/usePresentationSync';
 import { APPLE_SPRINGS } from '../../utils/applePhysics';
 
@@ -21,27 +21,27 @@ const COMPARE_CASES: Record<
 > = {
   ubat: {
     title: '1. Ubat (Tradisional & Moden)',
-    moleculeExample: 'Contoh: Parasetamol, Antibiotik, Halia',
+    moleculeExample: 'Ubat tradisional & ubat moden (m.s. 181–183)',
     mechanism:
-      'Bahan kimia yang digunakan untuk membantu kita merawat atau mencegah penyakit mengikut dos yang betul.',
-    verdict: 'Selamat jika diambil dengan betul; memudaratkan jika disalahgunakan.',
-    svgCaption: 'Merawat atau mencegah penyakit',
+      'Ubat ialah bahan kimia yang digunakan untuk membantu kita merawat atau mencegah penyakit. Dikelaskan kepada ubat tradisional dan ubat moden.',
+    verdict: 'Selamat jika diambil dengan betul; menyalahgunakan ubat hanya akan memudaratkan diri sendiri.',
+    svgCaption: 'Bahan kimia merawat atau mencegah penyakit',
   },
   kosmetik: {
-    title: '2. Kosmetik (Kegunaan Luaran)',
-    moleculeExample: 'Contoh: Bedak, Gincu, Krim, Minyak wangi',
+    title: '2. Kosmetik',
+    moleculeExample: 'Kosmetik rias, perawatan & pewangi (m.s. 184–185)',
     mechanism:
-      'Bahan atau produk yang digunakan secara luaran untuk membersih, melindungi atau mencantikkan penampilan seseorang.',
-    verdict: 'Kegunaan luaran sahaja dan berdaftar dengan NPRA.',
-    svgCaption: 'Bertindak di permukaan luar kulit',
+      'Kosmetik ialah bahan atau produk yang digunakan secara luaran untuk membersih, melindungi atau mencantikkan penampilan seseorang.',
+    verdict: 'Terdiri daripada air, pengemulsi, pemekat, pelembap, pewangi, pengawet dan pewarna (Rajah 5.15).',
+    svgCaption: 'Bahan atau produk kegunaan luaran',
   },
   terlarang: {
     title: '3. Bahan Kimia Terlarang',
-    moleculeExample: 'Contoh: Merkuri, Hidrokuinon, Betamethasone valerate, Tretinoin',
+    moleculeExample: 'Merkuri, Hidrokuinon, Betamethasone valerate, Tretinoin',
     mechanism:
-      'Dimasukkan secara tidak sah ke dalam kosmetik; boleh merengsakan kulit atau diserap ke dalam salur darah.',
-    verdict: 'Merosakkan kulit, buah pinggang dan sistem saraf.',
-    svgCaption: 'Boleh diserap masuk ke salur darah',
+      'Bahan kimia berbahaya yang dimasukkan ke dalam kosmetik secara tidak sah; mengakibatkan kulit merengsa, pengurangan pigmentasi atau diserap ke salur darah.',
+    verdict: 'Pastikan kosmetik berdaftar dengan Bahagian Regulatori Farmasi Negara (NPRA).',
+    svgCaption: 'Bahan kimia terlarang (Jadual 5.8, m.s. 186)',
   },
 };
 
@@ -67,26 +67,26 @@ export const Slide01Cover: React.FC<Slide01Props> = ({ interactions, onPatch }) 
             <div className="apple-slide-card rounded-[18px] p-4">
               <div className="text-[17px] font-bold text-[var(--apple-blue-fg)] tabular-nums-clean">5.4.1 Jenis Ubat</div>
               <p className="text-[15px] text-[var(--apple-secondary-label)] mt-1 leading-snug">
-                Tradisional &amp; moden
+                Ubat tradisional &amp; ubat moden
               </p>
             </div>
             <div className="apple-slide-card rounded-[18px] p-4">
               <div className="text-[17px] font-bold text-[var(--apple-orange-fg)] tabular-nums-clean">5.4.2 Penggunaan</div>
               <p className="text-[15px] text-[var(--apple-secondary-label)] mt-1 leading-snug">
-                Dos betul &amp; selamat
+                Kegunaan, dos &amp; NPRA
               </p>
             </div>
             <div className="apple-slide-card rounded-[18px] p-4">
               <div className="text-[17px] font-bold text-[var(--apple-green-fg)] tabular-nums-clean">5.4.3–4 Kosmetik</div>
               <p className="text-[15px] text-[var(--apple-secondary-label)] mt-1 leading-snug">
-                Jenis, asas &amp; kawalan
+                Bahan asas &amp; bahan terlarang
               </p>
             </div>
           </div>
         </div>
 
         <div className="pt-4 apple-hairline-t text-[18px] font-bold text-[var(--apple-label)]">
-          Prinsip utama: selamat jika digunakan dengan betul.
+          Ubat adalah selamat jika diambil dengan betul; menyalahgunakan ubat memudaratkan diri sendiri.
         </div>
       </div>
 
@@ -111,7 +111,7 @@ export const Slide01Cover: React.FC<Slide01Props> = ({ interactions, onPatch }) 
                   : 'text-[var(--apple-secondary-label)] hover:bg-[var(--apple-fill)]'
               }`}
             >
-              <Stethoscope className="w-5 h-5 shrink-0" />
+              <FlaskConical className="w-5 h-5 shrink-0" />
               <span>1. Ubat</span>
             </button>
 
@@ -167,7 +167,7 @@ export const Slide01Cover: React.FC<Slide01Props> = ({ interactions, onPatch }) 
                   strokeWidth={interactions.coverCompareId === 'kosmetik' ? 3 : 1.8}
                 />
                 <text x="100" y="39" textAnchor="middle" fontSize="13" fontWeight="700" fill="#1C1917">
-                  1. Permukaan Luar Kulit
+                  1. Kosmetik (Kegunaan Luaran)
                 </text>
 
                 <rect
@@ -181,7 +181,7 @@ export const Slide01Cover: React.FC<Slide01Props> = ({ interactions, onPatch }) 
                   strokeWidth={interactions.coverCompareId === 'ubat' ? 3 : 1.8}
                 />
                 <text x="100" y="95" textAnchor="middle" fontSize="13" fontWeight="700" fill="#0C4A6E">
-                  2. Rawatan Tubuh / Penyakit
+                  2. Ubat (Bahan Kimia)
                 </text>
 
                 <rect
@@ -198,11 +198,11 @@ export const Slide01Cover: React.FC<Slide01Props> = ({ interactions, onPatch }) 
                   x="100"
                   y="152"
                   textAnchor="middle"
-                  fontSize="13"
+                  fontSize="12.5"
                   fontWeight="700"
                   fill={interactions.coverCompareId === 'terlarang' ? '#7F1D1D' : 'var(--slide-svg-ink)'}
                 >
-                  3. Salur Darah &amp; Organ
+                  3. Bahan Terlarang (Jadual 5.8)
                 </text>
 
                 {interactions.coverCompareId === 'ubat' && (

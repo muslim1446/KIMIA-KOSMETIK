@@ -120,12 +120,12 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
   const [frameRect, setFrameRect] = useState<FloatingFrameRect>(() => {
     const vw = typeof window !== 'undefined' ? window.innerWidth : 1280;
     const vh = typeof window !== 'undefined' ? window.innerHeight : 720;
-    const initialWidth = Math.min(620, Math.max(340, vw - 48));
-    const initialHeight = Math.min(600, Math.max(380, vh - 96));
+    const initialWidth = Math.min(620, Math.max(240, vw - 48));
+    const initialHeight = Math.min(600, Math.max(260, vh - 96));
     return clampFloatingFrameRect(
       {
-        x: Math.max(20, vw - initialWidth - 32),
-        y: Math.max(24, Math.round((vh - initialHeight) / 2)),
+        x: Math.max(12, vw - initialWidth - 32),
+        y: Math.max(12, Math.round((vh - initialHeight) / 2)),
         width: initialWidth,
         height: initialHeight,
       },
@@ -148,6 +148,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
 
   const actionRef = useRef<{
     type: 'drag' | 'resize';
+    pointerId: number;
     corner?: ResizeCorner;
     startClientX: number;
     startClientY: number;
@@ -241,7 +242,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
   useEffect(() => {
     const onPointerMove = (e: PointerEvent) => {
       const act = actionRef.current;
-      if (!act) return;
+      if (!act || e.pointerId !== act.pointerId) return;
 
       const dx = e.clientX - act.startClientX;
       const dy = e.clientY - act.startClientY;
@@ -261,8 +262,9 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
           ),
         );
       } else if (act.type === 'resize' && act.corner) {
-        const minW = 340;
-        const minH = 300;
+        const margin = vw < 420 ? 8 : 12;
+        const minW = Math.min(310, Math.max(240, vw - margin * 2));
+        const minH = Math.min(260, Math.max(200, vh - margin * 2));
         let { x, y, width, height } = act.startRect;
 
         if (act.corner === 'se') {
@@ -286,25 +288,36 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
       }
     };
 
-    const onPointerUp = () => {
+    const onPointerUp = (e: PointerEvent) => {
+      const act = actionRef.current;
+      if (!act || e.pointerId !== act.pointerId) return;
       actionRef.current = null;
       setIsInteracting(false);
     };
 
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
     return () => {
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerUp);
     };
   }, []);
 
   const startDrag = (e: React.PointerEvent) => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
     if ((e.target as HTMLElement).closest('button, input, a, form')) return;
     e.preventDefault();
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {
+      // Ignore synthetic pointer capture error
+    }
     setIsInteracting(true);
     actionRef.current = {
       type: 'drag',
+      pointerId: e.pointerId,
       startClientX: e.clientX,
       startClientY: e.clientY,
       startRect: frameRect,
@@ -312,11 +325,18 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
   };
 
   const startResize = (corner: ResizeCorner, e: React.PointerEvent) => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
     e.preventDefault();
     e.stopPropagation();
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {
+      // Ignore synthetic pointer capture error
+    }
     setIsInteracting(true);
     actionRef.current = {
       type: 'resize',
+      pointerId: e.pointerId,
       corner,
       startClientX: e.clientX,
       startClientY: e.clientY,
@@ -372,9 +392,12 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
       <div
         data-testid="google-drag-handle"
         onPointerDown={startDrag}
-        onDoubleClick={() => setMinimized((m) => !m)}
+        onDoubleClick={(e) => {
+          if ((e.target as HTMLElement).closest('button, input, a, form')) return;
+          setMinimized((m) => !m);
+        }}
         title={t('google.frameDrag')}
-        className="flex items-center justify-between gap-2 px-3.5 py-2.5 apple-hairline-b cursor-grab active:cursor-grabbing shrink-0"
+        className="touch-none flex items-center justify-between gap-2 px-3.5 py-2.5 apple-hairline-b cursor-grab active:cursor-grabbing shrink-0"
       >
         <div className="flex items-center gap-1.5 min-w-0">
           <GripHorizontal className="w-4 h-4 text-[var(--apple-tertiary-label)] shrink-0" />
@@ -393,7 +416,7 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
           </span>
         </div>
 
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="relative z-40 flex items-center gap-1 shrink-0">
           {isAiMode && (
             <button
               type="button"
@@ -531,21 +554,21 @@ export const GoogleBrowserFrame: React.FC<GoogleBrowserFrameProps> = ({
           <div
             onPointerDown={(e) => startResize('se', e)}
             title={t('google.resize')}
-            className="apple-touch-halo absolute bottom-0 right-0 w-5 h-5 cursor-se-resize z-30"
+            className="apple-touch-halo touch-none absolute bottom-0 right-0 w-5 h-5 cursor-se-resize z-30"
           >
             <div className="absolute bottom-2 right-2 w-2.5 h-2.5 border-r-2 border-b-2 border-[var(--apple-secondary-label)] rounded-br-[18px]" />
           </div>
           <div
             onPointerDown={(e) => startResize('sw', e)}
-            className="apple-touch-halo absolute bottom-0 left-0 w-4 h-4 cursor-sw-resize z-30"
+            className="apple-touch-halo touch-none absolute bottom-0 left-0 w-4 h-4 cursor-sw-resize z-30"
           />
           <div
             onPointerDown={(e) => startResize('ne', e)}
-            className="apple-touch-halo absolute top-0 right-0 w-4 h-4 cursor-ne-resize z-30"
+            className="apple-touch-halo touch-none absolute top-0 right-0 w-4 h-4 cursor-ne-resize z-30"
           />
           <div
             onPointerDown={(e) => startResize('nw', e)}
-            className="apple-touch-halo absolute top-0 left-0 w-4 h-4 cursor-nw-resize z-30"
+            className="apple-touch-halo touch-none absolute top-0 left-0 w-4 h-4 cursor-nw-resize z-30"
           />
         </>
       )}

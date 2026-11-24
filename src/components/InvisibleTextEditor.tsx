@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from
 import { motion, useReducedMotion } from 'framer-motion';
 import { Check, Pencil, RotateCcw, X } from 'lucide-react';
 import { AnnotationTool, getRootSlideScope } from '../utils/annotationEngine';
-import { APPLE_SPRINGS } from '../utils/applePhysics';
+import { APPLE_SPRINGS, APPLE_TOUCH_SLOP_PX } from '../utils/applePhysics';
 import { useUiText } from '../utils/uiLanguage';
 
 interface InvisibleTextEditorProps {
@@ -13,6 +13,7 @@ interface InvisibleTextEditorProps {
   textEdits: Record<string, string>;
   onSaveTextEdit: (slideIndex: number, textKey: string, value: string | null) => void;
   isRemoteProjector?: boolean;
+  isPinchingOrPanning?: boolean;
 }
 
 interface ActiveTextMenu {
@@ -130,6 +131,7 @@ export const InvisibleTextEditor: React.FC<InvisibleTextEditorProps> = ({
   textEdits,
   onSaveTextEdit,
   isRemoteProjector = false,
+  isPinchingOrPanning = false,
 }) => {
   const t = useUiText();
   const shouldReduceMotion = useReducedMotion();
@@ -138,6 +140,9 @@ export const InvisibleTextEditor: React.FC<InvisibleTextEditorProps> = ({
   // Tracks true React text ONLY for keys currently overridden by textEdits
   const overriddenOriginalsRef = useRef<Map<string, string>>(new Map());
   const isApplyingRef = useRef(false);
+  const lastLongPressAtRef = useRef(0);
+  const isPinchingRef = useRef(isPinchingOrPanning);
+  isPinchingRef.current = isPinchingOrPanning;
 
   // Close editor when switching slides
   useEffect(() => {
@@ -195,21 +200,18 @@ export const InvisibleTextEditor: React.FC<InvisibleTextEditorProps> = ({
     return () => mo.disconnect();
   }, [applyOverrides, interactionsKey, slideRootRef]);
 
-  // Right-click anywhere OR left-click in 'text-edit' tool opens invisible Edit trigger
+  // Right-click anywhere, left-click in 'text-edit' tool, OR stationary touch/pen long-press (460ms)
   useEffect(() => {
     if (isRemoteProjector) return;
     const root = slideRootRef.current;
     if (!root) return;
 
-    const openMenuForEvent = (e: MouseEvent) => {
-      if (tool === 'pen' || tool === 'eraser') return;
+    const openMenuAtPoint = (targetNode: EventTarget | null, clientX: number, clientY: number): boolean => {
+      if (tool === 'pen' || tool === 'eraser' || tool === 'laser') return false;
       const panel = root.querySelector<HTMLElement>(`[data-slide-panel-index="${slideIndex}"]`);
-      if (!panel || !(e.target instanceof Node) || !panel.contains(e.target)) return;
-      const targetEl = findEditableElement(e.target, root);
-      if (!targetEl) return;
-
-      e.preventDefault();
-      e.stopPropagation();
+      if (!panel || !(targetNode instanceof Node) || !panel.contains(targetNode)) return false;
+      const targetEl = findEditableElement(targetNode, root);
+      if (!targetEl) return false;
 
       const key = computeDeterministicTextKey(targetEl, root, slideIndex);
       const currentText = getEditableTextValue(targetEl);
@@ -218,8 +220,9 @@ export const InvisibleTextEditor: React.FC<InvisibleTextEditorProps> = ({
         overriddenOriginalsRef.current.set(key, currentText);
       }
 
-      const safeX = Math.min(window.innerWidth - 310, Math.max(12, e.clientX));
-      const safeY = Math.min(window.innerHeight - 160, Math.max(12, e.clientY));
+      const maxMenuW = Math.min(310, Math.max(220, window.innerWidth - 24));
+      const safeX = Math.min(window.innerWidth - maxMenuW - 12, Math.max(12, clientX));
+      const safeY = Math.min(window.innerHeight - 160, Math.max(12, clientY));
 
       setDraftValue(currentText);
       setActive({
@@ -231,29 +234,109 @@ export const InvisibleTextEditor: React.FC<InvisibleTextEditorProps> = ({
         y: safeY,
         mode: 'menu',
       });
+      return true;
     };
 
     const onContextMenu = (e: MouseEvent) => {
-      openMenuForEvent(e);
+      if (Date.now() - lastLongPressAtRef.current < 800) {
+        e.preventDefault();
+        return;
+      }
+      if (openMenuAtPoint(e.target, e.clientX, e.clientY)) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
     };
 
     const onClickCapture = (e: MouseEvent) => {
       if (tool !== 'text-edit') return;
-      openMenuForEvent(e);
+      if (openMenuAtPoint(e.target, e.clientX, e.clientY)) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    let longPressState: {
+      pointerId: number;
+      startX: number;
+      startY: number;
+      target: EventTarget | null;
+      timer: number;
+    } | null = null;
+
+    const clearLongPress = () => {
+      if (longPressState) {
+        window.clearTimeout(longPressState.timer);
+        longPressState = null;
+      }
+    };
+
+    const onPointerDownCapture = (e: PointerEvent) => {
+      if (e.pointerType === 'mouse' || isPinchingRef.current) return;
+      if (tool === 'pen' || tool === 'eraser' || tool === 'laser') return;
+      const panel = root.querySelector<HTMLElement>(`[data-slide-panel-index="${slideIndex}"]`);
+      if (!panel || !(e.target instanceof Node) || !panel.contains(e.target)) return;
+      const targetEl = findEditableElement(e.target, root);
+      if (!targetEl) return;
+
+      clearLongPress();
+      const capturedTarget = e.target;
+      const capturedX = e.clientX;
+      const capturedY = e.clientY;
+      const capturedPointerId = e.pointerId;
+      const timer = window.setTimeout(() => {
+        if (isPinchingRef.current) {
+          clearLongPress();
+          return;
+        }
+        if (openMenuAtPoint(capturedTarget, capturedX, capturedY)) {
+          lastLongPressAtRef.current = Date.now();
+        }
+        longPressState = null;
+      }, 460);
+
+      longPressState = {
+        pointerId: capturedPointerId,
+        startX: capturedX,
+        startY: capturedY,
+        target: capturedTarget,
+        timer,
+      };
+    };
+
+    const onPointerMoveWindow = (e: PointerEvent) => {
+      if (!longPressState || e.pointerId !== longPressState.pointerId) return;
+      if (Math.hypot(e.clientX - longPressState.startX, e.clientY - longPressState.startY) >= APPLE_TOUCH_SLOP_PX) {
+        clearLongPress();
+      }
+    };
+
+    const onPointerEndWindow = (e: PointerEvent) => {
+      if (!longPressState || e.pointerId !== longPressState.pointerId) return;
+      clearLongPress();
     };
 
     root.addEventListener('contextmenu', onContextMenu, true);
     root.addEventListener('click', onClickCapture, true);
+    root.addEventListener('pointerdown', onPointerDownCapture, true);
+    window.addEventListener('pointermove', onPointerMoveWindow, true);
+    window.addEventListener('pointerup', onPointerEndWindow, true);
+    window.addEventListener('pointercancel', onPointerEndWindow, true);
     return () => {
+      clearLongPress();
       root.removeEventListener('contextmenu', onContextMenu, true);
       root.removeEventListener('click', onClickCapture, true);
+      root.removeEventListener('pointerdown', onPointerDownCapture, true);
+      window.removeEventListener('pointermove', onPointerMoveWindow, true);
+      window.removeEventListener('pointerup', onPointerEndWindow, true);
+      window.removeEventListener('pointercancel', onPointerEndWindow, true);
     };
   }, [isRemoteProjector, slideRootRef, slideIndex, tool, textEdits]);
 
-  // Close floating menu on outside click or Escape
+  // Close floating menu on outside tap/click or Escape
   useEffect(() => {
     if (!active) return;
-    const onDown = (e: MouseEvent) => {
+    const onDown = (e: PointerEvent) => {
       const target = e.target as HTMLElement | null;
       if (target?.closest('[data-text-editor-ui]')) return;
       setActive(null);
@@ -261,10 +344,10 @@ export const InvisibleTextEditor: React.FC<InvisibleTextEditorProps> = ({
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setActive(null);
     };
-    window.addEventListener('mousedown', onDown);
+    window.addEventListener('pointerdown', onDown);
     window.addEventListener('keydown', onKey);
     return () => {
-      window.removeEventListener('mousedown', onDown);
+      window.removeEventListener('pointerdown', onDown);
       window.removeEventListener('keydown', onKey);
     };
   }, [active]);
@@ -315,7 +398,7 @@ export const InvisibleTextEditor: React.FC<InvisibleTextEditorProps> = ({
           )}
         </div>
       ) : (
-        <div className="apple-sheet apple-ui apple-squircle w-[310px] rounded-[24px] p-3 space-y-2.5">
+        <div className="apple-sheet apple-ui apple-squircle w-[min(310px,calc(100vw-24px))] rounded-[24px] p-3 space-y-2.5">
           <div className="flex items-center justify-between text-[11px] font-semibold text-[var(--apple-secondary-label)] tracking-wide px-0.5">
             <span>{t('text.editTitle')}</span>
             <button

@@ -64,8 +64,8 @@ const steps: GuideStep[] = [
     target: '[data-testid="island-image-button"]',
     title: { ms: 'Tambah gambar', zh: '添加图片' },
     instruction: {
-      ms: 'Pilih gambar daripada peranti atau tampal dengan Ctrl+V. Ketik gambar untuk pilih; ketik dua kali dengan cepat untuk mula mengalih. Tarik penjuru untuk ubah saiz.',
-      zh: '从设备选择图片，或按 Ctrl+V 粘贴。点击图片可选中；快速双击可开始移动。拖动角落可调整大小。',
+      ms: 'Pilih gambar daripada peranti atau tampal dengan Ctrl+V. Seret gambar terus untuk mengalih, ketik untuk pilihan atau kunci kedudukan. Tarik penjuru untuk ubah saiz.',
+      zh: '从设备选择图片，或按 Ctrl+V 粘贴。可直接拖动图片移动，点击可选择或锁定位置。拖动角落可调整大小。',
     },
   },
   {
@@ -139,9 +139,8 @@ export const FirstVisitGuide: React.FC<{
   const sectionName = language === 'zh' ? '引导' : 'Panduan';
   const placeCardAboveTarget = Boolean(targetRect && targetRect.y > window.innerHeight * 0.52);
 
-  useEffect(() => {
-    if (!disabled && !hasCompletedGuide()) setOpen(true);
-  }, [disabled]);
+  // Do not auto-open the full-screen dimmed guide on initial load so presenters and
+  // classmates land straight on the interactive slide; the ? help button remains available.
 
   useEffect(() => {
     if (!open) return;
@@ -299,25 +298,34 @@ export const FirstVisitGuide: React.FC<{
               </p>
             </div>
 
-            <div className="flex items-center justify-end gap-2.5 apple-hairline-t pt-3.5">
+            <div className="flex items-center justify-between gap-2.5 apple-hairline-t pt-3.5">
               <button
                 type="button"
-                aria-label={t('guide.previous')}
-                disabled={stepIndex === 0}
-                onClick={() => setStepIndex((index) => Math.max(0, index - 1))}
-                className="apple-pressable flex h-11 w-11 items-center justify-center rounded-[12px] bg-[var(--apple-fill)] hover:bg-[var(--apple-fill-hover)] text-[var(--apple-label)] disabled:opacity-35 cursor-pointer"
+                onClick={finish}
+                className="apple-pressable min-h-11 px-4 rounded-[12px] text-[14px] font-semibold text-[var(--apple-secondary-label)] hover:bg-[var(--apple-fill)] cursor-pointer"
               >
-                <ChevronLeft className="h-5 w-5 -translate-x-[0.5px]" />
+                {t('common.close')}
               </button>
-              <button
-                type="button"
-                data-guide-primary
-                onClick={() => (isLast ? finish() : setStepIndex((index) => index + 1))}
-                className="apple-pressable flex min-h-11 items-center gap-2 rounded-[12px] bg-[var(--apple-blue)] px-5 text-[14px] font-semibold text-white whitespace-nowrap cursor-pointer"
-              >
-                <span>{isLast ? t('guide.finish') : t('guide.next')}</span>
-                {isLast ? <Check className="h-4 w-4" /> : <ChevronRight className="h-4 w-4 translate-x-[0.5px]" />}
-              </button>
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  aria-label={t('guide.previous')}
+                  disabled={stepIndex === 0}
+                  onClick={() => setStepIndex((index) => Math.max(0, index - 1))}
+                  className="apple-pressable flex h-11 w-11 items-center justify-center rounded-[12px] bg-[var(--apple-fill)] hover:bg-[var(--apple-fill-hover)] text-[var(--apple-label)] disabled:opacity-35 cursor-pointer"
+                >
+                  <ChevronLeft className="h-5 w-5 -translate-x-[0.5px]" />
+                </button>
+                <button
+                  type="button"
+                  data-guide-primary
+                  onClick={() => (isLast ? finish() : setStepIndex((index) => index + 1))}
+                  className="apple-pressable flex min-h-11 items-center gap-2 rounded-[12px] bg-[var(--apple-blue)] px-5 text-[14px] font-semibold text-white whitespace-nowrap cursor-pointer"
+                >
+                  <span>{isLast ? t('guide.finish') : t('guide.next')}</span>
+                  {isLast ? <Check className="h-4 w-4" /> : <ChevronRight className="h-4 w-4 translate-x-[0.5px]" />}
+                </button>
+              </div>
             </div>
             <p className="sr-only">{sectionName}</p>
           </section>

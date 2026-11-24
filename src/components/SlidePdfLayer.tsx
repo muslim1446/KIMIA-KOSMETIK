@@ -8,6 +8,7 @@ import {
   logicalToClientPoint,
   SlidePdfItem,
 } from '../utils/annotationEngine';
+import { getElementDragSlopPx } from '../utils/applePhysics';
 import { useUiText } from '../utils/uiLanguage';
 
 interface SlidePdfLayerProps {
@@ -25,6 +26,7 @@ interface SlidePdfLayerProps {
   isRemoteProjector?: boolean;
   zoomScale?: number;
   panOffset?: { x: number; y: number };
+  isPinchingOrPanning?: boolean;
 }
 
 type ResizeCorner = 'nw' | 'ne' | 'sw' | 'se';
@@ -43,6 +45,7 @@ export const SlidePdfLayer: React.FC<SlidePdfLayerProps> = ({
   isRemoteProjector = false,
   zoomScale = 1,
   panOffset = { x: 0, y: 0 },
+  isPinchingOrPanning = false,
 }) => {
   const t = useUiText();
   const [slideRect, setSlideRect] = useState<LogicalRect>({
@@ -59,6 +62,9 @@ export const SlidePdfLayer: React.FC<SlidePdfLayerProps> = ({
   const actionRef = useRef<{
     type: 'drag' | 'resize';
     pdfId: string;
+    pointerId: number;
+    slopPx: number;
+    hasMoved: boolean;
     corner?: ResizeCorner;
     startClientX: number;
     startClientY: number;
@@ -130,8 +136,17 @@ export const SlidePdfLayer: React.FC<SlidePdfLayerProps> = ({
   }, [slideIndex]);
 
   useEffect(() => {
-    if (!interactive) setSelectedId(null);
+    if (!interactive) {
+      actionRef.current = null;
+      setSelectedId(null);
+    }
   }, [interactive]);
+
+  useEffect(() => {
+    if (isPinchingOrPanning) {
+      actionRef.current = null;
+    }
+  }, [isPinchingOrPanning]);
 
   useEffect(() => {
     if (selectedId && !visiblePdfs.some((pdf) => pdf.id === selectedId)) {
@@ -143,12 +158,19 @@ export const SlidePdfLayer: React.FC<SlidePdfLayerProps> = ({
   useEffect(() => {
     const onPointerMove = (e: PointerEvent) => {
       const act = actionRef.current;
-      if (!act) return;
+      if (!act || e.pointerId !== act.pointerId) return;
+
+      const rawDx = e.clientX - act.startClientX;
+      const rawDy = e.clientY - act.startClientY;
+      if (!act.hasMoved) {
+        if (Math.hypot(rawDx, rawDy) < act.slopPx) return;
+        act.hasMoved = true;
+      }
 
       const scaleX = LOGICAL_WIDTH / (slideRect.width || LOGICAL_WIDTH);
       const scaleY = LOGICAL_HEIGHT / (slideRect.height || LOGICAL_HEIGHT);
-      const dx = (e.clientX - act.startClientX) * scaleX;
-      const dy = (e.clientY - act.startClientY) * scaleY;
+      const dx = rawDx * scaleX;
+      const dy = rawDy * scaleY;
 
       let patch: Partial<Pick<SlidePdfItem, 'x' | 'y' | 'width' | 'height'>>;
       if (act.type === 'drag') {
@@ -200,13 +222,14 @@ export const SlidePdfLayer: React.FC<SlidePdfLayerProps> = ({
       onUpdatePdf(act.pdfId, patch, false);
     };
 
-    const onPointerUp = () => {
+    const onPointerUp = (e: PointerEvent) => {
       const act = actionRef.current;
-      if (!act) return;
+      if (!act || e.pointerId !== act.pointerId) return;
       actionRef.current = null;
+      if (!act.hasMoved || !act.latestPatch) return;
       const item = pdfsRef.current.find((pdf) => pdf.id === act.pdfId);
       if (!item) return;
-      onUpdatePdf(act.pdfId, act.latestPatch ?? {}, true);
+      onUpdatePdf(act.pdfId, act.latestPatch, true);
     };
 
     window.addEventListener('pointermove', onPointerMove);
@@ -259,14 +282,22 @@ export const SlidePdfLayer: React.FC<SlidePdfLayerProps> = ({
   }, [selectedId, isRemoteProjector, onDeletePdf]);
 
   const startDrag = (item: SlidePdfItem, e: React.PointerEvent) => {
-    if (!interactive) return;
+    if (!interactive || isPinchingOrPanning) return;
     if (e.button !== 0 && e.pointerType === 'mouse') return;
     e.stopPropagation();
     e.preventDefault();
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {
+      // Ignore synthetic pointer capture error
+    }
     setSelectedId(item.id);
     actionRef.current = {
       type: 'drag',
       pdfId: item.id,
+      pointerId: e.pointerId,
+      slopPx: getElementDragSlopPx(e.pointerType),
+      hasMoved: false,
       startClientX: e.clientX,
       startClientY: e.clientY,
       startX: item.x,
@@ -278,13 +309,21 @@ export const SlidePdfLayer: React.FC<SlidePdfLayerProps> = ({
   };
 
   const startResize = (e: React.PointerEvent, item: SlidePdfItem, corner: ResizeCorner) => {
-    if (!interactive) return;
+    if (!interactive || isPinchingOrPanning) return;
     e.stopPropagation();
     e.preventDefault();
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {
+      // Ignore synthetic pointer capture error
+    }
     setSelectedId(item.id);
     actionRef.current = {
       type: 'resize',
       pdfId: item.id,
+      pointerId: e.pointerId,
+      slopPx: 0,
+      hasMoved: false,
       corner,
       startClientX: e.clientX,
       startClientY: e.clientY,
@@ -321,6 +360,7 @@ export const SlidePdfLayer: React.FC<SlidePdfLayerProps> = ({
               width: `${screenW}px`,
               height: `${screenH}px`,
               pointerEvents: interactive ? 'auto' : 'none',
+              touchAction: interactive ? 'none' : 'auto',
               cursor: interactive ? 'grab' : 'default',
               zIndex: isSelected ? 25 : 24,
             }}
@@ -394,7 +434,7 @@ export const SlidePdfLayer: React.FC<SlidePdfLayerProps> = ({
                     tabIndex={0}
                     aria-label={t('pdf.resize', { corner })}
                     onPointerDown={(e) => startResize(e, item, corner)}
-                    className={`apple-pressable apple-touch-halo absolute w-3.5 h-3.5 bg-white border-2 border-[var(--apple-red)] rounded-full shadow-md ${cls}`}
+                    className={`apple-pressable apple-touch-halo touch-none absolute w-3.5 h-3.5 bg-white border-2 border-[var(--apple-red)] rounded-full shadow-md ${cls}`}
                   />
                 ))}
               </>

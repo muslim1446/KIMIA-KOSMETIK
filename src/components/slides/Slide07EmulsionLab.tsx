@@ -61,7 +61,7 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
             5.4.3 · Bahan-bahan Asas Kosmetik (Rajah 5.15 · m.s. 184–185)
           </div>
           <h2 className="font-display text-[28px] font-bold text-[var(--apple-label)] mt-0.5 leading-tight">
-            Tujuh Bahan Asas Kosmetik &amp; Peranan Pengemulsi
+            Tujuh Bahan Asas Kosmetik &amp; Campuran Homogen (Rajah 5.15)
           </h2>
         </div>
 
@@ -137,9 +137,9 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
           })}
 
           <div className="rounded-[18px] border border-amber-300/80 dark:border-amber-700/50 bg-amber-50/85 dark:bg-amber-950/30 px-3.5 py-2.5 flex flex-col justify-center">
-            <div className="text-[14px] font-bold text-[var(--apple-orange-fg)]">Fungsi Pengemulsi</div>
+            <div className="text-[14px] font-bold text-[var(--apple-orange-fg)]">Pengemulsi (Rajah 5.15)</div>
             <p className="text-[14px] text-[var(--apple-label)] mt-0.5 leading-snug">
-              Membentuk <strong>campuran homogen</strong> antara <strong>air</strong> dan <strong>minyak</strong> supaya kosmetik tidak terpisah.
+              Membentuk <strong>campuran homogen</strong> antara <strong>air</strong> dan <strong>minyak</strong> (contoh: lesitin dan asid stearik).
             </p>
           </div>
         </div>
@@ -232,10 +232,9 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
                   )}
 
                   {em.air && !em.pengawet && (
-                    <g fill="#3F6212">
-                      <circle cx="58" cy="140" r="4.5" />
-                      <circle cx="126" cy="138" r="5" />
-                      <text x="92" y="144" textAnchor="middle" fontSize="10.5" fill="#3F6212" fontWeight="800">
+                    <g fill="#B45309">
+                      <line x1="48" y1="138" x2="136" y2="138" stroke="#D97706" strokeWidth="2" strokeDasharray="3 3" />
+                      <text x="92" y="146" textAnchor="middle" fontSize="10.5" fill="#92400E" fontWeight="800">
                         Mudah Rosak
                       </text>
                     </g>
@@ -265,17 +264,17 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
                       Lapisan Minyak
                     </text>
                     <text x="135" y="46" textAnchor="middle" fontSize="11.5" fontWeight="600" fill="#92400E">
-                      Terapung di atas dan tidak bercampur
+                      Air dan minyak terpisah
                     </text>
 
                     <line x1="12" y1="66" x2="258" y2="66" stroke="var(--apple-red-fg)" strokeWidth="2.5" strokeDasharray="5 4" />
 
                     <rect x="8" y="76" width="254" height="48" rx="10" fill="#DBEAFE" stroke="#0066D6" strokeWidth="1.8" />
                     <text x="135" y="98" textAnchor="middle" fontSize="12.5" fontWeight="800" fill="#1E3A8A">
-                      Lapisan Air (Pelarut)
+                      Air (Bahan Pelarut)
                     </text>
                     <text x="135" y="115" textAnchor="middle" fontSize="11.5" fontWeight="600" fill="#1E40AF">
-                      Tiada pengemulsi untuk menyatukan campuran
+                      Tiada pengemulsi untuk campuran homogen
                     </text>
                   </g>
                 ) : (

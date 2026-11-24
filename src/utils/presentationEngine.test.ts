@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { DAILY_MYSTERIES, MODERN_DRUGS } from '../data/slidesData.ts';
 import {
   assessDrugForPatient,
   clampSlideIndex,
@@ -104,6 +105,10 @@ test('assessDrugForPatient enforces KSSM Table 5.7 safety rules', () => {
   const psychoticWound = assessDrugForPatient('psikotik', 'luka_luaran');
   assert.equal(psychoticWound.suitable, false);
   assert.match(psychoticWound.mechanismReason, /Ubat psikotik/);
+
+  const psychoticAdult = assessDrugForPatient('psikotik', 'dewasa_sihat');
+  assert.match(psychoticAdult.mechanismReason, /Merawat psikosis/i);
+  assert.match(psychoticAdult.mechanismReason, /tidak nyata/i);
 });
 
 test('validateNpraCode distinguishes MAL drug codes, NOT cosmetic codes, and invalid entries', () => {
@@ -111,4 +116,26 @@ test('validateNpraCode distinguishes MAL drug codes, NOT cosmetic codes, and inv
   assert.equal(validateNpraCode('MAL 1998 1234 X').category, 'ubat_berdaftar');
   assert.equal(validateNpraCode('NOT230501234K').category, 'kosmetik_bernotifikasi');
   assert.equal(validateNpraCode('KILANG-PUTIH-99').category, 'tidak_sah');
+});
+
+test('slidesData covers both KSSM Uji Diri 5.4 and all Fotostet Latihan Modul 225-234 questions', () => {
+  const aspirin = MODERN_DRUGS.find((d) => d.id === 'aspirin');
+  const para = MODERN_DRUGS.find((d) => d.id === 'parasetamol');
+  const psikotik = MODERN_DRUGS.find((d) => d.id === 'psikotik');
+  assert.ok(aspirin);
+  assert.ok(para);
+  assert.ok(psikotik);
+  assert.match(aspirin.sideEffects, /ulser perut/i);
+  assert.match(para.usageRule, /preskripsi doktor/i);
+  assert.match(para.sideEffects, /kerosakan hati/i);
+  assert.match(psikotik.functionDesc, /Merawat psikosis/i);
+  assert.match(psikotik.functionDesc, /perkara yang tidak nyata/i);
+
+  assert.equal(DAILY_MYSTERIES.length, 9);
+  const f5 = DAILY_MYSTERIES.find((m) => m.id === 'f5');
+  assert.ok(f5);
+  assert.match(f5.kssmRef, /Latihan 26\(a\)/i);
+  assert.match(f5.causalChain.step1Fact, /Analgesik/);
+  assert.match(f5.causalChain.step1Fact, /Antibiotik/);
+  assert.match(f5.causalChain.step2Reason, /Ubat psikotik/);
 });

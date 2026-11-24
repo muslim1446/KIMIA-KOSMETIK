@@ -17,7 +17,7 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
       <div className="shrink-0 flex items-end justify-between gap-3 apple-hairline-b pb-3">
         <div>
           <div className="text-[15px] font-bold text-[var(--apple-blue-fg)] tabular-nums-clean">
-            5.4.1–5.4.4 · Uji Diri 5.4 (S1–S4) &amp; Latihan Modul (S5–S8)
+            5.4.1–5.4.4 · Uji Diri 5.4 (S1–S4) &amp; Latihan Modul (S5–S9)
           </div>
           <h2 className="font-display text-[26px] font-bold text-[var(--apple-label)] mt-0.5 leading-tight">
             Uji Diri, Latihan Modul PdPC &amp; Rumusan Topik
@@ -70,7 +70,7 @@ export const Slide09Quiz: React.FC<Slide09Props> = ({ interactions, onPatch }) =
             </div>
             <div className="text-[14px] text-[var(--apple-secondary-label)] leading-snug tabular-nums-clean">
               1. <strong className="text-[var(--apple-label)]">Ubat Tradisional &amp; Moden (5.4.1)</strong> · 2.{' '}
-              <strong className="text-[var(--apple-label)]">Penggunaan Ubat, Plasebo &amp; NPRA (5.4.2)</strong> · 3.{' '}
+              <strong className="text-[var(--apple-label)]">Penggunaan Ubat, Plasebo &amp; Kawalan KKM (5.4.2)</strong> · 3.{' '}
               <strong className="text-[var(--apple-label)]">Kosmetik &amp; Bahan Terlarang Jadual 5.8 (5.4.3–5.4.4)</strong>
             </div>
           </div>

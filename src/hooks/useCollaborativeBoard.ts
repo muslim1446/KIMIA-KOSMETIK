@@ -69,6 +69,7 @@ import {
   savePresenceDisplayName,
 } from '../utils/presence';
 import { LaserPoint, SyncedPresentationState } from './usePresentationSync';
+import { shouldAcceptRemoteRoomSnapshot } from '../utils/presentationSyncGuard';
 import {
   PdfSource,
   RoomPdfEntry,
@@ -334,10 +335,21 @@ export function useCollaborativeBoard({
   const lastLocalLaserPushRef = useRef<number>(0);
   const lastLocalLaserActiveRef = useRef<boolean>(false);
   const lastLocalRoomPushRef = useRef<number>(0);
+  const roomWriteInFlightRef = useRef<number>(0);
+  const pendingRoomPushRef = useRef<SyncedPresentationState | null>(null);
+  const prevRoomIdRef = useRef<string>(roomId);
   const laserPushTimerRef = useRef<number | null>(null);
   const pendingLaserRef = useRef<LaserPoint | null>(null);
   const presentationStateRef = useRef(presentationState);
   presentationStateRef.current = presentationState;
+
+  useEffect(() => {
+    if (prevRoomIdRef.current !== roomId) {
+      prevRoomIdRef.current = roomId;
+      pendingRoomPushRef.current = null;
+      lastLocalRoomPushRef.current = 0;
+    }
+  }, [roomId]);
 
   const strokesRef = useRef(strokesBySlide);
   strokesRef.current = strokesBySlide;
@@ -681,19 +693,23 @@ export function useCollaborativeBoard({
           (snap) => {
             if (!snap.exists()) return;
             const data = snap.data();
-            if (!snap.metadata.hasPendingWrites) {
-              const suppressRoomEcho = Date.now() - lastLocalRoomPushRef.current < 900;
+            const acceptRoomSnapshot = shouldAcceptRemoteRoomSnapshot({
+              hasPendingWrites: snap.metadata.hasPendingWrites,
+              now: Date.now(),
+              lastLocalPushAt: lastLocalRoomPushRef.current,
+              inFlightWrites: roomWriteInFlightRef.current,
+              hasPendingLocalPush: Boolean(pendingRoomPushRef.current),
+            });
+            if (acceptRoomSnapshot) {
               const suppressLaserEcho =
                 lastLocalLaserActiveRef.current || Date.now() - lastLocalLaserPushRef.current < 450;
-              if (!suppressRoomEcho) {
-                onRemotePresentationSync({
-                  slideIndex: typeof data.slideIndex === 'number' ? data.slideIndex : 0,
-                  blackout: Boolean(data.blackout),
-                  projectorDark: Boolean(data.projectorDark),
-                  ...(suppressLaserEcho ? {} : { laser: data.laser }),
-                  interactions: data.interactions,
-                });
-              }
+              onRemotePresentationSync({
+                slideIndex: typeof data.slideIndex === 'number' ? data.slideIndex : 0,
+                blackout: Boolean(data.blackout),
+                projectorDark: Boolean(data.projectorDark),
+                ...(suppressLaserEcho ? {} : { laser: data.laser }),
+                interactions: data.interactions,
+              });
             }
 
             const nextIds: string[] = Array.isArray(data.imageIds) ? data.imageIds : [];
@@ -1082,8 +1098,13 @@ export function useCollaborativeBoard({
   // Push presentation state updates (slide change, tab clicks, etc.)
   const pushPresentationStateToFirebase = useCallback(
     async (next: SyncedPresentationState) => {
-      if (!isFirebaseActive) return;
       lastLocalRoomPushRef.current = Date.now();
+      if (!isFirebaseActive) {
+        pendingRoomPushRef.current = next;
+        return;
+      }
+      pendingRoomPushRef.current = null;
+      roomWriteInFlightRef.current += 1;
       const path = `rooms/${roomId}`;
       try {
         // setDoc(merge) instead of updateDoc: never fails with "document not found"
@@ -1106,10 +1127,22 @@ export function useCollaborativeBoard({
         );
       } catch (err) {
         handleFirestoreError(err, OperationType.UPDATE, path);
+      } finally {
+        roomWriteInFlightRef.current = Math.max(0, roomWriteInFlightRef.current - 1);
+        lastLocalRoomPushRef.current = Date.now();
       }
     },
     [isFirebaseActive, roomId],
   );
+
+  // Flush any slide/tab change tapped while connecting as soon as Firestore becomes active.
+  useEffect(() => {
+    if (!isFirebaseActive) return;
+    const queued = pendingRoomPushRef.current;
+    if (!queued) return;
+    pendingRoomPushRef.current = null;
+    void pushPresentationStateToFirebase(queued);
+  }, [isFirebaseActive, pushPresentationStateToFirebase]);
 
   // Throttled real-time laser coordinate broadcast (immediate on start/stop, ~120ms while moving)
   const broadcastLaserToFirebase = useCallback(

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import { SharedSlideInteractions } from '../hooks/usePresentationSync';
 import { APPLE_SPRINGS } from '../utils/applePhysics';
 import { Slide01Cover } from './slides/Slide01Cover';
@@ -144,19 +144,16 @@ export const SlideStageContent: React.FC<SlideStageContentProps> = ({
               transform: `scale(${effectiveScale})`,
             }}
           >
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={slideIndex}
-                data-slide-panel-index={slideIndex}
-                initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
-                animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-                exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
-                transition={prefersReducedMotion ? { duration: 0.14 } : APPLE_SPRINGS.snappy}
-                className="projection-slide w-full min-h-[720px] h-auto overflow-visible"
-              >
-                {renderSlide()}
-              </motion.div>
-            </AnimatePresence>
+            <motion.div
+              key={slideIndex}
+              data-slide-panel-index={slideIndex}
+              initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
+              animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+              transition={prefersReducedMotion ? { duration: 0.14 } : APPLE_SPRINGS.snappy}
+              className="projection-slide w-full min-h-[720px] h-auto overflow-visible"
+            >
+              {renderSlide()}
+            </motion.div>
           </div>
         </div>
       </div>

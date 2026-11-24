@@ -129,7 +129,7 @@ export function describeActiveSubElement(
     case 4:
       return {
         label: `Kes ${interactions.misuseCaseIndex + 1} · Kod ${interactions.npraInput}`,
-        detail: `Kes penyalahgunaan ke-${interactions.misuseCaseIndex + 1}, Input semakan NPRA: "${interactions.npraInput}".`,
+        detail: `Kes penyalahgunaan ke-${interactions.misuseCaseIndex + 1}, Input semakan pendaftaran KKM: "${interactions.npraInput}".`,
       };
     case 5:
       return {
@@ -260,8 +260,8 @@ export function buildGoogleSlideAiPrompt(
   const visible = compactWhitespace(visibleSlideText).slice(0, 2600);
   const hiddenInstruction =
     'Anda ialah tutor Kimia KSSM Tingkatan 5 (Bab 5.4: Ubat-ubatan dan Bahan Kosmetik). ' +
-    'Jawab dalam Bahasa Melayu yang jelas. Gunakan konteks slaid pembentangan di bawah untuk menerangkan konsep, ' +
-    'nama bahan kimia, kegunaan, kesan sampingan, dan formula kimia jika relevan. ' +
+    'Jawab dalam Bahasa Melayu yang jelas. Gunakan konteks slaid pembentangan di bawah dan patuhi sukatan buku teks Kimia KSSM Tingkatan 5 (m.s. 181–186) secara ketat ' +
+    '(nama bahan kimia, kegunaan, cara penggunaan, dan kesan sampingan tanpa fakta di luar sukatan). ' +
     'Jika ada lukisan atau kotak teks pengguna, anggap ia sebahagian daripada soalan.';
 
   const compactContext = [
@@ -291,8 +291,8 @@ export function buildGoogleSlideAiPrompt(
     'OUTLINE KESELURUHAN DEK:',
     digest.deckOutlineText,
     '',
-    'ARAHAN: Terangkan slaid ini seperti pembentang Kimia KSSM Tingkatan 5. Senaraikan bahan kimia, ' +
-      'fungsi, kesan sampingan, dan formula yang berkaitan. Jika sesuai, cadangkan soalan kuiz ringkas.',
+    'ARAHAN: Terangkan slaid ini seperti pembentang Kimia KSSM Tingkatan 5 (m.s. 181–186). Senaraikan nama bahan, ' +
+      'fungsi, cara penggunaan dan kesan sampingan tepat mengikut buku teks tanpa menambah fakta di luar sukatan.',
   ].join('\n');
 
   return { query, prompt };

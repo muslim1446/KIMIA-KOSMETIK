@@ -40,7 +40,7 @@ export const Slide05AbuseNpra: React.FC<Slide05Props> = ({ interactions, onPatch
             5.4.2 · Keberkesanan, Penyalahgunaan Ubat &amp; Kawalan KKM (Gambar foto 5.10 · m.s. 183–184)
           </div>
           <h2 className="font-display text-[29px] font-bold text-[var(--apple-label)] mt-0.5 leading-tight">
-            Keberkesanan, Penyalahgunaan Ubat &amp; Penyeliaan NPRA
+            Keberkesanan, Penyalahgunaan Ubat &amp; Kawalan KKM
           </h2>
         </div>
       </div>
@@ -103,7 +103,7 @@ export const Slide05AbuseNpra: React.FC<Slide05Props> = ({ interactions, onPatch
                 · <strong className="text-[var(--apple-label)]">Dasar Perubatan Tradisional dan Komplementari Kebangsaan</strong> — memastikan ubat dan rawatan selamat serta berkualiti.
               </li>
               <li>
-                · <strong className="text-[var(--apple-label)]">Bahagian Regulatori Farmasi Negara (NPRA)</strong> — menyelia kualiti dan keselamatan ubat serta kosmetik.
+                · <strong className="text-[var(--apple-label)]">Bahagian Regulatori Farmasi Negara</strong> — badan yang bertanggungjawab menyelia kualiti dan keselamatan ubat-ubatan dan kosmetik di Malaysia.
               </li>
             </ul>
           </div>
@@ -112,13 +112,13 @@ export const Slide05AbuseNpra: React.FC<Slide05Props> = ({ interactions, onPatch
         <div className="col-span-6 apple-slide-card rounded-[24px] p-6 flex flex-col justify-between">
           <div>
             <div className="text-[15px] font-bold text-[var(--apple-blue-fg)] tabular-nums-clean">
-              Cara Semak Pendaftaran KKM (m.s. 184)
+              Portal Kimia (m.s. 184) · Cara Semak Ubat &amp; Kosmetik Mendaftar dengan KKM
             </div>
-            <h3 className="font-display text-[26px] font-bold text-[var(--apple-label)] mt-0.5 leading-tight">
-              Semak Nombor MAL (Ubat) &amp; NOT (Kosmetik)
+            <h3 className="font-display text-[25px] font-bold text-[var(--apple-label)] mt-0.5 leading-tight">
+              Bahagian Regulatori Farmasi Negara
             </h3>
-            <p className="text-[16px] text-[var(--apple-secondary-label)] mt-1.5 leading-snug">
-              <strong className="text-[var(--apple-label)]">MAL</strong> = Ubat berdaftar. <strong className="text-[var(--apple-label)]">NOT</strong> = Kosmetik bernotifikasi yang diselia oleh NPRA.
+            <p className="text-[15.5px] text-[var(--apple-secondary-label)] mt-1.5 leading-snug">
+              Pastikan ubat dan kosmetik berdaftar dengan KKM (contoh kod semakan Portal Kimia: <strong className="text-[var(--apple-label)]">MAL</strong> untuk ubat, <strong className="text-[var(--apple-label)]">NOT</strong> untuk kosmetik).
             </p>
 
             <div className="mt-4">

@@ -40,7 +40,7 @@ const COMPARE_CASES: Record<
     moleculeExample: 'Merkuri, Hidrokuinon, Betamethasone valerate, Tretinoin',
     mechanism:
       'Bahan kimia berbahaya yang dimasukkan ke dalam kosmetik secara tidak sah; mengakibatkan kulit merengsa, pengurangan pigmentasi atau diserap ke salur darah.',
-    verdict: 'Pastikan kosmetik berdaftar dengan Bahagian Regulatori Farmasi Negara (NPRA).',
+    verdict: 'Pastikan kosmetik berdaftar dengan Bahagian Regulatori Farmasi Negara.',
     svgCaption: 'Bahan kimia terlarang (Jadual 5.8, m.s. 186)',
   },
 };
@@ -73,7 +73,7 @@ export const Slide01Cover: React.FC<Slide01Props> = ({ interactions, onPatch }) 
             <div className="apple-slide-card rounded-[18px] p-4">
               <div className="text-[17px] font-bold text-[var(--apple-orange-fg)] tabular-nums-clean">5.4.2 Penggunaan</div>
               <p className="text-[15px] text-[var(--apple-secondary-label)] mt-1 leading-snug">
-                Kegunaan, dos &amp; NPRA
+                Kegunaan, dos &amp; Kawalan KKM
               </p>
             </div>
             <div className="apple-slide-card rounded-[18px] p-4">

@@ -280,16 +280,16 @@ export const Slide07EmulsionLab: React.FC<Slide07Props> = ({ interactions, onPat
                 ) : (
                   <g>
                     <rect x="8" y="8" width="254" height="116" rx="12" fill="#EFF6FF" stroke="#0066D6" strokeWidth="1.8" />
-                    <circle cx="88" cy="56" r="18" fill="#FCD34D" stroke="#B45309" strokeWidth="2" />
-                    <circle cx="135" cy="50" r="22" fill="#FCD34D" stroke="#B45309" strokeWidth="2" />
-                    <circle cx="182" cy="58" r="17" fill="#FCD34D" stroke="#B45309" strokeWidth="2" />
-                    <text x="135" y="54" textAnchor="middle" fontSize="11.5" fontWeight="800" fill="#78350F">
+                    <circle cx="84" cy="48" r="18" fill="#FCD34D" stroke="#B45309" strokeWidth="2" />
+                    <circle cx="135" cy="46" r="24" fill="#FCD34D" stroke="#B45309" strokeWidth="2" />
+                    <circle cx="186" cy="48" r="18" fill="#FCD34D" stroke="#B45309" strokeWidth="2" />
+                    <text x="135" y="50" textAnchor="middle" fontSize="9.5" fontWeight="800" fill="#78350F">
                       Homogen
                     </text>
-                    <text x="135" y="95" textAnchor="middle" fontSize="12" fontWeight="800" fill="#1E3A8A">
+                    <text x="135" y="92" textAnchor="middle" fontSize="11.5" fontWeight="800" fill="#1E3A8A">
                       Pengemulsi (Lesitin / Asid stearik)
                     </text>
-                    <text x="135" y="113" textAnchor="middle" fontSize="11.5" fontWeight="600" fill="#1E40AF">
+                    <text x="135" y="110" textAnchor="middle" fontSize="9.8" fontWeight="600" fill="#1E40AF">
                       Membentuk campuran homogen antara air dan minyak
                     </text>
                   </g>

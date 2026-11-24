@@ -269,7 +269,7 @@ export const Slide08BannedForensics: React.FC<Slide08Props> = ({ interactions, o
 
           <div className="mt-2 pt-2.5 apple-hairline-t text-[14px] text-[var(--apple-secondary-label)] leading-snug tabular-nums-clean">
             <strong className="text-[var(--apple-label)]">Nasihat Pengguna (m.s. 186):</strong> Peka dengan kandungan bahan dan pastikan kosmetik berdaftar dengan{' '}
-            <strong className="text-[var(--apple-label)]">Bahagian Regulatori Farmasi Negara (NPRA)</strong>.
+            <strong className="text-[var(--apple-label)]">Bahagian Regulatori Farmasi Negara</strong>.
           </div>
         </div>
       </div>
